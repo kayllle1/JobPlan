@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JobMS v6.0 — 지능형 채용 매칭 시스템</title>
+<title>JobMS v6.1 — 지능형 채용 매칭 시스템</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -16,7 +16,6 @@ input,select,textarea{font-family:inherit}
 .tbl-tr:hover{background:#F8FAFC!important}
 .acc-tr:hover{background:#EFF6FF!important}
 .job-name-btn:hover{color:#1D4ED8!important;text-decoration:underline!important}
-/* 긴급 행 — 최종발표 D-DAY */
 .row-urgent{background:#FFF1E6!important}
 .row-urgent:hover{background:#FFE8D6!important}
 #dash-root{display:flex;flex-direction:column;height:100%;overflow:hidden}
@@ -64,7 +63,7 @@ let _dbConnected = false;
 let _reloadTimer = null;
 
 // ── 상수 ─────────────────────────────────────────────────────
-const TODAY = new Date().toISOString().split('T')[0];
+const TODAY = new Date().toISOString().split('T')[0];   // 'YYYY-MM-DD' 문자열
 const MONTH = TODAY.slice(0, 7);
 const CATS  = ['전체','법원','의회','검찰청','공공기관','해바라기','팀벨','사기업','대학교','기타'];
 const JOB_TYPES = ['한시임기제','전문임기제','서기보','기간제','프리랜서','공무직','무기계약직','대체직','공무원','의회임기제'];
@@ -94,60 +93,51 @@ let studentFilter = {kw:'', grade:'전체'};
 let STUDENTS = [], JOBS = [];
 
 // ══════════════════════════════════════════════════════════════
-// ★★★ v6.0 IME 완벽 처리 — compositionstart/update/end + setTimeout
-// 한글 조합 중에는 플래그로 차단, 완성 즉시 setTimeout(0)으로 반영
+// ★★★ v6.1 IME 완벽 처리
+//  - compositionstart  → 조합 시작 플래그
+//  - compositionend    → 값 즉시 캡처 후 requestAnimationFrame 으로 렌더
+//  - input             → 조합 중이면 무시 (영문/숫자는 바로 처리)
+//  핵심: el.value를 compositionend 핸들러 내에서 동기적으로 읽어 캡처.
+//        renderView()는 RAF(requestAnimationFrame) 안에서 실행해
+//        브라우저가 IME 확정 작업을 완전히 끝낸 뒤 DOM을 교체함.
 // ══════════════════════════════════════════════════════════════
-let _jobComposing     = false;
-let _jobSearchTimer   = null;
-let _stuComposing     = false;
-let _stuSearchTimer   = null;
+let _jobComposing   = false;
+let _stuComposing   = false;
 
-// [공고] 검색
-function onJobCompositionStart() {
-  _jobComposing = true;
-}
-function onJobCompositionUpdate() {
-  _jobComposing = true;
-}
-function onJobCompositionEnd(el) {
+function onJobCompositionStart()   { _jobComposing = true; }
+function onJobCompositionEnd(el)   {
   _jobComposing = false;
-  clearTimeout(_jobSearchTimer);
-  _jobSearchTimer = setTimeout(function() {
-    jobFilter.kw = el.value;
+  const val = el.value;              // 조합 완료 직후 동기적으로 캡처
+  requestAnimationFrame(function() {
+    jobFilter.kw = val;
     renderView();
-  }, 0);
+  });
 }
 function onJobInput(el) {
-  if (_jobComposing) return;            // 조합 중 → 무시
-  clearTimeout(_jobSearchTimer);
-  _jobSearchTimer = setTimeout(function() {
-    jobFilter.kw = el.value;
+  if (_jobComposing) return;         // 한글 조합 중 → 완전히 무시
+  const val = el.value;
+  requestAnimationFrame(function() {
+    jobFilter.kw = val;
     renderView();
-  }, 0);
+  });
 }
 
-// [학생] 검색
-function onStuCompositionStart() {
-  _stuComposing = true;
-}
-function onStuCompositionUpdate() {
-  _stuComposing = true;
-}
-function onStuCompositionEnd(el) {
+function onStuCompositionStart()   { _stuComposing = true; }
+function onStuCompositionEnd(el)   {
   _stuComposing = false;
-  clearTimeout(_stuSearchTimer);
-  _stuSearchTimer = setTimeout(function() {
-    studentFilter.kw = el.value;
+  const val = el.value;
+  requestAnimationFrame(function() {
+    studentFilter.kw = val;
     renderView();
-  }, 0);
+  });
 }
 function onStuInput(el) {
   if (_stuComposing) return;
-  clearTimeout(_stuSearchTimer);
-  _stuSearchTimer = setTimeout(function() {
-    studentFilter.kw = el.value;
+  const val = el.value;
+  requestAnimationFrame(function() {
+    studentFilter.kw = val;
     renderView();
-  }, 0);
+  });
 }
 function onStudentGradeChange(value) {
   studentFilter.grade = value;
@@ -156,20 +146,39 @@ function onStudentGradeChange(value) {
 
 // ── 유틸 ─────────────────────────────────────────────────────
 const fmt        = d => d ? String(d).replace(/-/g,'.') : '-';
-const isToday    = d => d === TODAY;
 const $          = id => document.getElementById(id);
 const esc        = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const dateOrNull = v => (v && String(v).trim()) ? v : null;
 
+/* ★ 날짜 비교: 시/분/초 완전 무시, 문자열 YYYY-MM-DD만 비교
+   - TODAY는 'YYYY-MM-DD' 문자열
+   - dateStr도 'YYYY-MM-DD' 형식 → 직접 문자열 비교로 정확한 결과 보장 */
+const isToday = d => !!d && d === TODAY;
+
 function calcDDay(dateStr) {
   if (!dateStr) return null;
-  const t = new Date(dateStr + 'T00:00:00');
-  const n = new Date(TODAY   + 'T00:00:00');
-  return Math.round((t - n) / 86400000);
+  // YYYY-MM-DD 문자열을 로컬 자정 기준으로 파싱
+  const [y, mo, da] = String(dateStr).split('-').map(Number);
+  const target = new Date(y, mo - 1, da);           // 로컬 자정
+  const [ty, tmo, tda] = TODAY.split('-').map(Number);
+  const now    = new Date(ty, tmo - 1, tda);         // 오늘 로컬 자정
+  return Math.round((target - now) / 86400000);
 }
 
-function dDayBadge(dateStr, isClosed) {
-  if (isClosed) return `<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">마감됨</span>`;
+// ★ 날짜 오류 수정: 공고가 "진짜 종료"인지 판별
+// 최종합격발표일이 오늘이거나 미래라면 → 절대 마감/블러 처리 안 함
+function isTrulyOver(job) {
+  if (job.isClosed) return true;
+  // 최종합격발표일이 오늘 이후라면 → 아직 살아있는 공고
+  if (job.finalDate && calcDDay(job.finalDate) >= 0) return false;
+  // 지원마감일도 지났고, 최종발표일도 없거나 지난 경우
+  const deadline = job.applyDeadline || job.docDate;
+  if (deadline && calcDDay(deadline) < 0) return true;
+  return false;
+}
+
+function dDayBadge(dateStr, closed) {
+  if (closed) return `<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">마감됨</span>`;
   const d = calcDDay(dateStr);
   if (d === null) return '';
   if (d < 0)   return `<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">기간만료</span>`;
@@ -207,7 +216,6 @@ function getStudentStatus(sid) {
   return {label:'지원가능', emoji:'🟢', color:'#059669', bg:'#D1FAE5', border:'#6EE7B7'};
 }
 
-// 학생 필터링: 이름 OR 연락처 OR 이메일
 function filterStudents() {
   const kw = studentFilter.kw.trim();
   return STUDENTS.filter(s => {
@@ -235,7 +243,6 @@ function dbToJob(r) {
   return {
     id:r.id, name:r.name, category:r.category||'기타', type:r.type||'',
     isRec:!!r.is_rec, isReA:!!r.is_rea, isClosed:!!r.is_closed,
-    // ★ applyStartDate: DB의 apply_start_date 값을 그대로 보존 (입력창 없이 표시만)
     applyStartDate:   r.apply_start_date||'',
     applyDeadline:    r.apply_deadline||'',
     documentPassDate: r.document_pass_date||'',
@@ -284,7 +291,7 @@ async function loadAllData() {
 // ── 실시간 구독 ───────────────────────────────────────────────
 function scheduleReload() { clearTimeout(_reloadTimer); _reloadTimer = setTimeout(loadAllData, 500); }
 function setupRealtime() {
-  SB.channel('jobms-v60')
+  SB.channel('jobms-v61')
     .on('postgres_changes',{event:'*',schema:'public',table:'students'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'jobs'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'applicants'},scheduleReload)
@@ -415,7 +422,7 @@ function renderSidebar() {
     <div style="padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.06)">
       <p style="margin:0;font-size:9px;color:#475569;font-weight:700;letter-spacing:.2em;text-transform:uppercase">취업공고 관리 시스템</p>
       <h1 style="margin:6px 0 2px;font-size:22px;font-weight:900;letter-spacing:-.5px;background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">JobMS</h1>
-      <p style="margin:0;font-size:9px;color:#334155">v6.0 · 지능형 채용 매칭</p>
+      <p style="margin:0;font-size:9px;color:#334155">v6.1 · 지능형 채용 매칭</p>
     </div>
     <nav style="flex:1;padding:12px 8px">
       ${nav.map(n=>`<button onclick="setView('${n.id}')" style="width:100%;text-align:left;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:${currentView===n.id?700:400};background:${currentView===n.id?'rgba(37,99,235,.4)':'transparent'};color:${currentView===n.id?'#93C5FD':'#64748B'};margin-bottom:3px;display:flex;align-items:center;gap:10px;font-family:inherit"><span style="font-size:16px">${n.icon}</span>${n.label}</button>`).join('')}
@@ -438,7 +445,6 @@ function renderDashboard() {
   const finalSids = JOBS.flatMap(j => j.applicants.filter(a=>a.status==='최종합격').map(a=>a.studentId));
   const active    = JOBS.filter(j => !j.isClosed);
 
-  // 오늘 일정
   const todayEvents = JOBS.flatMap(j => [
     isToday(j.docDate)            && {jname:j.name, type:'서류접수',    c:'#2563EB'},
     isToday(j.documentPassDate)   && {jname:j.name, type:'서류합격발표', c:'#3B82F6'},
@@ -446,7 +452,6 @@ function renderDashboard() {
     isToday(j.finalDate)          && {jname:j.name, type:'최종합격발표', c:'#059669'}
   ].filter(Boolean));
 
-  // 월별 성과 (selectedMonth 기준)
   const monthNewJobs = JOBS.filter(j => (j.createdAt||'').slice(0,7) === selectedMonth).length;
   const monthDocPass = JOBS
     .filter(j => ((j.documentPassDate||j.docDate)||'').slice(0,7) === selectedMonth)
@@ -455,7 +460,6 @@ function renderDashboard() {
     .filter(j => (j.finalDate||'').slice(0,7) === selectedMonth)
     .flatMap(j => j.applicants.filter(a=>a.status==='최종합격')).length;
 
-  // 마감 임박순 정렬 (대시보드: applyDeadline 기준 유지)
   const activeSorted = [
     ...active.filter(j=>{const d=calcDDay(j.applyDeadline||j.docDate);return d===null||d>=0;})
       .sort((a,b)=>{
@@ -508,7 +512,6 @@ function renderDashboard() {
       </div>`).join('')}
     </div>
 
-    <!-- 월 선택기 + 월별 성과 카드 -->
     <div id="dash-monthly">
       <div style="background:linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%);border-radius:10px;padding:12px 18px;display:flex;align-items:center;flex-wrap:wrap;gap:10px">
         <div style="flex-shrink:0;margin-right:12px">
@@ -580,20 +583,17 @@ function getFiltered() {
   return JOBS.filter(j => {
     if (jobFilter.cat !== '전체' && j.category !== jobFilter.cat) return false;
     if (jobFilter.year && !(j.docDate||'').startsWith(jobFilter.year)) return false;
-    if (jobFilter.kw) {
-      if (!j.name.includes(jobFilter.kw)) return false;
-    }
+    if (jobFilter.kw && !j.name.includes(jobFilter.kw)) return false;
     if (jobFilter.type === '추천' && !j.isRec) return false;
     if (jobFilter.type === '지원' && j.isRec) return false;
     return true;
   });
 }
 
-// 정렬: 유효마감(applyDeadline) ASC → 과거마감 진행중 → isClosed 맨 아래
+// ★ 정렬: 유효마감 ASC → 기간초과 진행중 → isClosed 맨 아래
 function getSorted(filtered) {
   const active = filtered.filter(j => !j.isClosed);
   const closed = filtered.filter(j =>  j.isClosed);
-
   const validActive = active
     .filter(j => { const d=calcDDay(j.applyDeadline||j.docDate); return d===null||d>=0; })
     .sort((a,b) => {
@@ -608,9 +608,7 @@ function getSorted(filtered) {
 function toggleDetail(jobId) { if(detailJobs.has(jobId))detailJobs.delete(jobId);else detailJobs.add(jobId); renderView(); }
 function toggleJob(jobId)    { if(expandedJobs.has(jobId))expandedJobs.delete(jobId);else expandedJobs.add(jobId); renderView(); }
 
-// ══════════════════════════════════════════════════════════════
-// ★ 공고 상세 패널 (colspan=11) — applyStartDate 포함
-// ══════════════════════════════════════════════════════════════
+// ── 공고 상세 패널 ──────────────────────────────────────────
 function renderDetailPanel(job) {
   const dl=(lbl,val,hi)=>`<div style="min-width:100px"><p style="margin:0;font-size:10px;color:#6B7280;font-weight:600;text-transform:uppercase;letter-spacing:.05em">${lbl}</p><p style="margin:3px 0 0;font-size:13px;font-weight:600;color:${hi||'#111827'}">${esc(val||'-')}</p></div>`;
   const fdNum=calcDDay(job.finalDate);
@@ -618,11 +616,11 @@ function renderDetailPanel(job) {
     ${dl('카테고리',job.category)}
     ${dl('채용형태',job.type)}
     ${job.applyStartDate?dl('지원 시작일',fmt(job.applyStartDate)):''}
-    ${job.applyDeadline?dl('지원 마감일',fmt(job.applyDeadline)):''}
+    ${job.applyDeadline?dl('서류 마감일',fmt(job.applyDeadline)):''}
     ${dl('서류접수일',fmt(job.docDate),isToday(job.docDate)?'#DC2626':'')}
     ${dl('서류합격발표일',fmt(job.documentPassDate),isToday(job.documentPassDate)?'#DC2626':'')}
     ${dl('면접일',fmt(job.interviewDate),isToday(job.interviewDate)?'#DC2626':'')}
-    ${dl('최종합격발표일',fmt(job.finalDate),(fdNum!==null&&fdNum<=3)?'#DC2626':isToday(job.finalDate)?'#EA580C':'')}
+    ${dl('최종합격발표일',fmt(job.finalDate),(fdNum!==null&&fdNum<=3&&fdNum>=0)?'#DC2626':isToday(job.finalDate)?'#EA580C':'')}
     ${dl('근무 시작',fmt(job.startDate))}
     ${dl('근무 종료',job.endDate?fmt(job.endDate):'무기한')}
   </div>`;
@@ -633,11 +631,14 @@ function renderDetailPanel(job) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ★★★ v6.0 공고 행 렌더링
-//  11컬럼: No | 카테고리 | 채용형태 | 공고명 | 지원시작일 | 마감일(D-Day) |
-//          서류합격발표일 | 면접일정 | 최종합격발표일(D-Day) | 지원현황 | 관리
+// ★★★ v6.1 공고 행 렌더링
+//  11컬럼: No | 카테고리 | 채용형태 | 공고명 | 서류접수일 | 서류마감일(D-Day) |
+//          서류합격발표일 | 면접일 | 최종합격발표일(D-Day) | 지원현황 | 관리
 //
-//  ★ 긴급(🔥최종발표): isToday(finalDate) 이면 주홍 배경
+//  ★ 날짜 오류 수정:
+//    - isTrulyOver(): finalDate >= 오늘이면 블러/마감 처리 완전 차단
+//    - 모든 날짜 비교는 YYYY-MM-DD 문자열 기준 (시간 무시)
+//  ★ 긴급: isToday(finalDate) → 연한 주홍 배경 + 🔥최종발표 뱃지
 // ══════════════════════════════════════════════════════════════
 function renderJobRow(job, rowNum) {
   const deadline  = job.applyDeadline || job.docDate;
@@ -647,12 +648,13 @@ function renderJobRow(job, rowNum) {
   const tD  = isToday(job.docDate);
   const tDP = isToday(job.documentPassDate);
   const tI  = isToday(job.interviewDate);
-  const tF  = isToday(job.finalDate);  // ★ 최종합격발표일 = 오늘
+  const tF  = isToday(job.finalDate);      // 최종합격발표일 = 오늘
 
-  // ★ 긴급 판정: 최종합격발표일이 오늘인 진행중 공고
-  const isUrgent  = !job.isClosed && tF;
-  // 마감일 지난 진행중
-  const isPastDl  = deadline && dlDNum !== null && dlDNum < 0 && !job.isClosed;
+  // ★ 긴급: 최종합격발표일이 오늘인 진행중 공고
+  const isUrgent = !job.isClosed && tF;
+
+  // ★ 날짜 오류 수정: isTrulyOver()로 판별 (finalDate >= 오늘이면 false)
+  const over = isTrulyOver(job);
 
   const cTotal=job.applicants.length;
   const cDocP =job.applicants.filter(a=>a.status==='서류합격').length;
@@ -661,9 +663,9 @@ function renderJobRow(job, rowNum) {
   const cFail =job.applicants.filter(a=>a.status==='불합격').length;
 
   let rowClass='tbl-tr', rowBg='#fff';
-  if (isUrgent)     { rowClass='row-urgent'; }
+  if (isUrgent)         { rowClass='row-urgent'; }
   else if (tD||tDP||tI) { rowBg='#FFFBEB'; }
-  else if (job.isClosed) { rowBg='#F9FAFB'; }
+  else if (job.isClosed){ rowBg='#F9FAFB'; }
 
   const isOpen   = expandedJobs.has(job.id);
   const isDetail = detailJobs.has(job.id);
@@ -706,8 +708,8 @@ function renderJobRow(job, rowNum) {
     ?`<a href="${esc(job.jobUrl)}" target="_blank" style="background:#F0FDF4;color:#059669;border:1px solid #6EE7B7;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">🔗 공고</a>`:'';
   const manageBtns=`<div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center">${urlBtn} ${btn('✏',`openJobModal(${job.id})`,'outline',true)} ${btn('🗑',`confirmDeleteJob(${job.id})`,'danger',true)} ${btn('+지원',`openAddApModal(${job.id})`,'primary',true)}</div>`;
 
-  // ★ 공고명 셀: 긴급이면 🔥최종발표 배지
-  const hasScheduleToday = tD||tDP||tI; // finalDate는 별도(isUrgent)
+  // 공고명 셀
+  const hasScheduleToday = tD || tDP || tI;
   const nameCell=`<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
     ${isUrgent?`<span style="background:#FFEDD5;color:#EA580C;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FDBA74;white-space:nowrap">🔥최종발표</span>`:''}
     ${hasScheduleToday?'<span style="color:#F59E0B;font-size:14px">★</span>':''}
@@ -718,16 +720,16 @@ function renderJobRow(job, rowNum) {
     ${hasScheduleToday?`<span style="font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:800">${[tD&&'서류접수',tDP&&'합격발표',tI&&'면접'].filter(Boolean).join('/')} D-DAY</span>`:''}
   </div>`;
 
-  // ── 컬럼5: 지원 시작일 (applyStartDate, DB 기존값 표시)
-  const startDateText = job.applyStartDate
-    ? `<span style="color:#475569;font-size:11px">${fmt(job.applyStartDate)}</span>`
+  // ── 컬럼5: 서류접수일 (docDate)
+  const docDateText = job.docDate
+    ? `<span style="color:${tD?'#DC2626':'#475569'};font-weight:${tD?700:400};font-size:11px">${fmt(job.docDate)}</span>`
     : `<span style="color:#E2E8F0;font-size:11px">-</span>`;
 
-  // ── 컬럼6: 마감일 (applyDeadline, D-Day 배지)
+  // ── 컬럼6: 서류마감일 (applyDeadline, D-Day 배지)
   const dlText = job.isClosed
     ? `<span style="color:#9CA3AF;font-size:10px">마감됨</span>`
     : deadline
-      ? `<div style="display:flex;flex-direction:column;gap:2px">${dDayBadge(deadline,false)}<span style="color:${dlDNum!==null&&dlDNum<=3?'#DC2626':dlDNum!==null&&dlDNum<=7?'#D97706':'#475569'};font-size:10px;font-weight:${dlDNum!==null&&dlDNum<=7?700:400}">${fmt(deadline)}</span></div>`
+      ? `<div style="display:flex;flex-direction:column;gap:2px">${dDayBadge(deadline,false)}<span style="color:${dlDNum!==null&&dlDNum>=0&&dlDNum<=3?'#DC2626':dlDNum!==null&&dlDNum>=0&&dlDNum<=7?'#D97706':'#6B7280'};font-size:10px;font-weight:${dlDNum!==null&&dlDNum>=0&&dlDNum<=7?700:400}">${fmt(deadline)}</span></div>`
       : `<span style="color:#E2E8F0">-</span>`;
 
   // ── 컬럼7: 서류합격발표일
@@ -735,11 +737,12 @@ function renderJobRow(job, rowNum) {
     ? `<span style="color:${tDP?'#DC2626':'#475569'};font-weight:${tDP?700:400};font-size:11px">${fmt(job.documentPassDate)}</span>`
     : `<span style="color:#E2E8F0">-</span>`;
 
-  // ── 컬럼9: 최종합격발표일 + D-Day 배지 (★ v6 핵심: D-Day 배지 추가)
+  // ── 컬럼9: 최종합격발표일 + D-Day 배지
+  // ★ 날짜 오류 수정: closed가 아닌 한, finalDate의 D-Day 배지는 정상 표시
   const finalText = job.finalDate
     ? `<div style="display:flex;flex-direction:column;gap:2px">
         ${dDayBadge(job.finalDate, job.isClosed)}
-        <span style="color:${tF?'#EA580C':finalDNum!==null&&finalDNum<=3?'#DC2626':'#475569'};font-weight:${tF||finalDNum!==null&&finalDNum<=3?700:400};font-size:10px">${fmt(job.finalDate)}</span>
+        <span style="color:${tF?'#EA580C':finalDNum!==null&&finalDNum>=0&&finalDNum<=3?'#DC2626':'#475569'};font-weight:${(tF||(finalDNum!==null&&finalDNum>=0&&finalDNum<=3))?700:400};font-size:10px">${fmt(job.finalDate)}</span>
       </div>`
     : `<span style="color:#E2E8F0">-</span>`;
 
@@ -748,14 +751,15 @@ function renderJobRow(job, rowNum) {
     ? `<span style="background:#F1F5F9;color:#374151;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;border:1px solid #E2E8F0">${esc(job.type)}</span>`
     : `<span style="color:#E2E8F0">-</span>`;
 
-  const opacityStyle = (job.isClosed||isPastDl) ? 'opacity:.65;' : '';
+  // ★ 날짜 오류 수정: isTrulyOver() 기준으로만 블러 적용
+  const opacityStyle = over ? 'opacity:.65;' : '';
 
   return `<tr class="${rowClass}" style="border-bottom:1px solid #F1F5F9;${rowBg!='#fff'&&!isUrgent?`background:${rowBg};`:''}${opacityStyle}">
     <td style="padding:10px 8px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700;white-space:nowrap">${rowNum}</td>
     <td style="padding:10px 10px;white-space:nowrap">${badge(job.category)}</td>
     <td style="padding:10px 10px;white-space:nowrap">${typeCell}</td>
     <td style="padding:10px 10px;min-width:180px">${nameCell}</td>
-    <td style="padding:10px 10px;font-size:11px;white-space:nowrap">${startDateText}</td>
+    <td style="padding:10px 10px;white-space:nowrap">${docDateText}</td>
     <td style="padding:10px 10px;white-space:nowrap">${dlText}</td>
     <td style="padding:10px 10px;font-size:11px;white-space:nowrap">${dpText}</td>
     <td style="padding:10px 10px;font-size:11px;white-space:nowrap;color:${tI?'#DC2626':'#475569'};font-weight:${tI?700:400}">${fmt(job.interviewDate)}</td>
@@ -766,7 +770,7 @@ function renderJobRow(job, rowNum) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ★ 공고 관리 뷰 (v6.0 — 11컬럼, IME 완벽 처리)
+// ★ 공고 관리 뷰
 // ══════════════════════════════════════════════════════════════
 function renderJobs() {
   const filtered=getFiltered();
@@ -779,15 +783,14 @@ function renderJobs() {
     return `<button onclick="jobFilter.cat='${c}';renderView()" style="white-space:nowrap;padding:6px 14px;border-radius:99px;border:1.5px solid ${active?'#2563EB':'#E2E8F0'};background:${active?'#2563EB':'#fff'};color:${active?'#fff':'#374151'};font-size:12px;font-weight:${active?700:500};cursor:pointer;font-family:inherit;flex-shrink:0">${c} <span style="font-size:10px;opacity:.75">${cnt}</span></button>`;
   }).join('');
 
-  // ★ v6.0 11컬럼 헤더 (지시사항 준수)
   const headers=[
     'No.','카테고리','채용 형태',
     '공고명 (▼ 상세)',
-    '지원 시작일',          // col5: applyStartDate
-    '마감일 (D-Day)',        // col6: applyDeadline
-    '서류합격발표일',        // col7
-    '면접일정',              // col8
-    '최종합격발표일 (D-Day)',// col9: finalDate + D-Day 배지
+    '서류접수일',          // col5: docDate
+    '서류마감일 (D-Day)',  // col6: applyDeadline
+    '서류합격발표일',      // col7: documentPassDate
+    '면접일',              // col8: interviewDate
+    '최종합격발표일 (D-Day)', // col9: finalDate
     '지원현황','관리'
   ];
 
@@ -809,7 +812,12 @@ function renderJobs() {
 
     <div class="cat-tab-wrap" style="flex-shrink:0">${catTabs}</div>
 
-    <!-- ★ v6 필터바: IME 완벽 처리 (compositionstart/update/end + input) -->
+    <!--
+      ★★★ v6.1 IME 완벽 처리:
+      compositionstart  → 한글 조합 시작 플래그
+      compositionend    → 플래그 해제 + 값 즉시 캡처 + RAF 렌더
+      input             → 조합 중이면 완전 무시 (영문/숫자는 정상 동작)
+    -->
     <div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #E5E7EB;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0">
       <select onchange="jobFilter.year=this.value;renderView()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">
         <option value="">전체 연도</option>
@@ -818,18 +826,10 @@ function renderJobs() {
       <select onchange="jobFilter.type=this.value;renderView()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">
         ${['전체','추천','지원'].map(t=>`<option value="${t}" ${t===jobFilter.type?'selected':''}>${t}</option>`).join('')}
       </select>
-      <!--
-        ★★★ IME 완벽 처리:
-        1. oncompositionstart → _jobComposing=true (한글 조합 시작)
-        2. oncompositionupdate → _jobComposing=true (조합 진행 중)
-        3. oncompositionend → _jobComposing=false + setTimeout(0) 으로 완성된 값 반영
-        4. oninput → _jobComposing이면 무시, 아니면 setTimeout(0) 으로 필터링
-      -->
       <input
         id="jobSearchInput"
         value="${esc(jobFilter.kw)}"
         oncompositionstart="onJobCompositionStart()"
-        oncompositionupdate="onJobCompositionUpdate()"
         oncompositionend="onJobCompositionEnd(this)"
         oninput="onJobInput(this)"
         placeholder="🔍 공고명 실시간 검색..."
@@ -840,7 +840,7 @@ function renderJobs() {
     </div>
 
     <div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1300px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1280px">
         <thead>
           <tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">
             ${headers.map(h=>`<th style="padding:10px 10px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">${h}</th>`).join('')}
@@ -853,7 +853,7 @@ function renderJobs() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ★ 학생 DB 뷰 (v6.0 — 통합 검색, IME 완벽 처리)
+// ★ 학생 DB 뷰
 // ══════════════════════════════════════════════════════════════
 function renderStudents() {
   const filtered = filterStudents();
@@ -897,13 +897,11 @@ function renderStudents() {
       </div>
     </div>
 
-    <!-- ★ v6 학생 통합 검색 (이름+연락처+이메일) — IME 완벽 처리 -->
     <div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #E5E7EB;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0">
       <input
         id="studentSearchInput"
         value="${esc(studentFilter.kw)}"
         oncompositionstart="onStuCompositionStart()"
-        oncompositionupdate="onStuCompositionUpdate()"
         oncompositionend="onStuCompositionEnd(this)"
         oninput="onStuInput(this)"
         placeholder="🔍 이름 · 연락처 · 이메일 통합 검색..."
@@ -931,11 +929,11 @@ function renderStudents() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ★ renderView — 검색창 포커스 복원
+// ★ renderView — 검색창 포커스/커서 복원
 // ══════════════════════════════════════════════════════════════
 function renderView() {
-  const focusedId  = document.activeElement ? document.activeElement.id : null;
-  const cursorPos  = (document.activeElement && typeof document.activeElement.selectionStart === 'number')
+  const focusedId = document.activeElement ? document.activeElement.id : null;
+  const cursorPos = (document.activeElement && typeof document.activeElement.selectionStart === 'number')
     ? document.activeElement.selectionStart : null;
 
   const main=$('_main'); if(!main) return;
@@ -943,19 +941,20 @@ function renderView() {
   else if (currentView==='jobs')      { main.innerHTML=renderJobs(); }
   else if (currentView==='students')  { main.innerHTML=renderStudents(); }
 
-  // 사이드바 갱신
   const sb=$('_sidebar'); if(sb) sb.outerHTML=renderSidebar();
 
   // 검색창 포커스 복원
-  const searchInputIds=['jobSearchInput','studentSearchInput'];
-  if (focusedId && searchInputIds.includes(focusedId)) {
-    const el=$(focusedId);
-    if (el) {
-      el.focus();
-      if (cursorPos !== null) {
-        try { el.setSelectionRange(cursorPos, cursorPos); } catch(e) {}
+  const searchIds=['jobSearchInput','studentSearchInput'];
+  if (focusedId && searchIds.includes(focusedId)) {
+    requestAnimationFrame(function() {
+      const el=$(focusedId);
+      if (el) {
+        el.focus();
+        if (cursorPos !== null) {
+          try { el.setSelectionRange(cursorPos, cursorPos); } catch(e){}
+        }
       }
-    }
+    });
   }
 }
 
@@ -967,7 +966,15 @@ function setView(v) {
 window.addEventListener('resize', () => { if(currentView==='dashboard') requestAnimationFrame(drawCharts); });
 
 // ══════════════════════════════════════════════════════════════
-// ★ 공고 등록/수정 모달 (v6: 지원시작일 입력란 제거, 기존 DB값 보존)
+// ★★★ v6.1 공고 등록/수정 모달 — 실무 흐름 순서로 완전 재배치
+//
+//  [기본 정보]    카테고리 / 채용형태 / 공고명
+//  [접수 단계]    서류접수일 / 서류마감일
+//  [심사 단계]    서류합격발표일 / 면접일
+//  [합격 단계]    최종합격발표일 (D-Day 기준점)
+//  [임용 단계]    근무시작일 / 근무종료일
+//  [참고]         공고 원문 URL
+//  [기타]         추천/재공고/마감 체크박스 → 추천 공고 정보 섹션 → 비고
 // ══════════════════════════════════════════════════════════════
 function buildRecSection(f) {
   f=f||{};
@@ -983,28 +990,82 @@ function openJobModal(jobId) {
   const job=jobId!=null?JOBS.find(j=>j.id===jobId):null;
   const f=job||{name:'',category:'법원',type:'한시임기제',isRec:false,docDate:'',documentPassDate:'',interviewDate:'',finalDate:'',startDate:'',endDate:'',isReA:false,isClosed:false,note:'',applyDeadline:'',jobUrl:'',submitDocs:'',submitDeadline:'',managerEmail:'',managerName:'',managerPhone:''};
 
-  // ★ applyStartDate가 기존 데이터에 있으면 안내 표시
+  // 기존 applyStartDate 안내 (입력란 없음 — DB값 보존)
   const existingStartDate = job && job.applyStartDate
-    ? `<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#1E40AF"><strong>기존 지원시작일:</strong> ${fmt(job.applyStartDate)} <span style="opacity:.7">(리스트에 표시됩니다)</span></div>`
+    ? `<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#1E40AF">
+        <strong>기존 지원시작일:</strong> ${fmt(job.applyStartDate)}
+        <span style="opacity:.7">(리스트에 표시됩니다)</span>
+      </div>`
     : '';
 
   showModal(job?'공고 수정':'새 공고 등록', `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+
+    <!-- ① 기본 정보 -->
+    <div style="background:#F8FAFC;border-radius:8px;padding:12px 14px;margin-bottom:14px;border:1px solid #E2E8F0">
+      <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.06em">① 기본 정보</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+        ${fSel('카테고리','jf_cat',CATS.slice(1),f.category)}
+        ${fSel('채용 형태','jf_type',JOB_TYPES,f.type)}
+      </div>
       <div style="grid-column:1/-1">${fInp('공고명 *','jf_name','text',f.name)}</div>
-      ${fSel('카테고리','jf_cat',CATS.slice(1),f.category)} ${fSel('채용형태','jf_type',JOB_TYPES,f.type)}
-      ${fInp('★ 지원 마감일 (D-Day 기준)','jf_ad','date',f.applyDeadline||'')} ${fInp('서류접수일','jf_dd','date',f.docDate||'')}
-      ${fInp('★ 서류합격발표일','jf_dpd','date',f.documentPassDate||'')} ${fInp('면접일','jf_id','date',f.interviewDate||'')}
-      ${fInp('★ 최종합격발표일 (D-Day 강조)','jf_fd','date',f.finalDate||'')} <div></div>
-      ${fInp('근무 시작일','jf_sd2','date',f.startDate||'')} ${fInp('근무 종료일','jf_ed','date',f.endDate||'')}
     </div>
+
+    <!-- ② 접수 단계 -->
+    <div style="background:#F0FDF4;border-radius:8px;padding:12px 14px;margin-bottom:14px;border:1px solid #BBF7D0">
+      <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#15803D;text-transform:uppercase;letter-spacing:.06em">② 접수 단계</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+        ${fInp('서류접수일','jf_dd','date',f.docDate||'')}
+        ${fInp('서류 마감일 (D-Day 기준)','jf_ad','date',f.applyDeadline||'')}
+      </div>
+    </div>
+
+    <!-- ③ 심사 단계 -->
+    <div style="background:#FFF7ED;border-radius:8px;padding:12px 14px;margin-bottom:14px;border:1px solid #FED7AA">
+      <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.06em">③ 심사 단계</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+        ${fInp('서류합격발표일','jf_dpd','date',f.documentPassDate||'')}
+        ${fInp('면접일','jf_id','date',f.interviewDate||'')}
+      </div>
+    </div>
+
+    <!-- ④ 합격 단계 -->
+    <div style="background:#FFF1F2;border-radius:8px;padding:12px 14px;margin-bottom:14px;border:1px solid #FECDD3">
+      <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#BE123C;text-transform:uppercase;letter-spacing:.06em">④ 합격 발표 — D-Day 강조 기준</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+        ${fInp('★ 최종합격발표일','jf_fd','date',f.finalDate||'')}
+        <div></div>
+      </div>
+    </div>
+
+    <!-- ⑤ 임용 단계 -->
+    <div style="background:#F5F3FF;border-radius:8px;padding:12px 14px;margin-bottom:14px;border:1px solid #DDD6FE">
+      <p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:.06em">⑤ 임용 단계</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+        ${fInp('근무 시작일','jf_sd2','date',f.startDate||'')}
+        ${fInp('근무 종료일','jf_ed','date',f.endDate||'')}
+      </div>
+    </div>
+
+    <!-- ⑥ 참고 자료 -->
     ${existingStartDate}
-    <div style="margin-bottom:12px">${fInp('🔗 공고 원문 URL','jf_url','url',f.jobUrl||'','placeholder="https://..."')}</div>
-    <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="margin-bottom:14px">${fInp('🔗 공고 원문 URL','jf_url','url',f.jobUrl||'','placeholder="https://..."')}</div>
+
+    <!-- ⑦ 공고 속성 -->
+    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
       ${[['isRec','jf_rc','📌 추천 채용'],['isReA','jf_ra','🔄 재공고'],['isClosed','jf_cl','🔒 마감']].map(x=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:6px 12px;border:1px solid #E5E7EB;border-radius:6px;background:${f[x[0]]?'#EFF6FF':'#fff'};color:${f[x[0]]?'#2563EB':'#374151'}"><input type="checkbox" id="${x[1]}" ${f[x[0]]?'checked':''} onchange="toggleRecF()">${x[2]}</label>`).join('')}
     </div>
     <div id="jf_rec">${f.isRec?buildRecSection(f):''}</div>
-    <div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">비고</label><textarea id="jf_note" rows="2" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">${esc(f.note||'')}</textarea></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">${btn('취소','closeModal()','outline')} ${btn(job?'💾 저장':'✅ 등록',`saveJob(${jobId!=null?jobId:'null'})`,'primary')}</div>
+
+    <!-- ⑧ 비고 -->
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">비고</label>
+      <textarea id="jf_note" rows="2" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">${esc(f.note||'')}</textarea>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">
+      ${btn('취소','closeModal()','outline')}
+      ${btn(job?'💾 저장':'✅ 등록',`saveJob(${jobId!=null?jobId:'null'})`,'primary')}
+    </div>
   `, '720px');
 }
 
@@ -1016,8 +1077,8 @@ async function saveJob(jobId) {
   const f = {
     name, category:$('jf_cat').value, type:$('jf_type').value,
     is_rec:!!$('jf_rc').checked, is_rea:!!$('jf_ra').checked, is_closed:!!$('jf_cl').checked,
-    apply_deadline:     dateOrNull($('jf_ad')  && $('jf_ad').value),
     doc_date:           dateOrNull($('jf_dd')  && $('jf_dd').value),
+    apply_deadline:     dateOrNull($('jf_ad')  && $('jf_ad').value),
     document_pass_date: dateOrNull($('jf_dpd') && $('jf_dpd').value),
     interview_date:     dateOrNull($('jf_id')  && $('jf_id').value),
     final_date:         dateOrNull($('jf_fd')  && $('jf_fd').value),
@@ -1298,16 +1359,16 @@ function openHistoryModal(studentId) {
 function exportJobs() {
   csvExport(getSorted(getFiltered()).map((j,i)=>({
     No:i+1, 카테고리:j.category, 채용형태:j.type, 공고명:j.name,
-    지원시작일:j.applyStartDate||'', 서류접수일:j.docDate||'',
-    마감일:j.applyDeadline||'', 서류합격발표일:j.documentPassDate||'',
-    면접일:j.interviewDate||'', 최종합격발표일:j.finalDate||'',
-    공고URL:j.jobUrl||'', 지원자수:j.applicants.length,
+    서류접수일:j.docDate||'', 서류마감일:j.applyDeadline||'',
+    서류합격발표일:j.documentPassDate||'', 면접일:j.interviewDate||'',
+    최종합격발표일:j.finalDate||'', 공고URL:j.jobUrl||'',
+    지원자수:j.applicants.length,
     서류합격:j.applicants.filter(a=>a.status==='서류합격').length,
     면접대기:j.applicants.filter(a=>a.status==='면접대기').length,
     합격:j.applicants.filter(a=>a.status==='최종합격').length,
     불합격:j.applicants.filter(a=>a.status==='불합격').length,
     상태:j.isClosed?'마감':'진행'
-  })), '공고목록_v6');
+  })), '공고목록_v61');
 }
 function exportStudents() {
   const filtered=filterStudents();
@@ -1315,7 +1376,7 @@ function exportStudents() {
     const apps=getApps(s.id);
     const st=getStudentStatus(s.id);
     return{No:i+1,이름:s.name,상태:st.label,나이:s.age||'미등록',연락처:s.phone,이메일:s.email,지원횟수:apps.length,최종합격:apps.filter(a=>a.status==='최종합격').length,상담메모:s.counselingMemo||''};
-  }), '학생DB_v6');
+  }), '학생DB_v61');
 }
 function exportHistory(studentId) {
   const s=STUDENTS.find(st=>st.id===studentId); if(!s) return;
