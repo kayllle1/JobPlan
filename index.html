@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JobMS v4.3 — 지능형 채용 매칭 시스템</title>
+<title>JobMS v4.4 — 지능형 채용 매칭 시스템</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -25,14 +25,13 @@ input,select,textarea{font-family:inherit}
 .dash-card{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;display:flex;flex-direction:column}
 .dash-card-head{padding:10px 16px 6px;flex-shrink:0}
 .dash-card-body{flex:1;overflow:hidden;padding:4px 16px 12px;display:flex;align-items:center;justify-content:center}
-.mid-card{background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:12px 16px;display:flex;flex-direction:column;min-height:0}
-.mid-scroll{flex:1;overflow-y:auto;min-height:0}
+/* ★ mid-card: flex col, bounded height so inner scroll works */
+.mid-card{background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:12px 16px;display:flex;flex-direction:column;overflow:hidden}
+/* ★ mid-scroll: explicit max-height + overflow for dashboard active postings */
+.mid-scroll{flex:1;overflow-y:auto;min-height:0;max-height:220px}
 .job-detail-panel{background:#F0F7FF;border-left:4px solid #2563EB;border-bottom:2px solid #DBEAFE}
 .cat-tab-wrap{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .cat-tab-wrap::-webkit-scrollbar{display:none}
-.tl-line{position:relative;padding-left:22px}
-.tl-line::before{content:'';position:absolute;left:5px;top:16px;bottom:0;width:2px;background:#E5E7EB}
-.tl-dot{position:absolute;left:0;top:6px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px currentColor}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -41,19 +40,16 @@ input,select,textarea{font-family:inherit}
 <script>
 /*
  ╔══════════════════════════════════════════════════════════════════╗
- ║  ★ Supabase 스키마 마이그레이션 (최초 1회 — SQL Editor 실행)   ║
+ ║  ★ Supabase 스키마 마이그레이션 (SQL Editor에서 실행)           ║
  ║                                                                  ║
- ║  -- v2 기존                                                     ║
- ║  ALTER TABLE jobs                                                ║
- ║    ADD COLUMN IF NOT EXISTS apply_deadline DATE;                 ║
+ ║  -- v2 기존                                                      ║
+ ║  ALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_deadline DATE;  ║
  ║  ALTER TABLE students                                            ║
  ║    ADD COLUMN IF NOT EXISTS counseling_memo TEXT DEFAULT '';     ║
  ║                                                                  ║
- ║  -- v4.3 신규                                                   ║
- ║  ALTER TABLE jobs                                                ║
- ║    ADD COLUMN IF NOT EXISTS apply_start_date DATE;               ║
- ║  ALTER TABLE jobs                                                ║
- ║    ADD COLUMN IF NOT EXISTS job_url TEXT DEFAULT '';             ║
+ ║  -- v4.3/v4.4 신규                                              ║
+ ║  ALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_start_date DATE;║
+ ║  ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_url TEXT DEFAULT '';║
  ╚══════════════════════════════════════════════════════════════════╝
 */
 
@@ -70,35 +66,43 @@ let _reloadTimer = null;
 
 // ── 상수 ─────────────────────────────────────────────────────
 const TODAY = new Date().toISOString().split('T')[0];
-const MONTH = TODAY.slice(0, 7); // YYYY-MM (이번 달)
+const MONTH = TODAY.slice(0, 7);
 const CATS  = ['전체','법원','의회','검찰청','공공기관','해바라기','팀벨','사기업','대학교','기타'];
 const JOB_TYPES = ['한시임기제','전문임기제','서기보','기간제','프리랜서','공무직','무기계약직','대체직','공무원','의회임기제'];
 const GRADES    = ['1급','2급','3급','무급'];
-// ★ '면접완료' 완전 제거 (기존 데이터 호환은 STATUS_COLORS에서만 유지)
 const STATUSES  = ['서류접수','서류합격','면접대기','최종합격','불합격'];
 const ANNOUNCE  = ['개별','홈페이지'];
 const STATUS_COLORS = {
   '서류접수':'#6B7280','서류합격':'#3B82F6','면접대기':'#F59E0B',
-  '면접완료':'#8B5CF6', // 구 데이터 호환용 — 선택 불가
+  '면접완료':'#8B5CF6', // 구 데이터 호환용
   '최종합격':'#10B981','불합격':'#EF4444'
 };
-const CAT_COLORS = {'법원':'#1D4ED8','의회':'#7C3AED','검찰청':'#DC2626','공공기관':'#059669','해바라기':'#D97706','팀벨':'#0891B2','사기업':'#374151','대학교':'#9333EA','기타':'#6B7280'};
+const CAT_COLORS = {
+  '법원':'#1D4ED8','의회':'#7C3AED','검찰청':'#DC2626',
+  '공공기관':'#059669','해바라기':'#D97706','팀벨':'#0891B2',
+  '사기업':'#374151','대학교':'#9333EA','기타':'#6B7280'
+};
 const PIE_C = ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#6B7280','#06B6D4'];
 
 // ── 앱 상태 ───────────────────────────────────────────────────
-let currentView   = 'dashboard';
-let expandedJobs  = new Set();
-let detailJobs    = new Set();
-let jobFilter     = {cat:'전체', year:'', kw:'', type:'전체'};
-let studentSearch = '';
+let currentView  = 'dashboard';
+let expandedJobs = new Set();
+let detailJobs   = new Set();
+
+// ★ 공고 필터 (실시간 검색 포함)
+let jobFilter = {cat:'전체', year:'', kw:'', type:'전체'};
+
+// ★ 학생 필터 (이름 + 급수 동시 작동)
+let studentFilter = {name:'', grade:'전체'};
+
 let STUDENTS = [], JOBS = [];
 
 // ── 유틸 ─────────────────────────────────────────────────────
-const fmt       = d => d ? String(d).replace(/-/g,'.') : '-';
-const isToday   = d => d === TODAY;
-const $         = id => document.getElementById(id);
-const esc       = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const dateOrNull= v => (v && String(v).trim()) ? v : null;
+const fmt        = d => d ? String(d).replace(/-/g,'.') : '-';
+const isToday    = d => d === TODAY;
+const $          = id => document.getElementById(id);
+const esc        = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const dateOrNull = v => (v && String(v).trim()) ? v : null;
 
 function calcDDay(dateStr){
   if(!dateStr) return null;
@@ -107,12 +111,12 @@ function calcDDay(dateStr){
   return Math.round((t - n) / 86400000);
 }
 
-// ★ 마감됨 뱃지: 과거 날짜는 D+ 대신 '마감됨'으로 표시
+// 마감됨 배지: 음수 D → '마감됨'
 function dDayBadge(dateStr, isClosed){
   if(isClosed) return '';
   const d = calcDDay(dateStr);
   if(d === null) return '';
-  if(d < 0)  return `<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">마감됨</span>`;
+  if(d < 0)   return `<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">마감됨</span>`;
   if(d === 0) return `<span style="background:#FEE2E2;color:#DC2626;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FECACA;white-space:nowrap">🔴 D-DAY</span>`;
   if(d <= 3)  return `<span style="background:#FEE2E2;color:#DC2626;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FECACA;white-space:nowrap">D-${d}</span>`;
   if(d <= 7)  return `<span style="background:#FEF3C7;color:#D97706;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #FDE68A;white-space:nowrap">D-${d}</span>`;
@@ -129,28 +133,74 @@ function csvExport(data, name){
   const a = document.createElement('a'); a.href=url; a.download=name+'.csv'; a.click();
   URL.revokeObjectURL(url);
 }
-function getApps(sid){ return JOBS.flatMap(j=>j.applicants.filter(a=>a.studentId===sid).map(a=>({...a,jobName:j.name,category:j.category,docDate:j.docDate,finalDate:j.finalDate}))); }
 
-// ★ 학생 상태 판별 (지원가능/진행중/취업완료)
+function getApps(sid){
+  return JOBS.flatMap(j=>j.applicants
+    .filter(a=>a.studentId===sid)
+    .map(a=>({...a, jobName:j.name, category:j.category, docDate:j.docDate, finalDate:j.finalDate})));
+}
+
+// ★ 학생 상태 판별
 function getStudentStatus(sid){
   const apps = getApps(sid);
-  if(apps.length === 0) return {label:'지원가능', emoji:'🟢', color:'#059669', bg:'#D1FAE5', border:'#6EE7B7'};
-  if(apps.some(a => a.status === '최종합격')) return {label:'취업완료', emoji:'🔵', color:'#1D4ED8', bg:'#DBEAFE', border:'#93C5FD'};
-  if(apps.some(a => a.status !== '최종합격' && a.status !== '불합격')) return {label:'진행중', emoji:'🟡', color:'#D97706', bg:'#FEF3C7', border:'#FDE68A'};
+  if(apps.length === 0)
+    return {label:'지원가능', emoji:'🟢', color:'#059669', bg:'#D1FAE5', border:'#6EE7B7'};
+  if(apps.some(a => a.status === '최종합격'))
+    return {label:'취업완료', emoji:'🔵', color:'#1D4ED8', bg:'#DBEAFE', border:'#93C5FD'};
+  if(apps.some(a => a.status !== '최종합격' && a.status !== '불합격'))
+    return {label:'진행중',  emoji:'🟡', color:'#D97706', bg:'#FEF3C7', border:'#FDE68A'};
   return {label:'지원가능', emoji:'🟢', color:'#059669', bg:'#D1FAE5', border:'#6EE7B7'};
+}
+
+// ══════════════════════════════════════════════════════════════
+// ★ 실시간 검색 핵심 로직
+// ══════════════════════════════════════════════════════════════
+
+// 공고 실시간 검색 핸들러 (input 이벤트 연결)
+function onJobSearchInput(value){
+  jobFilter.kw = value;
+  renderView();
+}
+
+// ★ 학생 필터 함수 — 이름 + 급수 동시 작동
+function filterStudents(){
+  return STUDENTS.filter(s => {
+    // 이름 필터
+    if(studentFilter.name && !s.name.includes(studentFilter.name)) return false;
+    // 급수 필터: 해당 학생의 지원 중 하나라도 해당 급수이면 통과
+    if(studentFilter.grade !== '전체'){
+      const apps = getApps(s.id);
+      if(!apps.some(a => a.grade === studentFilter.grade)) return false;
+    }
+    return true;
+  });
+}
+
+// 학생 검색 핸들러
+function onStudentNameInput(value){
+  studentFilter.name = value;
+  renderView();
+}
+function onStudentGradeChange(value){
+  studentFilter.grade = value;
+  renderView();
 }
 
 // ── DB 변환 ───────────────────────────────────────────────────
 function dbToStudent(r){
-  return {id:r.id, name:r.name, age:r.age, phone:r.phone||'', email:r.email||'', counselingMemo:r.counseling_memo||''};
+  return {
+    id:r.id, name:r.name, age:r.age,
+    phone:r.phone||'', email:r.email||'',
+    counselingMemo:r.counseling_memo||''
+  };
 }
 function dbToJob(r){
   return {
     id:r.id, name:r.name, category:r.category||'기타', type:r.type||'',
     isRec:!!r.is_rec, isReA:!!r.is_rea, isClosed:!!r.is_closed,
-    applyStartDate:r.apply_start_date||'',   // ★ v4.3 신규
+    applyStartDate:r.apply_start_date||'',
     applyDeadline: r.apply_deadline||'',
-    jobUrl:        r.job_url||'',            // ★ v4.3 신규
+    jobUrl:        r.job_url||'',
     docDate:r.doc_date||'', interviewDate:r.interview_date||'',
     finalDate:r.final_date||'', startDate:r.start_date||'', endDate:r.end_date||'',
     note:r.note||'', submitDocs:r.submit_docs||'', submitDeadline:r.submit_deadline||'',
@@ -177,39 +227,46 @@ async function loadAllData(){
       SB.from('jobs').select('*').order('created_at',{ascending:false}),
       SB.from('applicants').select('*')
     ]);
-    if(e1||e2||e3){console.error('DB오류:',e1,e2,e3);customAlert('데이터 로드 오류.\nSupabase URL과 ANON_KEY를 확인하세요.');return;}
+    if(e1||e2||e3){
+      console.error('DB오류:',e1,e2,e3);
+      customAlert('데이터 로드 오류.\nSupabase URL과 ANON_KEY를 확인하세요.');
+      return;
+    }
     STUDENTS = (sd||[]).map(dbToStudent);
     const jobs = (jd||[]).map(dbToJob);
     const aps  = (ad||[]).map(dbToApplicant);
     JOBS = jobs.map(j=>({...j, applicants:aps.filter(a=>a.jobId===j.id)}));
     renderView();
-  }catch(err){console.error('loadAllData실패:',err);customAlert('네트워크 오류. 인터넷 연결을 확인하세요.');}
+  }catch(err){
+    console.error('loadAllData실패:',err);
+    customAlert('네트워크 오류. 인터넷 연결을 확인하세요.');
+  }
 }
 
 // ── 실시간 구독 ───────────────────────────────────────────────
 function scheduleReload(){clearTimeout(_reloadTimer);_reloadTimer=setTimeout(loadAllData,500);}
 function setupRealtime(){
-  SB.channel('jobms-v43')
+  SB.channel('jobms-v44')
     .on('postgres_changes',{event:'*',schema:'public',table:'students'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'jobs'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'applicants'},scheduleReload)
     .subscribe(status=>{
-      _dbConnected=(status==='SUBSCRIBED');
-      var dot=$('_conn_dot'),txt=$('_conn_txt');
-      if(dot)dot.style.background=_dbConnected?'#10B981':'#F59E0B';
-      if(txt)txt.textContent=_dbConnected?'실시간 연동 활성':'연결 중...';
+      _dbConnected = (status==='SUBSCRIBED');
+      const dot=$('_conn_dot'), txt=$('_conn_txt');
+      if(dot) dot.style.background = _dbConnected?'#10B981':'#F59E0B';
+      if(txt) txt.textContent = _dbConnected?'실시간 연동 활성':'연결 중...';
     });
 }
 
 // ── 로딩 ─────────────────────────────────────────────────────
 function showLoading(){
   if($('_loading'))return;
-  var div=document.createElement('div');div.id='_loading';
+  const div=document.createElement('div');div.id='_loading';
   div.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:20000;backdrop-filter:blur(2px)';
   div.innerHTML=`<div style="background:#fff;border-radius:14px;padding:28px 36px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)"><div style="font-size:36px;animation:spin 1s linear infinite;display:inline-block">⟳</div><p style="margin:10px 0 0;font-size:13px;color:#6B7280;font-weight:600">Supabase 연결 중...</p></div>`;
   document.body.appendChild(div);
 }
-function hideLoading(){var el=$('_loading');if(el)el.remove();}
+function hideLoading(){const el=$('_loading');if(el)el.remove();}
 
 // ── SVG 차트 ─────────────────────────────────────────────────
 function pieChartSVG(data,w,h){
@@ -218,7 +275,7 @@ function pieChartSVG(data,w,h){
   const r=Math.min(w,h)*0.32,cx=w*0.42,cy=h/2;
   const legX=cx+r+18,legStartY=h/2-(data.length*18)/2;
   let angle=-Math.PI/2,paths='',labels='',legend='';
-  data.forEach(function(d,i){
+  data.forEach((d,i)=>{
     const slice=(d.value/total)*2*Math.PI,x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle),x2=cx+r*Math.cos(angle+slice),y2=cy+r*Math.sin(angle+slice);
     const large=slice>Math.PI?1:0,c=PIE_C[i%PIE_C.length],mx=cx+(r*.65)*Math.cos(angle+slice/2),my=cy+(r*.65)*Math.sin(angle+slice/2);
     paths+=`<path d="M${cx.toFixed(1)},${cy.toFixed(1)} L${x1.toFixed(1)},${y1.toFixed(1)} A${r.toFixed(1)},${r.toFixed(1)} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${c}" stroke="#fff" stroke-width="2"/>`;
@@ -230,11 +287,11 @@ function pieChartSVG(data,w,h){
 }
 function barChartSVG(data,w,h){
   if(!data||!data.length)return`<svg width="${w}" height="${h}"><text x="${w/2}" y="${h/2}" text-anchor="middle" fill="#CBD5E1" font-size="13">데이터 없음</text></svg>`;
-  const max=Math.max.apply(null,data.map(d=>d.value).concat([1]));
+  const max=Math.max(...data.map(d=>d.value),1);
   const pl=28,pb=28,pt=30,pr=8,bw2=(w-pl-pr)/data.length*.55,gap=(w-pl-pr)/data.length;
   let bars='',grid='';
   for(let i=0;i<=4;i++){const y=h-pb-(i/4)*(h-pt-pb);grid+=`<line x1="${pl}" y1="${y.toFixed(1)}" x2="${w-pr}" y2="${y.toFixed(1)}" stroke="#F1F5F9" stroke-width="1"/>`;if(i>0)grid+=`<text x="${(pl-5).toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="10" fill="#94A3B8">${Math.round(max*i/4)}</text>`;}
-  data.forEach(function(d,i){
+  data.forEach((d,i)=>{
     const bh=((d.value/max)*(h-pt-pb))||2,x=pl+i*gap+gap*.225,y=h-pb-bh,c=PIE_C[i%PIE_C.length];
     bars+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw2.toFixed(1)}" height="${bh.toFixed(1)}" fill="${c}" rx="4"/>`;
     bars+=`<text x="${(x+bw2/2).toFixed(1)}" y="${(h-pb+16).toFixed(1)}" text-anchor="middle" font-size="10" fill="#6B7280">${esc(d.name)}</text>`;
@@ -246,13 +303,29 @@ function barChartSVG(data,w,h){
 // ── UI 헬퍼 ──────────────────────────────────────────────────
 function btn(label,onclick,variant,sm){
   variant=variant||'primary';sm=sm||false;
-  const vs={primary:'background:#2563EB;color:#fff;border:none',success:'background:#059669;color:#fff;border:none',danger:'background:#DC2626;color:#fff;border:none',outline:'background:#fff;color:#374151;border:1px solid #D1D5DB',warn:'background:#D97706;color:#fff;border:none'};
+  const vs={
+    primary:'background:#2563EB;color:#fff;border:none',
+    success:'background:#059669;color:#fff;border:none',
+    danger:'background:#DC2626;color:#fff;border:none',
+    outline:'background:#fff;color:#374151;border:1px solid #D1D5DB',
+    warn:'background:#D97706;color:#fff;border:none'
+  };
   const pad=sm?'4px 9px':'7px 14px',fs=sm?'11px':'12px';
   return`<button onclick="${onclick}" style="${vs[variant]};padding:${pad};border-radius:6px;font-size:${fs};font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit">${label}</button>`;
 }
-function badge(t,c){const cc=c||CAT_COLORS[t]||'#6B7280';return`<span style="background:${cc}1A;color:${cc};padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;border:1px solid ${cc}33">${esc(t)}</span>`;}
-function fInp(label,id,type,value,extra){type=type||'text';value=value||'';extra=extra||'';return`<div style="margin-bottom:10px">${label?`<label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">${label}</label>`:''}<input id="${id}" type="${type}" value="${esc(value)}" ${extra} style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;outline:none;font-family:inherit"></div>`;}
-function fSel(label,id,opts,value){value=value||'';const options=opts.map(o=>`<option value="${esc(o)}" ${o===value?'selected':''}>${esc(o)}</option>`).join('');return`<div style="margin-bottom:10px">${label?`<label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">${label}</label>`:''}<select id="${id}" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">${options}</select></div>`;}
+function badge(t,c){
+  const cc=c||CAT_COLORS[t]||'#6B7280';
+  return`<span style="background:${cc}1A;color:${cc};padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;border:1px solid ${cc}33">${esc(t)}</span>`;
+}
+function fInp(label,id,type,value,extra){
+  type=type||'text';value=value||'';extra=extra||'';
+  return`<div style="margin-bottom:10px">${label?`<label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">${label}</label>`:''}<input id="${id}" type="${type}" value="${esc(value)}" ${extra} style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;outline:none;font-family:inherit"></div>`;
+}
+function fSel(label,id,opts,value){
+  value=value||'';
+  const options=opts.map(o=>`<option value="${esc(o)}" ${o===value?'selected':''}>${esc(o)}</option>`).join('');
+  return`<div style="margin-bottom:10px">${label?`<label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">${label}</label>`:''}<select id="${id}" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">${options}</select></div>`;
+}
 
 // ── 모달 ─────────────────────────────────────────────────────
 function customAlert(msg){
@@ -283,12 +356,12 @@ function closeModal(){var m=$('_modal');if(m)m.remove();}
 
 // ── 공고 삭제 ─────────────────────────────────────────────────
 function confirmDeleteJob(jobId){
-  var job=JOBS.find(j=>j.id===jobId);if(!job)return;
-  var n=job.applicants.length;
+  const job=JOBS.find(j=>j.id===jobId);if(!job)return;
+  const n=job.applicants.length;
   customConfirm(`"${job.name}"\n\n공고를 삭제하시겠습니까?${n>0?`\n\n⚠️ 지원자 ${n}명 데이터도 함께 삭제됩니다.`:''}`,()=>executeDeleteJob(jobId),'삭제','#DC2626');
 }
 async function executeDeleteJob(jobId){
-  var{error}=await SB.from('jobs').delete().eq('id',jobId);
+  const{error}=await SB.from('jobs').delete().eq('id',jobId);
   if(error){customAlert('삭제 오류: '+error.message);return;}
   expandedJobs.delete(jobId);detailJobs.delete(jobId);
   await loadAllData();
@@ -296,12 +369,16 @@ async function executeDeleteJob(jobId){
 
 // ── 사이드바 ─────────────────────────────────────────────────
 function renderSidebar(){
-  const nav=[{id:'dashboard',label:'대시보드',icon:'📊'},{id:'jobs',label:'공고 관리',icon:'📋'},{id:'students',label:'학생 DB',icon:'👥'}];
+  const nav=[
+    {id:'dashboard',label:'대시보드',icon:'📊'},
+    {id:'jobs',label:'공고 관리',icon:'📋'},
+    {id:'students',label:'학생 DB',icon:'👥'}
+  ];
   return`<aside id="_sidebar" style="width:215px;background:#0F172A;display:flex;flex-direction:column;flex-shrink:0;box-shadow:2px 0 20px rgba(0,0,0,.3)">
     <div style="padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.06)">
       <p style="margin:0;font-size:9px;color:#475569;font-weight:700;letter-spacing:.2em;text-transform:uppercase">취업공고 관리 시스템</p>
       <h1 style="margin:6px 0 2px;font-size:22px;font-weight:900;letter-spacing:-.5px;background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">JobMS</h1>
-      <p style="margin:0;font-size:9px;color:#334155">v4.3 · 지능형 채용 매칭</p>
+      <p style="margin:0;font-size:9px;color:#334155">v4.4 · 지능형 채용 매칭</p>
     </div>
     <nav style="flex:1;padding:12px 8px">
       ${nav.map(n=>`<button onclick="setView('${n.id}')" style="width:100%;text-align:left;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:${currentView===n.id?700:400};background:${currentView===n.id?'rgba(37,99,235,.4)':'transparent'};color:${currentView===n.id?'#93C5FD':'#64748B'};margin-bottom:3px;display:flex;align-items:center;gap:10px;font-family:inherit"><span style="font-size:16px">${n.icon}</span>${n.label}</button>`).join('')}
@@ -322,24 +399,25 @@ function renderDashboard(){
   const finalSids = JOBS.flatMap(j=>j.applicants.filter(a=>a.status==='최종합격').map(a=>a.studentId));
   const active    = JOBS.filter(j=>!j.isClosed);
   const todayEvents = JOBS.flatMap(j=>[
-    isToday(j.docDate)&&{jname:j.name,type:'서류발표',c:'#2563EB'},
-    isToday(j.interviewDate)&&{jname:j.name,type:'면접',c:'#7C3AED'},
-    isToday(j.finalDate)&&{jname:j.name,type:'최종합격',c:'#059669'}
+    isToday(j.docDate)       && {jname:j.name,type:'서류발표',c:'#2563EB'},
+    isToday(j.interviewDate) && {jname:j.name,type:'면접',c:'#7C3AED'},
+    isToday(j.finalDate)     && {jname:j.name,type:'최종합격',c:'#059669'}
   ].filter(Boolean));
 
-  // ★ 이번 달 성과 집계
-  const monthNewJobs  = JOBS.filter(j=>(j.createdAt||j.docDate||'').startsWith(MONTH)).length;
-  const monthDocPass  = JOBS.filter(j=>(j.docDate||'').startsWith(MONTH)).flatMap(j=>j.applicants.filter(a=>a.status==='서류합격')).length;
-  const monthFinal    = JOBS.filter(j=>(j.finalDate||'').startsWith(MONTH)).flatMap(j=>j.applicants.filter(a=>a.status==='최종합격')).length;
+  // 이번 달 성과
+  const monthNewJobs = JOBS.filter(j=>(j.createdAt||j.docDate||'').startsWith(MONTH)).length;
+  const monthDocPass = JOBS.filter(j=>(j.docDate||'').startsWith(MONTH)).flatMap(j=>j.applicants.filter(a=>a.status==='서류합격')).length;
+  const monthFinal   = JOBS.filter(j=>(j.finalDate||'').startsWith(MONTH)).flatMap(j=>j.applicants.filter(a=>a.status==='최종합격')).length;
 
-  // ★ 진행 중 공고: 마감 임박순 정렬 (과거 마감은 제외 후 뒤쪽)
+  // ★ 마감 임박순 정렬 (유효마감 오름차순 → 과거마감 → isClosed)
   const activeSorted = [
-    ...active.filter(j=>{const d=calcDDay(j.applyDeadline||j.docDate);return d===null||d>=0;}).sort((a,b)=>{
-      const da=a.applyDeadline||a.docDate||'9999-99-99';
-      const db=b.applyDeadline||b.docDate||'9999-99-99';
-      return da.localeCompare(db);
-    }),
-    ...active.filter(j=>{const d=calcDDay(j.applyDeadline||j.docDate);return d!==null&&d<0;})
+    ...active.filter(j=>{ const d=calcDDay(j.applyDeadline||j.docDate); return d===null||d>=0; })
+      .sort((a,b)=>{
+        const da=a.applyDeadline||a.docDate||'9999-99-99';
+        const db=b.applyDeadline||b.docDate||'9999-99-99';
+        return da.localeCompare(db);
+      }),
+    ...active.filter(j=>{ const d=calcDDay(j.applyDeadline||j.docDate); return d!==null&&d<0; })
   ];
 
   const kpis=[
@@ -348,32 +426,44 @@ function renderDashboard(){
     {label:'전체 지원자',val:allAps.length,icon:'👤',c:'#7C3AED',bg:'#F5F3FF'},
     {label:'최종합격자',val:finalSids.length,icon:'🏆',c:'#D97706',bg:'#FFFBEB'}
   ];
+
   const eventRows=todayEvents.length===0
     ?`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:6px;color:#CBD5E1"><span style="font-size:22px">🗓️</span><span style="font-size:12px">오늘 예정된 발표 없음</span></div>`
     :todayEvents.map(ev=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F8FAFC"><span style="background:${ev.c}20;color:${ev.c};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0">${ev.type}</span><span style="font-size:12px;color:#374151;line-height:1.3">${esc(ev.jname.length>20?ev.jname.slice(0,20)+'…':ev.jname)}</span></div>`).join('');
 
-  // ★ 진행 중 공고 (No. 열 + 내부 스크롤)
+  // ★ 진행 중 공고 (No. 열 + max-height 스크롤)
   const activeRows=activeSorted.length===0
-    ?`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#CBD5E1;font-size:12px">진행 중인 공고 없음</div>`
+    ?`<div style="display:flex;align-items:center;justify-content:center;color:#CBD5E1;font-size:12px;padding:24px 0">진행 중인 공고 없음</div>`
     :activeSorted.map((j,i)=>{
         const dl=j.applyDeadline||j.docDate;
         const isPast=dl&&calcDDay(dl)<0;
-        return`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #F9FAFB;${isPast?'opacity:.55':''}">
-          <span style="min-width:18px;font-size:10px;font-weight:800;color:#94A3B8;text-align:center">${i+1}</span>
+        return`<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #F9FAFB;${isPast?'opacity:.5':''}">
+          <span style="min-width:20px;text-align:center;font-size:10px;font-weight:800;color:#94A3B8;flex-shrink:0">${i+1}</span>
           ${badge(j.category)}
           <span style="font-size:12px;flex:1;color:#374151;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.name.length>16?j.name.slice(0,16)+'…':j.name)}</span>
           ${dl?dDayBadge(dl,false):''}
-          <span style="font-size:11px;color:#94A3B8;white-space:nowrap">${j.applicants.length}명</span>
+          <span style="font-size:11px;color:#94A3B8;white-space:nowrap;flex-shrink:0">${j.applicants.length}명</span>
         </div>`;
       }).join('');
 
   return`<div id="dash-root">
-    <div id="dash-header"><div style="display:flex;align-items:baseline;gap:12px"><h2 style="margin:0;font-size:18px;font-weight:800;color:#0F172A">대시보드</h2><span style="font-size:12px;color:#94A3B8">${TODAY} 기준</span></div></div>
-    <div id="dash-kpi">${kpis.map(k=>`<div style="background:${k.bg};border-radius:10px;padding:10px 14px;border:1px solid ${k.c}33;display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:8px;background:${k.c}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${k.icon}</div><div><p style="margin:0;font-size:10px;color:${k.c};font-weight:700">${k.label}</p><p style="margin:1px 0 0;font-size:24px;font-weight:800;color:#0F172A;line-height:1">${k.val}</p></div></div>`).join('')}</div>
+    <div id="dash-header">
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <h2 style="margin:0;font-size:18px;font-weight:800;color:#0F172A">대시보드</h2>
+        <span style="font-size:12px;color:#94A3B8">${TODAY} 기준</span>
+      </div>
+    </div>
+
+    <div id="dash-kpi">
+      ${kpis.map(k=>`<div style="background:${k.bg};border-radius:10px;padding:10px 14px;border:1px solid ${k.c}33;display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:8px;background:${k.c}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${k.icon}</div>
+        <div><p style="margin:0;font-size:10px;color:${k.c};font-weight:700">${k.label}</p><p style="margin:1px 0 0;font-size:24px;font-weight:800;color:#0F172A;line-height:1">${k.val}</p></div>
+      </div>`).join('')}
+    </div>
 
     <!-- ★ 이번 달 성과 카드 -->
     <div id="dash-monthly">
-      <div style="background:linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:0">
+      <div style="background:linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%);border-radius:10px;padding:12px 18px;display:flex;align-items:center">
         <div style="flex-shrink:0;margin-right:20px">
           <p style="margin:0;font-size:9px;color:#93C5FD;font-weight:800;letter-spacing:.12em;text-transform:uppercase">이번 달 취업 현황</p>
           <p style="margin:2px 0 0;font-size:11px;color:#BFDBFE">${MONTH.replace('-','년 ')}월</p>
@@ -389,50 +479,75 @@ function renderDashboard(){
     </div>
 
     <div id="dash-mid">
-      <div class="mid-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0"><span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800">TODAY</span><span style="font-size:13px;font-weight:700;color:#0F172A">오늘의 주요 일정</span>${todayEvents.length>0?`<span style="margin-left:auto;background:#FEE2E2;color:#DC2626;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${todayEvents.length}건</span>`:''}</div><div class="mid-scroll">${eventRows}</div></div>
-      <div class="mid-card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0"><span style="font-size:14px">📋</span><span style="font-size:13px;font-weight:700;color:#0F172A">진행 중인 공고 (마감 임박순)</span><span style="margin-left:auto;background:#DBEAFE;color:#1E40AF;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${active.length}건</span></div><div class="mid-scroll">${activeRows}</div></div>
+      <div class="mid-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0">
+          <span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800">TODAY</span>
+          <span style="font-size:13px;font-weight:700;color:#0F172A">오늘의 주요 일정</span>
+          ${todayEvents.length>0?`<span style="margin-left:auto;background:#FEE2E2;color:#DC2626;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${todayEvents.length}건</span>`:''}
+        </div>
+        <div class="mid-scroll">${eventRows}</div>
+      </div>
+      <div class="mid-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0">
+          <span style="font-size:14px">📋</span>
+          <span style="font-size:13px;font-weight:700;color:#0F172A">진행 중인 공고 (마감 임박순)</span>
+          <span style="margin-left:auto;background:#DBEAFE;color:#1E40AF;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${active.length}건</span>
+        </div>
+        <!-- ★ max-height + overflow-y:auto 명시 적용 -->
+        <div class="mid-scroll" style="max-height:220px;overflow-y:auto">${activeRows}</div>
+      </div>
     </div>
+
     <div id="dash-charts">
       <div class="dash-card"><div class="dash-card-head"><p style="margin:0;font-size:13px;font-weight:700;color:#0F172A">📊 지원 진행 상태</p></div><div class="dash-card-body" id="pie-wrap"></div></div>
       <div class="dash-card"><div class="dash-card-head"><p style="margin:0;font-size:13px;font-weight:700;color:#0F172A">👥 최종합격자 연령대</p></div><div class="dash-card-body" id="bar-wrap"></div></div>
     </div>
   </div>`;
 }
+
 function drawCharts(){
-  var pw=$('pie-wrap'),bw=$('bar-wrap');if(!pw||!bw)return;
-  var allAps=JOBS.flatMap(j=>j.applicants);
-  var finalSids=JOBS.flatMap(j=>j.applicants.filter(a=>a.status==='최종합격').map(a=>a.studentId));
-  var statusData=STATUSES.map(s=>({name:s,value:allAps.filter(a=>a.status===s).length})).filter(d=>d.value>0);
-  var ag={'10대':0,'20대':0,'30대':0,'40대+':0,'나이 모름':0};
-  finalSids.forEach(sid=>{var st=STUDENTS.find(s=>s.id===sid);if(!st||!st.age){ag['나이 모름']++;return;}if(st.age<20)ag['10대']++;else if(st.age<30)ag['20대']++;else if(st.age<40)ag['30대']++;else ag['40대+']++;});
-  var ageData=Object.keys(ag).map(k=>({name:k,value:ag[k]})).filter(d=>d.value>0);
-  var pw_w=pw.clientWidth-4,pw_h=pw.clientHeight-4,bw_w=bw.clientWidth-4,bw_h=bw.clientHeight-4;
-  if(pw_w>0&&pw_h>0)pw.innerHTML=pieChartSVG(statusData,pw_w,pw_h);
-  if(bw_w>0&&bw_h>0)bw.innerHTML=barChartSVG(ageData,bw_w,bw_h);
+  const pw=$('pie-wrap'),bw=$('bar-wrap');if(!pw||!bw)return;
+  const allAps=JOBS.flatMap(j=>j.applicants);
+  const finalSids=JOBS.flatMap(j=>j.applicants.filter(a=>a.status==='최종합격').map(a=>a.studentId));
+  const statusData=STATUSES.map(s=>({name:s,value:allAps.filter(a=>a.status===s).length})).filter(d=>d.value>0);
+  const ag={'10대':0,'20대':0,'30대':0,'40대+':0,'나이 모름':0};
+  finalSids.forEach(sid=>{
+    const st=STUDENTS.find(s=>s.id===sid);
+    if(!st||!st.age){ag['나이 모름']++;return;}
+    if(st.age<20)ag['10대']++;else if(st.age<30)ag['20대']++;else if(st.age<40)ag['30대']++;else ag['40대+']++;
+  });
+  const ageData=Object.keys(ag).map(k=>({name:k,value:ag[k]})).filter(d=>d.value>0);
+  const pw_w=pw.clientWidth-4,pw_h=pw.clientHeight-4,bw_w=bw.clientWidth-4,bw_h=bw.clientHeight-4;
+  if(pw_w>0&&pw_h>0) pw.innerHTML=pieChartSVG(statusData,pw_w,pw_h);
+  if(bw_w>0&&bw_h>0) bw.innerHTML=barChartSVG(ageData,bw_w,bw_h);
 }
 
 // ── 공고 필터 & 정렬 ──────────────────────────────────────────
 function getFiltered(){
   return JOBS.filter(j=>{
-    if(jobFilter.cat!=='전체'&&j.category!==jobFilter.cat)return false;
-    if(jobFilter.year&&!(j.docDate||'').startsWith(jobFilter.year))return false;
-    if(jobFilter.kw&&!j.name.includes(jobFilter.kw))return false;
-    if(jobFilter.type==='추천'&&!j.isRec)return false;
-    if(jobFilter.type==='지원'&&j.isRec)return false;
+    if(jobFilter.cat!=='전체'&&j.category!==jobFilter.cat) return false;
+    if(jobFilter.year&&!(j.docDate||'').startsWith(jobFilter.year)) return false;
+    if(jobFilter.kw&&!j.name.includes(jobFilter.kw)) return false;
+    if(jobFilter.type==='추천'&&!j.isRec) return false;
+    if(jobFilter.type==='지원'&&j.isRec) return false;
     return true;
   });
 }
-// ★ 지능형 정렬: 마감 유효 공고(D-Day 오름차순) → 과거마감 공고 → 마감처리 공고
+
+// ★ 마감 임박순 우선 정렬 (유효마감 ASC → 과거마감 → isClosed)
 function getSorted(filtered){
   const active=filtered.filter(j=>!j.isClosed);
-  const validActive=active.filter(j=>{const d=calcDDay(j.applyDeadline||j.docDate);return d===null||d>=0;}).sort((a,b)=>{
-    const da=a.applyDeadline||a.docDate||'9999-99-99';
-    const db=b.applyDeadline||b.docDate||'9999-99-99';
-    return da.localeCompare(db);
-  });
-  const pastActive=active.filter(j=>{const d=calcDDay(j.applyDeadline||j.docDate);return d!==null&&d<0;});
-  return [...validActive,...pastActive,...filtered.filter(j=>j.isClosed)];
+  const validActive=active
+    .filter(j=>{ const d=calcDDay(j.applyDeadline||j.docDate); return d===null||d>=0; })
+    .sort((a,b)=>{
+      const da=a.applyDeadline||a.docDate||'9999-99-99';
+      const db=b.applyDeadline||b.docDate||'9999-99-99';
+      return da.localeCompare(db);
+    });
+  const pastActive=active.filter(j=>{ const d=calcDDay(j.applyDeadline||j.docDate); return d!==null&&d<0; });
+  return [...validActive, ...pastActive, ...filtered.filter(j=>j.isClosed)];
 }
+
 function toggleDetail(jobId){if(detailJobs.has(jobId))detailJobs.delete(jobId);else detailJobs.add(jobId);renderView();}
 function toggleJob(jobId){if(expandedJobs.has(jobId))expandedJobs.delete(jobId);else expandedJobs.add(jobId);renderView();}
 
@@ -445,35 +560,40 @@ function renderDetailPanel(job){
     ${dl('채용형태',job.type)}
     ${job.applyStartDate?dl('지원 시작일',fmt(job.applyStartDate)):''}
     ${job.applyDeadline?dl('지원 마감일',fmt(job.applyDeadline),(dNum!==null&&dNum<=3)?'#DC2626':''):''}
-    ${dl('서류발표일',fmt(job.docDate),isToday(job.docDate)?'#DC2626':'')}
+    ${dl('서류접수일',fmt(job.docDate),isToday(job.docDate)?'#DC2626':'')}
     ${dl('면접일',fmt(job.interviewDate),isToday(job.interviewDate)?'#DC2626':'')}
-    ${dl('최종합격 발표일',fmt(job.finalDate),isToday(job.finalDate)?'#DC2626':'')}
+    ${dl('최종합격발표일',fmt(job.finalDate),isToday(job.finalDate)?'#DC2626':'')}
     ${dl('근무 시작',fmt(job.startDate))}
     ${dl('근무 종료',job.endDate?fmt(job.endDate):'무기한')}
   </div>`;
-  if(job.jobUrl)rows+=`<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE;display:flex;align-items:center;gap:10px"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">공고 URL</span><a href="${esc(job.jobUrl)}" target="_blank" style="font-size:12px;color:#2563EB;text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px">${esc(job.jobUrl)}</a></div>`;
-  if(job.isRec)rows+=`<div style="padding:10px 16px;border-bottom:1px solid #DBEAFE;background:#F0F7FF"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.05em">📌 추천 공고 정보</p><div style="display:flex;flex-wrap:wrap;gap:14px 24px">${dl('제출 서류',job.submitDocs)}${dl('제출 기한',fmt(job.submitDeadline))}${dl('담당자',job.managerName)}${dl('연락처',job.managerPhone)}${dl('이메일',job.managerEmail)}</div></div>`;
-  if(job.note)rows+=`<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">비고 </span><span style="font-size:12px;color:#374151">${esc(job.note)}</span></div>`;
+  if(job.jobUrl) rows+=`<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE;display:flex;align-items:center;gap:10px"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">공고 URL</span><a href="${esc(job.jobUrl)}" target="_blank" style="font-size:12px;color:#2563EB;text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">${esc(job.jobUrl)}</a></div>`;
+  if(job.isRec) rows+=`<div style="padding:10px 16px;border-bottom:1px solid #DBEAFE;background:#F0F7FF"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.05em">📌 추천 공고 정보</p><div style="display:flex;flex-wrap:wrap;gap:14px 24px">${dl('제출 서류',job.submitDocs)}${dl('제출 기한',fmt(job.submitDeadline))}${dl('담당자',job.managerName)}${dl('연락처',job.managerPhone)}${dl('이메일',job.managerEmail)}</div></div>`;
+  if(job.note) rows+=`<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">비고 </span><span style="font-size:12px;color:#374151">${esc(job.note)}</span></div>`;
   return`<tr><td colspan="9" style="padding:0"><div class="job-detail-panel">${rows}</div></td></tr>`;
 }
 
-// ── 공고 행 렌더링 ────────────────────────────────────────────
-function renderJobRow(job,rowNum){
-  const tD=isToday(job.docDate),tI=isToday(job.interviewDate),tF=isToday(job.finalDate);
-  const hasT=tD||tI||tF,tLabel=[tD&&'서류발표',tI&&'면접',tF&&'최종합격'].filter(Boolean).join('/');
+// ══════════════════════════════════════════════════════════════
+// ★ 공고 행 렌더링
+//   컬럼 순서: No. | 카테고리 | 공고명 | 서류접수일 | 마감일(D-Day) | 면접일 | 최종합격발표일 | 지원현황 | 관리
+// ══════════════════════════════════════════════════════════════
+function renderJobRow(job, rowNum){
+  const tD=isToday(job.docDate), tI=isToday(job.interviewDate), tF=isToday(job.finalDate);
+  const hasT=tD||tI||tF;
+  const tLabel=[tD&&'서류발표',tI&&'면접',tF&&'최종합격'].filter(Boolean).join('/');
+
   const cTotal=job.applicants.length;
   const cDocP =job.applicants.filter(a=>a.status==='서류합격').length;
   const cInter=job.applicants.filter(a=>a.status==='면접대기').length;
   const cPass =job.applicants.filter(a=>a.status==='최종합격').length;
   const cFail =job.applicants.filter(a=>a.status==='불합격').length;
+
   const deadline=job.applyDeadline||job.docDate;
   const dNum=calcDDay(deadline);
-  const isPastDl=deadline&&dNum<0&&!job.isClosed;
-  const dlColor=(!job.isClosed&&dNum!==null)?(dNum<=3?'#DC2626':dNum<=7?'#D97706':'#475569'):'#CBD5E1';
-  const dlWeight=(!job.isClosed&&dNum!==null&&dNum<=7)?700:400;
-  const rowBg=job.isClosed?'#F9FAFB':isPastDl?'#F9FAFB':hasT?'#FFFBEB':'#fff';
-  const isOpen=expandedJobs.has(job.id),isDetail=detailJobs.has(job.id);
+  const isPastDl=deadline&&dNum!==null&&dNum<0&&!job.isClosed;
+  const rowBg=job.isClosed?'#F9FAFB':isPastDl?'#FAFAFA':hasT?'#FFFBEB':'#fff';
+  const isOpen=expandedJobs.has(job.id), isDetail=detailJobs.has(job.id);
 
+  // 지원자 서브테이블
   let apRows='';
   if(isOpen){
     const apBody=job.applicants.length===0
@@ -481,7 +601,7 @@ function renderJobRow(job,rowNum){
       :job.applicants.map(ap=>{
           const st=STUDENTS.find(s=>s.id===ap.studentId);
           const otherJ=JOBS.filter(j=>j.id!==job.id&&j.applicants.some(a=>a.studentId===ap.studentId));
-          const isDup=otherJ.length>0,sc=STATUS_COLORS[ap.status]||'#6B7280';
+          const isDup=otherJ.length>0, sc=STATUS_COLORS[ap.status]||'#6B7280';
           const hasIv=['면접대기','최종합격','불합격'].includes(ap.status);
           const examBadge=ap.examNumber?`<span style="margin-left:5px;font-size:9px;background:#FEF9C3;color:#854D0E;padding:1px 5px;border-radius:99px;font-weight:700">번호:${esc(ap.examNumber)}</span>`:'';
           const fbBadge=ap.interviewFeedback?`<span style="margin-left:3px;font-size:9px;background:#F0FDF4;color:#166534;padding:1px 5px;border-radius:99px;font-weight:700">회신✓</span>`:'';
@@ -497,6 +617,7 @@ function renderJobRow(job,rowNum){
     apRows=`<tr><td colspan="9" style="padding:0"><div style="background:#F8FAFF;border-left:3px solid #2563EB"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#EFF6FF">${['　지원자명','상태','급수','응시번호','메모','관리'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:700;color:#1E40AF;font-size:11px;border-bottom:1px solid #DBEAFE">${h}</th>`).join('')}</tr></thead><tbody>${apBody}</tbody></table></div></td></tr>`;
   }
 
+  // 지원현황 배지
   const countCell=`<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center">
     <span style="background:#DBEAFE;color:#1E40AF;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">지원 ${cTotal}</span>
     ${cDocP>0?`<span style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">서류합격 ${cDocP}</span>`:''}
@@ -506,30 +627,36 @@ function renderJobRow(job,rowNum){
     <button onclick="toggleJob(${job.id})" style="border:none;background:${isOpen?'#2563EB':'#E2E8F0'};color:${isOpen?'#fff':'#475569'};border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">${isOpen?'▲':'▼'}</button>
   </div>`;
 
-  // ★ 공고보기 버튼 (URL 있을 때만)
+  // 공고보기 버튼
   const urlBtn=job.jobUrl
-    ?`<a href="${esc(job.jobUrl)}" target="_blank" style="background:#F0FDF4;color:#059669;border:1px solid #6EE7B7;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">🔗 공고</a>`
-    :'';
+    ?`<a href="${esc(job.jobUrl)}" target="_blank" style="background:#F0FDF4;color:#059669;border:1px solid #6EE7B7;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">🔗 공고</a>`:'';
   const manageBtns=`<div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center">${urlBtn} ${btn('✏',`openJobModal(${job.id})`,'outline',true)} ${btn('🗑',`confirmDeleteJob(${job.id})`,'danger',true)} ${btn('+지원',`openAddApModal(${job.id})`,'primary',true)}</div>`;
 
+  // ★ 공고명 셀 (배지 + 이름 버튼)
+  const nameCell=`<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+    ${hasT?'<span style="color:#F59E0B;font-size:14px">★</span>':''}
+    ${job.isRec?badge('추천','#7C3AED'):''}
+    ${job.isReA?badge('재공고','#DC2626'):''}
+    ${job.isClosed?badge('마감','#9CA3AF'):''}
+    ${dDayBadge(deadline,job.isClosed)}
+    <button class="job-name-btn" onclick="toggleDetail(${job.id})" style="border:none;background:none;padding:0;cursor:pointer;font-weight:700;font-size:13px;color:${isDetail?'#2563EB':'#0F172A'};text-align:left;font-family:inherit;display:inline-flex;align-items:center;gap:4px">${esc(job.name)}<span style="font-size:10px;color:${isDetail?'#2563EB':'#94A3B8'}">${isDetail?'▲':'▼'}</span></button>
+    ${hasT?`<span style="font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:800">${tLabel} D-DAY</span>`:''}
+  </div>`;
+
+  // ★ 마감일 컬럼: applyDeadline 우선, 없으면 docDate
+  const dlText=deadline&&!job.isClosed
+    ?`<span style="color:${(dNum!==null&&dNum<=3)?'#DC2626':(dNum!==null&&dNum<=7)?'#D97706':'#475569'};font-weight:${(dNum!==null&&dNum<=7)?700:400}">${fmt(deadline)}</span>`
+    :`<span style="color:#E2E8F0">-</span>`;
+
+  // ★ 컬럼 순서 고정: No. | 카테고리 | 공고명 | 서류접수일 | 마감일(D-Day) | 면접일 | 최종합격발표일 | 지원현황 | 관리
   return`<tr class="tbl-tr" style="border-bottom:1px solid #F1F5F9;background:${rowBg}${(job.isClosed||isPastDl)?';opacity:.6':''}">
     <td style="padding:10px 8px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700;white-space:nowrap">${rowNum}</td>
-    <td style="padding:10px 10px;min-width:190px">
-      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-        ${hasT?'<span style="color:#F59E0B;font-size:14px">★</span>':''}
-        ${job.isRec?badge('추천','#7C3AED'):''}${job.isReA?badge('재공고','#DC2626'):''}${job.isClosed?badge('마감','#9CA3AF'):''}
-        ${dDayBadge(deadline,job.isClosed)}
-        <button class="job-name-btn" onclick="toggleDetail(${job.id})" style="border:none;background:none;padding:0;cursor:pointer;font-weight:700;font-size:13px;color:${isDetail?'#2563EB':'#0F172A'};text-align:left;font-family:inherit;display:inline-flex;align-items:center;gap:4px">${esc(job.name)}<span style="font-size:10px;color:${isDetail?'#2563EB':'#94A3B8'}">${isDetail?'▲':'▼'}</span></button>
-        ${hasT?`<span style="font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:800">${tLabel} D-DAY</span>`:''}
-      </div>
-    </td>
     <td style="padding:10px 10px;white-space:nowrap">${badge(job.category)}</td>
-    <td style="padding:10px 10px;font-size:11px;color:#6B7280;white-space:nowrap">${esc(job.type)}</td>
-    <td style="padding:10px 10px;font-size:11px;white-space:nowrap">
-      ${deadline&&!job.isClosed?`<span style="color:${dlColor};font-weight:${dlWeight}">${fmt(deadline)}</span>`:'<span style="color:#E2E8F0">-</span>'}
-    </td>
+    <td style="padding:10px 10px;min-width:180px">${nameCell}</td>
     <td style="padding:10px 10px;font-size:11px;white-space:nowrap;color:${tD?'#DC2626':'#475569'};font-weight:${tD?700:400}">${fmt(job.docDate)}</td>
+    <td style="padding:10px 10px;font-size:11px;white-space:nowrap">${dlText}</td>
     <td style="padding:10px 10px;font-size:11px;white-space:nowrap;color:${tI?'#DC2626':'#475569'};font-weight:${tI?700:400}">${fmt(job.interviewDate)}</td>
+    <td style="padding:10px 10px;font-size:11px;white-space:nowrap;color:${tF?'#DC2626':'#475569'};font-weight:${tF?700:400}">${job.finalDate?fmt(job.finalDate):'<span style="color:#E2E8F0">-</span>'}</td>
     <td style="padding:10px 10px">${countCell}</td>
     <td style="padding:10px 10px">${manageBtns}</td>
   </tr>${isDetail?renderDetailPanel(job):''}${apRows}`;
@@ -540,32 +667,63 @@ function renderJobs(){
   const filtered=getFiltered();
   const sorted=getSorted(filtered);
   const years=[...new Set(JOBS.map(j=>j.docDate?j.docDate.slice(0,4):'').filter(Boolean))].sort().reverse();
+
   const catTabs=CATS.map(c=>{
     const cnt=c==='전체'?JOBS.length:JOBS.filter(j=>j.category===c).length;
     const active=c===jobFilter.cat;
     return`<button onclick="jobFilter.cat='${c}';renderView()" style="white-space:nowrap;padding:6px 14px;border-radius:99px;border:1.5px solid ${active?'#2563EB':'#E2E8F0'};background:${active?'#2563EB':'#fff'};color:${active?'#fff':'#374151'};font-size:12px;font-weight:${active?700:500};cursor:pointer;font-family:inherit;flex-shrink:0">${c} <span style="font-size:10px;opacity:.75">${cnt}</span></button>`;
   }).join('');
+
+  // ★ 테이블 헤더: 고정 컬럼 순서
+  const headers=['No.','카테고리','공고명 (▼ 상세)','서류접수일','마감일 (D-Day)','면접일','최종합격발표일','지원현황','관리'];
+
   const tblRows=sorted.length===0
-    ?'<tr><td colspan="9" style="padding:40px;text-align:center;color:#CBD5E1;font-size:13px">공고가 없습니다.</td></tr>'
+    ?`<tr><td colspan="9" style="padding:40px;text-align:center;color:#CBD5E1;font-size:13px">공고가 없습니다.</td></tr>`
     :sorted.map((j,i)=>renderJobRow(j,i+1)).join('');
 
   return`<div style="padding:20px 24px 24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-      <div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">공고 관리</h2><p style="margin:3px 0 0;font-size:12px;color:#94A3B8">${sorted.length}건 표시 / 전체 ${JOBS.length}건</p></div>
-      <div style="display:flex;gap:8px">${btn('📥 CSV 내보내기','exportJobs()','success')} ${btn('+ 새 공고 등록','openJobModal(null)','primary')}</div>
+      <div>
+        <h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">공고 관리</h2>
+        <p style="margin:3px 0 0;font-size:12px;color:#94A3B8">${sorted.length}건 표시 / 전체 ${JOBS.length}건</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        ${btn('📥 CSV 내보내기','exportJobs()','success')}
+        ${btn('+ 새 공고 등록','openJobModal(null)','primary')}
+      </div>
     </div>
+
+    <!-- 카테고리 탭 -->
     <div class="cat-tab-wrap" style="flex-shrink:0">${catTabs}</div>
+
+    <!-- ★ 필터바 — input 이벤트로 onJobSearchInput 호출 -->
     <div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #E5E7EB;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0">
-      <select onchange="jobFilter.year=this.value;renderView()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit"><option value="">전체 연도</option>${years.map(y=>`<option value="${y}" ${y===jobFilter.year?'selected':''}>${y}</option>`).join('')}</select>
-      <select onchange="jobFilter.type=this.value;renderView()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">${['전체','추천','지원'].map(t=>`<option value="${t}" ${t===jobFilter.type?'selected':''}>${t}</option>`).join('')}</select>
-      <input id="_job_kw" value="${esc(jobFilter.kw)}" oninput="jobFilter.kw=this.value;renderView()" placeholder="🔍 공고명 실시간 검색..." style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;min-width:200px;outline:none;font-family:inherit;flex:1">
+      <select onchange="jobFilter.year=this.value;renderView()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">
+        <option value="">전체 연도</option>
+        ${years.map(y=>`<option value="${y}" ${y===jobFilter.year?'selected':''}>${y}</option>`).join('')}
+      </select>
+      <select onchange="jobFilter.type=this.value;renderView()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">
+        ${['전체','추천','지원'].map(t=>`<option value="${t}" ${t===jobFilter.type?'selected':''}>${t}</option>`).join('')}
+      </select>
+      <!-- ★ input 이벤트 → onJobSearchInput (실시간 필터링) -->
+      <input
+        id="jobSearchInput"
+        value="${esc(jobFilter.kw)}"
+        oninput="onJobSearchInput(this.value)"
+        placeholder="🔍 공고명 실시간 검색..."
+        style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;min-width:200px;outline:none;font-family:inherit;flex:1"
+      >
       ${jobFilter.kw?`<button onclick="jobFilter.kw='';renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:7px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">✕ 초기화</button>`:''}
     </div>
+
+    <!-- 테이블 -->
     <div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1060px">
-        <thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">
-          ${['No.','공고명 (▼ 상세)','카테고리','채용형태','지원마감','서류발표','면접','지원현황','관리'].map(h=>`<th style="padding:10px 10px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">${h}</th>`).join('')}
-        </tr></thead>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1100px">
+        <thead>
+          <tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">
+            ${headers.map(h=>`<th style="padding:10px 10px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">${h}</th>`).join('')}
+          </tr>
+        </thead>
         <tbody>${tblRows}</tbody>
       </table>
     </div>
@@ -574,14 +732,15 @@ function renderJobs(){
 
 // ── 학생 DB 뷰 ───────────────────────────────────────────────
 function renderStudents(){
-  const filtered=STUDENTS.filter(s=>!studentSearch||s.name.includes(studentSearch));
+  // ★ filterStudents() 로 이름+급수 동시 필터
+  const filtered = filterStudents();
+
   const rows=filtered.length===0
-    ?'<tr><td colspan="8" style="padding:40px;text-align:center;color:#CBD5E1">데이터가 없습니다.</td></tr>'
+    ?`<tr><td colspan="8" style="padding:40px;text-align:center;color:#CBD5E1">데이터가 없습니다.</td></tr>`
     :filtered.map((s,i)=>{
         const apps=getApps(s.id);
         const pass=apps.filter(a=>a.status==='최종합격').length;
         const ongoing=apps.filter(a=>a.status!=='최종합격'&&a.status!=='불합격').length;
-        // ★ 상태 뱃지
         const st=getStudentStatus(s.id);
         const stBadge=`<span style="background:${st.bg};color:${st.color};border:1px solid ${st.border};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">${st.emoji} ${st.label}</span>`;
         return`<tr class="tbl-tr" style="border-bottom:1px solid #F1F5F9">
@@ -600,21 +759,42 @@ function renderStudents(){
           <td style="padding:10px 14px;display:flex;gap:4px">${btn('수정',`openEditStudentModal(${s.id})`,'outline',true)} ${btn('삭제',`deleteStudent(${s.id})`,'danger',true)}</td>
         </tr>`;
       }).join('');
+
   return`<div style="padding:20px 24px 24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-      <div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">학생 DB</h2><p style="margin:3px 0 0;font-size:12px;color:#94A3B8">총 ${filtered.length}명</p></div>
+      <div>
+        <h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">학생 DB</h2>
+        <p style="margin:3px 0 0;font-size:12px;color:#94A3B8">총 ${filtered.length}명 / 전체 ${STUDENTS.length}명</p>
+      </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <input value="${esc(studentSearch)}" oninput="studentSearch=this.value;renderView()" placeholder="🔍 이름 실시간 검색..." style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;width:180px;outline:none;font-family:inherit">
-        ${studentSearch?`<button onclick="studentSearch='';renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:7px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">✕</button>`:''}
         ${btn('📥 CSV 내보내기','exportStudents()','success')}
         ${btn('+ 학생 추가','openAddStudentModal()','primary')}
       </div>
     </div>
+
+    <!-- ★ 학생 필터바: 이름 실시간 검색 + 급수 필터 동시 작동 -->
+    <div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #E5E7EB;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0">
+      <input
+        id="studentNameInput"
+        value="${esc(studentFilter.name)}"
+        oninput="onStudentNameInput(this.value)"
+        placeholder="🔍 이름 실시간 검색..."
+        style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;width:180px;outline:none;font-family:inherit"
+      >
+      <!-- ★ 급수 필터 -->
+      <select onchange="onStudentGradeChange(this.value)" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">
+        ${['전체',...GRADES].map(g=>`<option value="${g}" ${g===studentFilter.grade?'selected':''}>${g==='전체'?'전체 급수':g}</option>`).join('')}
+      </select>
+      ${(studentFilter.name||studentFilter.grade!=='전체')?`<button onclick="studentFilter={name:'',grade:'전체'};renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:7px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">✕ 필터 초기화</button>`:''}
+    </div>
+
     <div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">
-          ${['No.','이름','상태','나이','연락처','이메일','지원현황','관리'].map(h=>`<th style="padding:10px 14px;text-align:left;font-weight:700;color:#374151;font-size:11px;letter-spacing:.04em;background:#F8FAFC">${h}</th>`).join('')}
-        </tr></thead>
+        <thead>
+          <tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">
+            ${['No.','이름','상태','나이','연락처','이메일','지원현황','관리'].map(h=>`<th style="padding:10px 14px;text-align:left;font-weight:700;color:#374151;font-size:11px;letter-spacing:.04em;background:#F8FAFC">${h}</th>`).join('')}
+          </tr>
+        </thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
@@ -623,11 +803,16 @@ function renderStudents(){
 
 // ── 렌더링 ────────────────────────────────────────────────────
 function renderView(){
-  var main=$('_main');if(!main)return;
-  if(currentView==='dashboard'){main.innerHTML=renderDashboard();requestAnimationFrame(()=>requestAnimationFrame(drawCharts));}
-  else if(currentView==='jobs')    main.innerHTML=renderJobs();
-  else if(currentView==='students')main.innerHTML=renderStudents();
-  var sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();
+  const main=$('_main');if(!main)return;
+  if(currentView==='dashboard'){
+    main.innerHTML=renderDashboard();
+    requestAnimationFrame(()=>requestAnimationFrame(drawCharts));
+  } else if(currentView==='jobs'){
+    main.innerHTML=renderJobs();
+  } else if(currentView==='students'){
+    main.innerHTML=renderStudents();
+  }
+  const sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();
 }
 function setView(v){
   currentView=v;
@@ -637,24 +822,28 @@ function setView(v){
 window.addEventListener('resize',()=>{if(currentView==='dashboard')requestAnimationFrame(drawCharts);});
 
 // ══════════════════════════════════════════════════════════════
-// ★ 공고 등록/수정 (지원시작일 + 공고URL 추가)
+// ★ 공고 등록/수정
 // ══════════════════════════════════════════════════════════════
 function buildRecSection(f){
   f=f||{};
   return`<div style="background:#F0F7FF;border-radius:8px;padding:14px;margin-bottom:8px"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em">📌 추천 공고 정보</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">${fInp('제출 서류','jf_sd','text',f.submitDocs||'')} ${fInp('제출 기한','jf_sl','date',f.submitDeadline||'')} ${fInp('담당자 이름','jf_mn','text',f.managerName||'')} ${fInp('담당자 연락처','jf_mp','text',f.managerPhone||'')}</div>${fInp('담당자 이메일','jf_me','email',f.managerEmail||'')}</div>`;
 }
-function toggleRecF(){var isRec=$('jf_rc')&&$('jf_rc').checked,el=$('jf_rec');if(!el)return;el.innerHTML=isRec?buildRecSection({}):''}
+function toggleRecF(){
+  const isRec=$('jf_rc')&&$('jf_rc').checked;
+  const el=$('jf_rec');if(!el)return;
+  el.innerHTML=isRec?buildRecSection({}):'';
+}
 
 function openJobModal(jobId){
-  var job=jobId!=null?JOBS.find(j=>j.id===jobId):null;
-  var f=job||{name:'',category:'법원',type:'한시임기제',isRec:false,docDate:'',interviewDate:'',finalDate:'',startDate:'',endDate:'',isReA:false,isClosed:false,note:'',applyStartDate:'',applyDeadline:'',jobUrl:'',submitDocs:'',submitDeadline:'',managerEmail:'',managerName:'',managerPhone:''};
+  const job=jobId!=null?JOBS.find(j=>j.id===jobId):null;
+  const f=job||{name:'',category:'법원',type:'한시임기제',isRec:false,docDate:'',interviewDate:'',finalDate:'',startDate:'',endDate:'',isReA:false,isClosed:false,note:'',applyStartDate:'',applyDeadline:'',jobUrl:'',submitDocs:'',submitDeadline:'',managerEmail:'',managerName:'',managerPhone:''};
   showModal(job?'공고 수정':'새 공고 등록',`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
       <div style="grid-column:1/-1">${fInp('공고명 *','jf_name','text',f.name)}</div>
       ${fSel('카테고리','jf_cat',CATS.slice(1),f.category)} ${fSel('채용형태','jf_type',JOB_TYPES,f.type)}
-      ${fInp('★ 지원 시작일','jf_asd','date',f.applyStartDate||'')} ${fInp('★ 지원 마감일 (D-Day 기준)','jf_ad','date',f.applyDeadline||'')}
+      ${fInp('★ 지원 시작일 (서류접수일)','jf_asd','date',f.applyStartDate||'')} ${fInp('★ 지원 마감일 (D-Day 기준)','jf_ad','date',f.applyDeadline||'')}
       ${fInp('서류발표일','jf_dd','date',f.docDate||'')} ${fInp('면접일','jf_id','date',f.interviewDate||'')}
-      ${fInp('최종합격 발표일','jf_fd','date',f.finalDate||'')} <div></div>
+      ${fInp('최종합격발표일','jf_fd','date',f.finalDate||'')} <div></div>
       ${fInp('근무 시작일','jf_sd2','date',f.startDate||'')} ${fInp('근무 종료일','jf_ed','date',f.endDate||'')}
     </div>
     <div style="margin-bottom:12px">${fInp('🔗 공고 원문 URL','jf_url','url',f.jobUrl||'','placeholder="https://..."')}</div>
@@ -668,9 +857,9 @@ function openJobModal(jobId){
 }
 
 async function saveJob(jobId){
-  var name=$('jf_name')&&$('jf_name').value.trim();
-  if(!name)return customAlert('공고명을 입력하세요');
-  var f={
+  const name=$('jf_name')&&$('jf_name').value.trim();
+  if(!name) return customAlert('공고명을 입력하세요');
+  const f={
     name, category:$('jf_cat').value, type:$('jf_type').value,
     is_rec:!!$('jf_rc').checked, is_rea:!!$('jf_ra').checked, is_closed:!!$('jf_cl').checked,
     apply_start_date:dateOrNull($('jf_asd')&&$('jf_asd').value),
@@ -682,21 +871,23 @@ async function saveJob(jobId){
     end_date:        dateOrNull($('jf_ed') &&$('jf_ed').value),
     job_url:($('jf_url')&&$('jf_url').value)||'',
     note:   ($('jf_note')&&$('jf_note').value)||'',
-    submit_docs:      ($('jf_sd')&&$('jf_sd').value)||'',
-    submit_deadline:  dateOrNull($('jf_sl')&&$('jf_sl').value),
-    manager_name:    ($('jf_mn')&&$('jf_mn').value)||'',
-    manager_phone:   ($('jf_mp')&&$('jf_mp').value)||'',
-    manager_email:   ($('jf_me')&&$('jf_me').value)||''
+    submit_docs:    ($('jf_sd')&&$('jf_sd').value)||'',
+    submit_deadline:dateOrNull($('jf_sl')&&$('jf_sl').value),
+    manager_name:   ($('jf_mn')&&$('jf_mn').value)||'',
+    manager_phone:  ($('jf_mp')&&$('jf_mp').value)||'',
+    manager_email:  ($('jf_me')&&$('jf_me').value)||''
   };
-  var{error}=jobId!=null?await SB.from('jobs').update(f).eq('id',jobId):await SB.from('jobs').insert(f);
+  let{error}=jobId!=null?await SB.from('jobs').update(f).eq('id',jobId):await SB.from('jobs').insert(f);
   if(error){
-    // ★ 신규 컬럼 미생성 시 graceful fallback (apply_start_date, apply_deadline, job_url)
     if(error.message&&(error.message.includes('apply_start_date')||error.message.includes('apply_deadline')||error.message.includes('job_url'))){
-      var f2={...f};delete f2.apply_start_date;delete f2.apply_deadline;delete f2.job_url;
-      var{error:e2}=jobId!=null?await SB.from('jobs').update(f2).eq('id',jobId):await SB.from('jobs').insert(f2);
+      const f2={...f};delete f2.apply_start_date;delete f2.apply_deadline;delete f2.job_url;
+      const{error:e2}=jobId!=null?await SB.from('jobs').update(f2).eq('id',jobId):await SB.from('jobs').insert(f2);
       if(e2){customAlert('저장 오류: '+e2.message);return;}
-      customAlert('저장 완료.\n\n※ 지원시작/마감일·공고URL 기능을 사용하려면\nSupabase SQL Editor에서 아래를 실행하세요:\n\nALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_start_date DATE;\nALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_deadline DATE;\nALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_url TEXT DEFAULT \'\';');
-    }else{customAlert('저장 오류: '+error.message);return;}
+      customAlert('저장 완료.\n\n※ 신규 컬럼을 추가하려면 Supabase SQL Editor에서:\n\nALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_start_date DATE;\nALTER TABLE jobs ADD COLUMN IF NOT EXISTS apply_deadline DATE;\nALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_url TEXT DEFAULT \'\';');
+    } else {
+      customAlert('저장 오류: '+error.message);
+      return;
+    }
   }
   closeModal();await loadAllData();
 }
@@ -704,10 +895,10 @@ async function saveJob(jobId){
 // ══════════════════════════════════════════════════════════════
 // ★ 지원자 추가
 // ══════════════════════════════════════════════════════════════
-var _addApJobId=null,_addApSelectedSid=null;
+var _addApJobId=null, _addApSelectedSid=null;
 function openAddApModal(jobId){
   _addApJobId=jobId;_addApSelectedSid=null;
-  var job=JOBS.find(j=>j.id===jobId);if(!job)return;
+  const job=JOBS.find(j=>j.id===jobId);if(!job)return;
   showModal('지원자 추가 — '+job.name.slice(0,22),`
     <div style="margin-bottom:4px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">학생 이름 검색</label><input id="ap_search" oninput="updateApSearch(${jobId})" placeholder="이름 입력 → 기존 학생 검색 / 없으면 신규 등록" style="width:100%;padding:9px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;outline:none;font-family:inherit"></div>
     <div id="ap_search_results" style="margin-bottom:4px"></div>
@@ -720,50 +911,50 @@ function openAddApModal(jobId){
   `,'580px');
 }
 function updateApSearch(jobId){
-  var val=$('ap_search')&&$('ap_search').value.trim();
-  var results=$('ap_search_results'),selInfo=$('ap_selected_info');
+  const val=$('ap_search')&&$('ap_search').value.trim();
+  const results=$('ap_search_results'),selInfo=$('ap_selected_info');
   if(!results)return;
   if(!val){results.innerHTML='';if(selInfo)selInfo.innerHTML='';_addApSelectedSid=null;return;}
-  var job=JOBS.find(j=>j.id===jobId);if(!job)return;
-  var available=STUDENTS.filter(s=>!job.applicants.find(a=>a.studentId===s.id));
-  var matches=available.filter(s=>s.name.includes(val));
+  const job=JOBS.find(j=>j.id===jobId);if(!job)return;
+  const available=STUDENTS.filter(s=>!job.applicants.find(a=>a.studentId===s.id));
+  const matches=available.filter(s=>s.name.includes(val));
   if(matches.length>0){
     results.innerHTML=`<div style="border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:4px"><div style="background:#F8FAFC;padding:6px 12px;font-size:10px;font-weight:700;color:#6B7280">기존 학생 ${matches.length}명</div>${matches.map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid #F3F4F6"><div><span style="font-weight:700;font-size:13px">${esc(s.name)}</span><span style="margin-left:8px;font-size:11px;color:#6B7280">${s.age||'?'}세 · ${esc(s.phone)}</span></div><button onclick="selectExistingAp(${s.id},'${esc(s.name)}')" style="background:#2563EB;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">선택</button></div>`).join('')}<div style="padding:8px 12px;border-top:1px solid #F3F4F6;background:#FAFAFA;display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;color:#9CA3AF">찾는 학생이 없나요?</span><button onclick="selectNewAp('${esc(val)}')" style="background:#059669;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">신규 등록</button></div></div>`;
-  }else{
+  } else {
     results.innerHTML=`<div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:10px 14px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;color:#92400E">일치하는 학생이 없습니다.</span><button onclick="selectNewAp('${esc(val)}')" style="background:#059669;color:#fff;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;margin-left:10px">신규 등록</button></div>`;
   }
 }
 function selectExistingAp(sid,name){
   _addApSelectedSid=sid;
-  var r=$('ap_search_results');if(r)r.innerHTML='';
-  var s=$('ap_search');if(s){s.value=name;s.disabled=true;s.style.background='#F3F4F6';}
-  var si=$('ap_selected_info');if(si)si.innerHTML=`<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:#1E40AF">✅ 기존 학생 선택됨: ${esc(name)}</span><button onclick="clearApSelection()" style="background:none;border:1px solid #93C5FD;color:#2563EB;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div>`;
+  const r=$('ap_search_results');if(r)r.innerHTML='';
+  const s=$('ap_search');if(s){s.value=name;s.disabled=true;s.style.background='#F3F4F6';}
+  const si=$('ap_selected_info');if(si)si.innerHTML=`<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:#1E40AF">✅ 기존 학생 선택됨: ${esc(name)}</span><button onclick="clearApSelection()" style="background:none;border:1px solid #93C5FD;color:#2563EB;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div>`;
 }
 function selectNewAp(nameVal){
   _addApSelectedSid='new';
-  var r=$('ap_search_results');if(r)r.innerHTML='';
-  var s=$('ap_search');if(s){s.disabled=true;s.style.background='#F3F4F6';}
-  var si=$('ap_selected_info');if(si)si.innerHTML=`<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.06em">신규 학생 정보 입력</span><button onclick="clearApSelection()" style="background:none;border:1px solid #86EFAC;color:#15803D;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">${fInp('이름 *','ns_nm','text',nameVal)} ${fInp('나이','ns_ag','number')} ${fInp('연락처','ns_ph')} ${fInp('이메일','ns_em','email')}</div></div>`;
+  const r=$('ap_search_results');if(r)r.innerHTML='';
+  const s=$('ap_search');if(s){s.disabled=true;s.style.background='#F3F4F6';}
+  const si=$('ap_selected_info');if(si)si.innerHTML=`<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.06em">신규 학생 정보 입력</span><button onclick="clearApSelection()" style="background:none;border:1px solid #86EFAC;color:#15803D;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">${fInp('이름 *','ns_nm','text',nameVal)} ${fInp('나이','ns_ag','number')} ${fInp('연락처','ns_ph')} ${fInp('이메일','ns_em','email')}</div></div>`;
 }
 function clearApSelection(){
   _addApSelectedSid=null;
-  var s=$('ap_search');if(s){s.value='';s.disabled=false;s.style.background='';s.focus();}
-  var r=$('ap_search_results');if(r)r.innerHTML='';
-  var si=$('ap_selected_info');if(si)si.innerHTML='';
+  const s=$('ap_search');if(s){s.value='';s.disabled=false;s.style.background='';s.focus();}
+  const r=$('ap_search_results');if(r)r.innerHTML='';
+  const si=$('ap_selected_info');if(si)si.innerHTML='';
 }
 async function saveAddAp(jobId){
-  if(!_addApSelectedSid)return customAlert('학생을 검색하여 선택하거나 신규 등록을 먼저 해주세요.');
-  var sid;
+  if(!_addApSelectedSid) return customAlert('학생을 검색하여 선택하거나 신규 등록을 먼저 해주세요.');
+  let sid;
   if(_addApSelectedSid==='new'){
-    var nm=$('ns_nm')&&$('ns_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
-    var{data:newSt,error:se}=await SB.from('students').insert({
+    const nm=$('ns_nm')&&$('ns_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
+    const{data:newSt,error:se}=await SB.from('students').insert({
       name:nm,age:parseInt($('ns_ag')&&$('ns_ag').value)||null,
       phone:($('ns_ph')&&$('ns_ph').value)||'',email:($('ns_em')&&$('ns_em').value)||''
     }).select().single();
     if(se){customAlert('학생 등록 오류: '+se.message);return;}
     sid=newSt.id;
-  }else{sid=_addApSelectedSid;}
-  var{error:ae}=await SB.from('applicants').insert({
+  } else { sid=_addApSelectedSid; }
+  const{error:ae}=await SB.from('applicants').insert({
     job_id:jobId,student_id:sid,
     status:($('ap_st')&&$('ap_st').value)||'서류접수',
     grade:($('ap_gr')&&$('ap_gr').value)||'3급',
@@ -779,12 +970,12 @@ async function saveAddAp(jobId){
 // ★ 지원자 수정
 // ══════════════════════════════════════════════════════════════
 function openEditApModal(jobId,apId){
-  var job=JOBS.find(j=>j.id===jobId);
-  var ap=job&&job.applicants.find(a=>a.id===apId);
-  var st=ap&&STUDENTS.find(s=>s.id===ap.studentId);
+  const job=JOBS.find(j=>j.id===jobId);
+  const ap=job&&job.applicants.find(a=>a.id===apId);
+  const st=ap&&STUDENTS.find(s=>s.id===ap.studentId);
   if(!ap||!st)return;
-  var showIv=['면접대기','최종합격','불합격'].includes(ap.status);
-  var ivSection=`<div id="ea_interview_wrap" style="display:${showIv?'block':'none'}"><div style="background:#FFFBEB;border:1px solid #FEF3C7;border-radius:8px;padding:12px 14px;margin-bottom:14px"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📋 면접 관련 기록</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">${fInp('응시번호','ea_exam','text',ap.examNumber||'')} ${fInp('면접자료 발송일','ea_docsent','date',ap.interviewDocSent||'')}</div><div><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">면접 회신 내용</label><textarea id="ea_feedback" rows="3" placeholder="면접 후 회신 내용..." style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">${esc(ap.interviewFeedback||'')}</textarea></div></div></div>`;
+  const showIv=['면접대기','최종합격','불합격'].includes(ap.status);
+  const ivSection=`<div id="ea_interview_wrap" style="display:${showIv?'block':'none'}"><div style="background:#FFFBEB;border:1px solid #FEF3C7;border-radius:8px;padding:12px 14px;margin-bottom:14px"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📋 면접 관련 기록</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">${fInp('응시번호','ea_exam','text',ap.examNumber||'')} ${fInp('면접자료 발송일','ea_docsent','date',ap.interviewDocSent||'')}</div><div><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">면접 회신 내용</label><textarea id="ea_feedback" rows="3" placeholder="면접 후 회신 내용..." style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">${esc(ap.interviewFeedback||'')}</textarea></div></div></div>`;
   const stOpts=STATUSES.map(s=>`<option value="${s}" ${s===ap.status?'selected':''}>${s}</option>`).join('')+(!STATUSES.includes(ap.status)?`<option value="${ap.status}" selected>${ap.status}(기존)</option>`:'');
   showModal('지원자 수정 — '+st.name,`
     <div style="background:#EFF6FF;border-radius:8px;padding:12px 14px;margin-bottom:14px">
@@ -802,12 +993,12 @@ function openEditApModal(jobId,apId){
   `,'580px');
 }
 function toggleInterviewSection(status){
-  var show=['면접대기','최종합격','불합격'].includes(status);
-  var wrap=$('ea_interview_wrap');if(wrap)wrap.style.display=show?'block':'none';
+  const show=['면접대기','최종합격','불합격'].includes(status);
+  const wrap=$('ea_interview_wrap');if(wrap)wrap.style.display=show?'block':'none';
 }
 async function saveEditAp(jobId,apId,studentId){
-  var nm=$('ea_nm')&&$('ea_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
-  var[{error:ae},{error:se}]=await Promise.all([
+  const nm=$('ea_nm')&&$('ea_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
+  const[{error:ae},{error:se}]=await Promise.all([
     SB.from('applicants').update({
       status:$('ea_st').value,grade:$('ea_gr').value,announce_type:$('ea_an').value,
       memo:($('ea_mm')&&$('ea_mm').value)||'',
@@ -825,7 +1016,7 @@ async function saveEditAp(jobId,apId,studentId){
 }
 function deleteAp(jobId,apId){
   customConfirm('이 지원자를 삭제하시겠습니까?',async function(){
-    var{error}=await SB.from('applicants').delete().eq('id',apId);
+    const{error}=await SB.from('applicants').delete().eq('id',apId);
     if(error){customAlert('삭제 오류: '+error.message);return;}
     await loadAllData();
   },'삭제','#DC2626');
@@ -842,72 +1033,65 @@ function openAddStudentModal(){
   `,'460px');
 }
 async function saveNewStudent(){
-  var nm=$('ns2_nm')&&$('ns2_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
-  var f={name:nm,age:parseInt($('ns2_ag')&&$('ns2_ag').value)||null,phone:($('ns2_ph')&&$('ns2_ph').value)||'',email:($('ns2_em')&&$('ns2_em').value)||''};
-  var cm=($('ns2_cm')&&$('ns2_cm').value)||'';
-  if(cm)f.counseling_memo=cm;
-  var{error}=await SB.from('students').insert(f);
+  const nm=$('ns2_nm')&&$('ns2_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
+  const f={name:nm,age:parseInt($('ns2_ag')&&$('ns2_ag').value)||null,phone:($('ns2_ph')&&$('ns2_ph').value)||'',email:($('ns2_em')&&$('ns2_em').value)||''};
+  const cm=($('ns2_cm')&&$('ns2_cm').value)||'';
+  if(cm) f.counseling_memo=cm;
+  const{error}=await SB.from('students').insert(f);
   if(error){
     if(error.message&&error.message.includes('counseling_memo')){
       delete f.counseling_memo;
-      var{error:e2}=await SB.from('students').insert(f);
+      const{error:e2}=await SB.from('students').insert(f);
       if(e2){customAlert('저장 오류: '+e2.message);return;}
-      customAlert('저장 완료.\n\n※ 상담 메모 기능을 사용하려면\nSupabase SQL Editor에서:\nALTER TABLE students ADD COLUMN IF NOT EXISTS counseling_memo TEXT DEFAULT \'\';');
-    }else{customAlert('저장 오류: '+error.message);return;}
+      customAlert('저장 완료.\n\n※ 상담 메모 기능:\nALTER TABLE students ADD COLUMN IF NOT EXISTS counseling_memo TEXT DEFAULT \'\';');
+    } else { customAlert('저장 오류: '+error.message);return; }
   }
   closeModal();await loadAllData();
 }
 function openEditStudentModal(id){
-  var s=STUDENTS.find(st=>st.id===id);if(!s)return;
+  const s=STUDENTS.find(st=>st.id===id);if(!s)return;
   showModal('학생 정보 수정',`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">${fInp('이름','es_nm','text',s.name)} ${fInp('나이','es_ag','number',s.age)} ${fInp('연락처','es_ph','text',s.phone)} ${fInp('이메일','es_em','email',s.email)}</div>
-    <div style="margin-bottom:12px">
-      <label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">★ 상담 메모</label>
-      <textarea id="es_cm" rows="4" placeholder="상담 내용을 입력하세요..." style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">${esc(s.counselingMemo||'')}</textarea>
-    </div>
+    <div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">★ 상담 메모</label><textarea id="es_cm" rows="4" placeholder="상담 내용을 입력하세요..." style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">${esc(s.counselingMemo||'')}</textarea></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">${btn('취소','closeModal()','outline')} ${btn('저장',`saveStudent(${id})`,'primary')}</div>
   `,'460px');
 }
 async function saveStudent(id){
-  var nm=$('es_nm')&&$('es_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
-  var f={name:nm,age:parseInt($('es_ag')&&$('es_ag').value)||null,phone:($('es_ph')&&$('es_ph').value)||'',email:($('es_em')&&$('es_em').value)||'',counseling_memo:($('es_cm')&&$('es_cm').value)||''};
-  var{error}=await SB.from('students').update(f).eq('id',id);
+  const nm=$('es_nm')&&$('es_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
+  const f={name:nm,age:parseInt($('es_ag')&&$('es_ag').value)||null,phone:($('es_ph')&&$('es_ph').value)||'',email:($('es_em')&&$('es_em').value)||'',counseling_memo:($('es_cm')&&$('es_cm').value)||''};
+  const{error}=await SB.from('students').update(f).eq('id',id);
   if(error){
     if(error.message&&error.message.includes('counseling_memo')){
       delete f.counseling_memo;
-      var{error:e2}=await SB.from('students').update(f).eq('id',id);
+      const{error:e2}=await SB.from('students').update(f).eq('id',id);
       if(e2){customAlert('저장 오류: '+e2.message);return;}
-    }else{customAlert('저장 오류: '+error.message);return;}
+    } else { customAlert('저장 오류: '+error.message);return; }
   }
   closeModal();await loadAllData();
 }
 function deleteStudent(id){
   customConfirm('학생을 삭제하면 관련 지원이력도 함께 삭제됩니다.\n계속하시겠습니까?',async function(){
-    var{error}=await SB.from('students').delete().eq('id',id);
+    const{error}=await SB.from('students').delete().eq('id',id);
     if(error){customAlert('삭제 오류: '+error.message);return;}
     await loadAllData();
   },'삭제','#DC2626');
 }
 
-// ── 지원이력 팝업 (★ 상담 메모 + 타임라인 추가) ──────────────
+// ── 지원이력 팝업 (상담 메모 + 타임라인) ─────────────────────
 function openHistoryModal(studentId){
-  var s=STUDENTS.find(st=>st.id===studentId);if(!s)return;
-  var apps=getApps(studentId);
-  // ★ 타임라인: docDate 기준 내림차순 정렬
-  var sorted=[...apps].sort((a,b)=>(b.docDate||'').localeCompare(a.docDate||''));
-  var pass=apps.filter(a=>a.status==='최종합격').length;
-  var ongoing=apps.filter(a=>a.status!=='최종합격'&&a.status!=='불합격').length;
+  const s=STUDENTS.find(st=>st.id===studentId);if(!s)return;
+  const apps=getApps(studentId);
+  const sorted=[...apps].sort((a,b)=>(b.docDate||'').localeCompare(a.docDate||''));
+  const pass=apps.filter(a=>a.status==='최종합격').length;
+  const ongoing=apps.filter(a=>a.status!=='최종합격'&&a.status!=='불합격').length;
 
-  // ★ 타임라인 HTML
-  var tlRows=sorted.length===0
+  const tlRows=sorted.length===0
     ?`<div style="text-align:center;padding:30px;color:#CBD5E1;font-size:13px">지원 이력 없음</div>`
     :sorted.map((ap,i)=>{
         const sc=STATUS_COLORS[ap.status]||'#6B7280';
         const isLast=i===sorted.length-1;
         return`<div style="position:relative;padding-left:28px;padding-bottom:${isLast?'0':'16px'}">
-          <!-- 세로선 -->
           ${!isLast?`<div style="position:absolute;left:7px;top:18px;bottom:0;width:2px;background:#E5E7EB"></div>`:''}
-          <!-- 도트 -->
           <div style="position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid #fff;box-shadow:0 0 0 2px ${sc}44"></div>
           <div style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px 14px">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px">
@@ -923,14 +1107,9 @@ function openHistoryModal(studentId){
         </div>`;
       }).join('');
 
-  // ★ 상담 메모 섹션
   const memoSection=s.counselingMemo
-    ?`<div style="background:#FFFBEB;border:1px solid #FEF3C7;border-radius:8px;padding:12px 14px;margin-bottom:14px">
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📝 상담 메모</p>
-        <p style="margin:0;font-size:13px;color:#374151;line-height:1.7;white-space:pre-wrap">${esc(s.counselingMemo)}</p>
-       </div>`:'';
+    ?`<div style="background:#FFFBEB;border:1px solid #FEF3C7;border-radius:8px;padding:12px 14px;margin-bottom:14px"><p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📝 상담 메모</p><p style="margin:0;font-size:13px;color:#374151;line-height:1.7;white-space:pre-wrap">${esc(s.counselingMemo)}</p></div>`:'';
 
-  // ★ 상태 뱃지
   const stObj=getStudentStatus(s.id);
   const stBadge=`<span style="background:${stObj.bg};color:${stObj.color};border:1px solid ${stObj.border};padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">${stObj.emoji} ${stObj.label}</span>`;
 
@@ -945,7 +1124,6 @@ function openHistoryModal(studentId){
       <span style="color:#D1D5DB">|</span>
       <span style="font-size:13px;color:#2563EB"><strong>${ongoing}</strong>건 진행 중</span>
     </div>
-    <!-- ★ 타임라인 섹션 -->
     <p style="margin:0 0 12px;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">📅 지원 타임라인 (최신순)</p>
     <div style="padding-left:4px">${tlRows}</div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid #F3F4F6">
@@ -957,25 +1135,29 @@ function openHistoryModal(studentId){
 // ── 내보내기 ─────────────────────────────────────────────────
 function exportJobs(){
   csvExport(getSorted(getFiltered()).map((j,i)=>({
-    No:i+1,공고명:j.name,카테고리:j.category,채용형태:j.type,
-    지원시작:j.applyStartDate||'',지원마감:j.applyDeadline||'',
-    서류발표:j.docDate,면접:j.interviewDate,최종합격:j.finalDate,
-    공고URL:j.jobUrl||'',
-    지원자수:j.applicants.length,서류합격:j.applicants.filter(a=>a.status==='서류합격').length,
-    면접대기:j.applicants.filter(a=>a.status==='면접대기').length,합격:j.applicants.filter(a=>a.status==='최종합격').length,
-    불합격:j.applicants.filter(a=>a.status==='불합격').length,상태:j.isClosed?'마감':'진행'
+    No:i+1, 카테고리:j.category, 공고명:j.name, 채용형태:j.type,
+    지원시작일:j.applyStartDate||'', 서류접수일:j.docDate||'',
+    마감일:j.applyDeadline||'', 면접일:j.interviewDate||'',
+    최종합격발표일:j.finalDate||'', 공고URL:j.jobUrl||'',
+    지원자수:j.applicants.length,
+    서류합격:j.applicants.filter(a=>a.status==='서류합격').length,
+    면접대기:j.applicants.filter(a=>a.status==='면접대기').length,
+    합격:j.applicants.filter(a=>a.status==='최종합격').length,
+    불합격:j.applicants.filter(a=>a.status==='불합격').length,
+    상태:j.isClosed?'마감':'진행'
   })),'공고목록');
 }
 function exportStudents(){
-  csvExport(STUDENTS.filter(s=>!studentSearch||s.name.includes(studentSearch)).map((s,i)=>{
-    var apps=getApps(s.id);
-    var st=getStudentStatus(s.id);
+  const filtered=filterStudents();
+  csvExport(filtered.map((s,i)=>{
+    const apps=getApps(s.id);
+    const st=getStudentStatus(s.id);
     return{No:i+1,이름:s.name,상태:st.label,나이:s.age||'미등록',연락처:s.phone,이메일:s.email,지원횟수:apps.length,최종합격:apps.filter(a=>a.status==='최종합격').length,상담메모:s.counselingMemo||''};
   }),'학생DB');
 }
 function exportHistory(studentId){
-  var s=STUDENTS.find(st=>st.id===studentId);if(!s)return;
-  csvExport(getApps(studentId).map(a=>({기관명:a.jobName,카테고리:a.category,서류발표일:a.docDate||'',상태:a.status,급수:a.grade,발표방식:a.announceType,메모:a.memo||''})),s.name+'_지원이력');
+  const s=STUDENTS.find(st=>st.id===studentId);if(!s)return;
+  csvExport(getApps(studentId).map(a=>({기관명:a.jobName,카테고리:a.category,서류접수일:a.docDate||'',최종합격발표일:a.finalDate||'',상태:a.status,급수:a.grade,발표방식:a.announceType,메모:a.memo||''})),s.name+'_지원이력');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -984,7 +1166,7 @@ function exportHistory(studentId){
 async function init(){
   setView('dashboard');
   showLoading();
-  try{await loadAllData();}finally{hideLoading();}
+  try{ await loadAllData(); } finally { hideLoading(); }
   setupRealtime();
 }
 init();
