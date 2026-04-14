@@ -9,29 +9,21 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:#F0F2F5;font-size:13px}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
-::-webkit-scrollbar-track{background:transparent}
-button{cursor:pointer;font-family:inherit}
-input,select,textarea{font-family:inherit}
-.tbl-tr:hover{background:#F8FAFC!important}
-.acc-tr:hover{background:#EFF6FF!important}
-.emp-tr:hover{background:#F0FDF4!important}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}::-webkit-scrollbar-track{background:transparent}
+button{cursor:pointer;font-family:inherit}input,select,textarea{font-family:inherit}
+.tbl-tr:hover{background:#F8FAFC!important}.acc-tr:hover{background:#EFF6FF!important}.emp-tr:hover{background:#F0FDF4!important}
 .job-name-btn:hover{color:#1D4ED8!important;text-decoration:underline!important}
-.row-urgent{background:#FFF1E6!important}
-.row-urgent:hover{background:#FFE8D6!important}
-.row-restricted{background:#FFF5F5!important}
-.row-restricted:hover{background:#FEE2E2!important}
+.row-urgent{background:#FFF1E6!important}.row-urgent:hover{background:#FFE8D6!important}
+.row-restricted{background:#FFF5F5!important}.row-restricted:hover{background:#FEE2E2!important}
 .job-detail-panel{background:#F0F7FF;border-left:4px solid #2563EB;border-bottom:2px solid #DBEAFE}
-.cat-tab-wrap{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-.cat-tab-wrap::-webkit-scrollbar{display:none}
+.cat-tab-wrap{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.cat-tab-wrap::-webkit-scrollbar{display:none}
 .emp-kpi-card{border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes rowIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .emp-row-anim{animation:rowIn .18s ease both}
 input[type="month"]{-webkit-appearance:none;appearance:none}
-.sort-th{transition:background .12s,color .12s}
-.sort-th:hover{background:#EFF6FF!important;color:#2563EB!important}
+.sort-th{transition:background .12s,color .12s}.sort-th:hover{background:#EFF6FF!important;color:#2563EB!important}
+.iv-card{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;transition:box-shadow .15s}.iv-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.09)}
 /* 대시보드 */
 #dash-root{display:flex;flex-direction:column;height:100%;overflow-y:auto}
 #dash-header{padding:14px 24px 8px;flex-shrink:0}
@@ -42,23 +34,20 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 .dash-card-head{padding:13px 18px 11px;flex-shrink:0;border-bottom:1px solid #F3F4F6;display:flex;align-items:center;gap:8px}
 .dash-card-body{flex:1;overflow-y:auto;padding:14px 16px 14px;min-height:0;display:flex;flex-direction:column}
 #dash-alerts{padding:0 24px 8px;flex-shrink:0}
-/* 면접 자료실 */
-.iv-card{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;transition:box-shadow .15s}
-.iv-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.09)}
 /* PDF 인쇄 전용 */
 #_print_target{display:none}
 @media print{
   body>*{display:none!important}
   #_print_target{display:block!important;padding:0;margin:0}
   #_print_target *{-webkit-user-select:none;user-select:none}
-  .pdf-page{page-break-after:avoid;padding:24mm 20mm;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:11pt;color:#111;min-height:100vh;display:flex;flex-direction:column}
-  .pdf-header{border-bottom:2.5pt solid #1D4ED8;padding-bottom:10pt;margin-bottom:14pt}
-  .pdf-title{font-size:18pt;font-weight:700;color:#0F172A;margin-bottom:6pt}
-  .pdf-meta{display:flex;gap:20pt;flex-wrap:wrap;font-size:10pt;color:#475569}
-  .pdf-meta span{display:inline-flex;align-items:center;gap:4pt}
-  .pdf-body{flex:1;white-space:pre-wrap;font-size:11pt;line-height:1.8;color:#1E293B;padding:10pt 0}
-  .pdf-copyright{margin-top:auto;padding-top:14pt;border-top:1.5pt solid #DC2626;text-align:center;font-size:8.5pt;font-weight:700;color:#DC2626;letter-spacing:.02em;line-height:1.6}
-  .pdf-watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-size:48pt;color:rgba(220,38,38,.06);font-weight:900;pointer-events:none;white-space:nowrap;z-index:0}
+  .pdf-wrap{padding:22mm 18mm;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:11pt;color:#111;min-height:100vh;display:flex;flex-direction:column}
+  .pdf-band{background:#1D4ED8;color:#fff;padding:10pt 18pt;border-radius:6pt;margin-bottom:14pt}
+  .pdf-band-cat{font-size:9pt;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.75;margin-bottom:3pt}
+  .pdf-band-title{font-size:17pt;font-weight:700}
+  .pdf-band-meta{font-size:9pt;opacity:.8;margin-top:5pt;display:flex;gap:18pt;flex-wrap:wrap}
+  .pdf-content{flex:1;white-space:pre-wrap;line-height:1.85;font-size:11pt;color:#1E293B;border:1pt solid #E5E7EB;border-radius:5pt;padding:14pt;background:#FAFAFA}
+  .pdf-footer{margin-top:auto;padding-top:12pt;border-top:2pt solid #DC2626;text-align:center;font-weight:800;color:#DC2626;font-size:9pt;letter-spacing:.03em;line-height:1.7}
+  .pdf-stamp{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-size:52pt;color:rgba(220,38,38,.05);font-weight:900;pointer-events:none;white-space:nowrap}
   @page{margin:0;size:A4}
 }
 @media(max-width:900px){
@@ -67,10 +56,7 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
   #dash-kpi{grid-template-columns:repeat(2,1fr);padding:0 14px}
   #dash-header,#dash-monthly{padding-left:14px;padding-right:14px}
 }
-@media(max-width:500px){
-  .dash-card{height:340px}
-  #dash-kpi{grid-template-columns:1fr 1fr}
-}
+@media(max-width:500px){.dash-card{height:340px}#dash-kpi{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -81,54 +67,42 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 const SUPABASE_URL      = 'https://swecejgbnlulcqmfffvv.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3ZWNlamdibmx1bGNxbWZmZnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxOTI2MDcsImV4cCI6MjA5MDc2ODYwN30.nFeiYalxzheU5Os9eD1oLD4_ftkIEl16c0PnKYD7EjY';
 const SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-let _dbConnected = false, _reloadTimer = null;
+let _dbConnected=false, _reloadTimer=null;
 
-function getKSTDateString(){const now=new Date();return new Date(now.getTime()+9*60*60*1000).toISOString().slice(0,10);}
-const TODAY = getKSTDateString();
-const MONTH = TODAY.slice(0,7);
+function getKSTDateString(){const n=new Date();return new Date(n.getTime()+9*3600000).toISOString().slice(0,10);}
+const TODAY=getKSTDateString(), MONTH=TODAY.slice(0,7);
 
-/* ── 공고 카테고리 (국회 추가) ── */
-const CATS      = ['전체','법원','의회','국회','검찰청','공공기관','해바라기','팀벨','사기업','대학교','기타'];
-const JOB_TYPES = ['한시임기제','전문임기제','서기보','기간제','프리랜서','공무직','무기계약직','대체직','공무원','의회임기제'];
-const GRADES    = ['1급','2급','3급','무급'];
-const STATUSES  = ['서류접수','서류합격','면접대기','최종합격','취업성공','불합격'];
-const ANNOUNCE  = ['개별','홈페이지'];
-const STATUS_COLORS = {
-  '서류접수':'#94A3B8','서류합격':'#60A5FA','면접대기':'#FBBF24',
-  '면접완료':'#A78BFA','최종합격':'#34D399','취업성공':'#10B981','불합격':'#F87171'
-};
-const CAT_COLORS = {
-  '법원':'#1D4ED8','의회':'#7C3AED','국회':'#4338CA','검찰청':'#DC2626',
-  '공공기관':'#059669','해바라기':'#D97706','팀벨':'#0891B2',
-  '사기업':'#374151','대학교':'#9333EA','기타':'#6B7280'
-};
+/* ── 상수 ── */
+const CATS      =['전체','법원','의회','국회','검찰청','공공기관','해바라기','팀벨','사기업','대학교','기타'];
+const JOB_TYPES =['한시임기제','전문임기제','서기보','기간제','프리랜서','공무직','무기계약직','대체직','공무원','의회임기제'];
+const GRADES    =['1급','2급','3급','무급'];
+const STATUSES  =['서류접수','서류합격','면접대기','최종합격','취업성공','불합격'];
+const ANNOUNCE  =['개별','홈페이지'];
+const STATUS_COLORS={'서류접수':'#94A3B8','서류합격':'#60A5FA','면접대기':'#FBBF24','면접완료':'#A78BFA','최종합격':'#34D399','취업성공':'#10B981','불합격':'#F87171'};
+const CAT_COLORS={'법원':'#1D4ED8','의회':'#7C3AED','국회':'#4338CA','검찰청':'#DC2626','공공기관':'#059669','해바라기':'#D97706','팀벨':'#0891B2','사기업':'#374151','대학교':'#9333EA','기타':'#6B7280'};
 
-/* ★ v7.2 면접 자료실 7대 카테고리 */
-const IV_CATS = ['법원','의회','국회','검찰','공공기관','사기업','교육속기사'];
-const IV_CAT_COLORS = {
-  '법원':'#1D4ED8','의회':'#7C3AED','국회':'#4338CA','검찰':'#DC2626',
-  '공공기관':'#059669','사기업':'#374151','교육속기사':'#D97706'
-};
-/* 공고 카테고리 → IV 카테고리 매핑 */
+/* ★ 면접 자료실 전용 카테고리 (jobs와 완전 독립) */
+const IV_CATS=['검찰','교육속기사','국회','공공기관','법원','사기업','의회'];
+const IV_COLORS={'검찰':'#DC2626','교육속기사':'#D97706','국회':'#4338CA','공공기관':'#059669','법원':'#1D4ED8','사기업':'#374151','의회':'#7C3AED'};
+
+/* 공고 카테고리 → IV 카테고리 (공고 모달 참조용) */
 function jobCatToIV(cat){
-  const m={'법원':'법원','의회':'의회','국회':'국회','검찰청':'검찰',
-    '공공기관':'공공기관','해바라기':'공공기관','팀벨':'공공기관',
-    '사기업':'사기업','기타':'사기업','대학교':'교육속기사'};
-  return m[cat]||null;
+  return{'법원':'법원','의회':'의회','국회':'국회','검찰청':'검찰','공공기관':'공공기관','해바라기':'공공기관','팀벨':'공공기관','사기업':'사기업','기타':'사기업','대학교':'교육속기사'}[cat]||null;
 }
 
 /* ── 상태 변수 ── */
-let currentView = 'dashboard', expandedJobs = new Set(), detailJobs = new Set();
-let selectedMonth = MONTH, empCat = '전체', ivFilter = '전체';
-let jobFilter = {cat:'전체', year:'', kw:'', type:'전체', dateFrom:'', dateTo:''};
-let studentFilter = {kw:'', grade:'전체', statusTab:'전체'};
-let STUDENTS = [], JOBS = [];
-let _savedScrollTop = 0, _savedTblScrollTop = 0;
+let currentView='dashboard', expandedJobs=new Set(), detailJobs=new Set();
+let selectedMonth=MONTH, empCat='전체';
+let jobFilter={cat:'전체',year:'',kw:'',type:'전체',dateFrom:'',dateTo:''};
+let studentFilter={kw:'',grade:'전체',statusTab:'전체'};
+let STUDENTS=[], JOBS=[], VAULT=[];
+let _savedScrollTop=0, _savedTblScrollTop=0;
+let tableSort={col:null,dir:'none'};
+/* 면접 자료실 필터 */
+let vaultFilter='전체', vaultKw='';
+let _vaultKwComposing=false, _vaultKwTimer=null;
 
-/* ★ v7.2 헤더 클릭 정렬 상태 */
-let tableSort = {col: null, dir: 'none'};
-
-/* ── IME 핸들러 ── */
+/* ── IME ── */
 let _jobComposing=false,_stuComposing=false,_jobDebTimer=null,_stuDebTimer=null;
 function onJobCompositionStart(){_jobComposing=true;clearTimeout(_jobDebTimer);}
 function onJobCompositionEnd(el){_jobComposing=false;clearTimeout(_jobDebTimer);const v=el.value;_jobDebTimer=setTimeout(()=>{jobFilter.kw=v;renderView();},0);}
@@ -136,62 +110,41 @@ function onJobInput(el){if(_jobComposing)return;clearTimeout(_jobDebTimer);const
 function onStuCompositionStart(){_stuComposing=true;clearTimeout(_stuDebTimer);}
 function onStuCompositionEnd(el){_stuComposing=false;clearTimeout(_stuDebTimer);const v=el.value;_stuDebTimer=setTimeout(()=>{studentFilter.kw=v;renderView();},0);}
 function onStuInput(el){if(_stuComposing)return;clearTimeout(_stuDebTimer);const v=el.value;_stuDebTimer=setTimeout(()=>{studentFilter.kw=v;renderView();},200);}
-function onStudentGradeChange(value){studentFilter.grade=value;renderView();}
-function setStudentStatusTab(tab){studentFilter.statusTab=tab;renderView();}
-function setIvFilter(cat){ivFilter=cat;renderView();}
+function onStudentGradeChange(v){studentFilter.grade=v;renderView();}
+function setStudentStatusTab(t){studentFilter.statusTab=t;renderView();}
+function setVaultFilter(c){vaultFilter=c;renderView();}
+function onVaultKwCompositionStart(){_vaultKwComposing=true;clearTimeout(_vaultKwTimer);}
+function onVaultKwCompositionEnd(el){_vaultKwComposing=false;clearTimeout(_vaultKwTimer);const v=el.value;_vaultKwTimer=setTimeout(()=>{vaultKw=v;renderView();},0);}
+function onVaultKwInput(el){if(_vaultKwComposing)return;clearTimeout(_vaultKwTimer);const v=el.value;_vaultKwTimer=setTimeout(()=>{vaultKw=v;renderView();},200);}
 
 /* ── 유틸 ── */
-const fmt        = d => d?String(d).replace(/-/g,'.'):'-';
-const $          = id => document.getElementById(id);
-const esc        = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const dateOrNull = v => (v&&String(v).trim())?v:null;
-const isToday    = d => !!d&&String(d).slice(0,10)===TODAY;
-
-function calcDDay(ds){
-  if(!ds)return null;
-  const s=String(ds).slice(0,10);const[y,mo,da]=s.split('-').map(Number);const[ty,tmo,tda]=TODAY.split('-').map(Number);
-  return Math.round((new Date(y,mo-1,da)-new Date(ty,tmo-1,tda))/86400000);
-}
-function isTrulyOver(job){
-  if(job.isClosed)return true;
-  if(job.finalDate&&String(job.finalDate).slice(0,10)>=TODAY)return false;
-  if(job.interviewDate&&String(job.interviewDate).slice(0,10)>=TODAY)return false;
-  const dl=job.applyDeadline||job.docDate;return !!(dl&&String(dl).slice(0,10)<TODAY);
-}
-function dDayBadge(dateStr,closed){
-  if(closed)return`<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">마감됨</span>`;
-  const d=calcDDay(dateStr);if(d===null)return'';
-  if(d<0)  return`<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">기간만료</span>`;
-  if(d===0)return`<span style="background:#FEE2E2;color:#DC2626;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FECACA;white-space:nowrap">🔴 D-DAY</span>`;
-  if(d<=3) return`<span style="background:#FEE2E2;color:#DC2626;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FECACA;white-space:nowrap">D-${d}</span>`;
-  if(d<=7) return`<span style="background:#FEF3C7;color:#D97706;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #FDE68A;white-space:nowrap">D-${d}</span>`;
-  return`<span style="background:#DBEAFE;color:#1D4ED8;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #BFDBFE;white-space:nowrap">D-${d}</span>`;
-}
-function csvExport(data,name){
-  if(!data||!data.length)return;const hdrs=Object.keys(data[0]);
-  const rows=data.map(r=>hdrs.map(h=>`"${String(r[h]??'').replace(/"/g,'""')}"`).join(','));
-  const csv=[hdrs.join(','),...rows].join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name+'.csv';a.click();URL.revokeObjectURL(url);
-}
+const fmt=d=>d?String(d).replace(/-/g,'.'):'-';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const dateOrNull=v=>(v&&String(v).trim())?v:null;
+const isToday=d=>!!d&&String(d).slice(0,10)===TODAY;
+function calcDDay(ds){if(!ds)return null;const s=String(ds).slice(0,10);const[y,mo,da]=s.split('-').map(Number);const[ty,tmo,tda]=TODAY.split('-').map(Number);return Math.round((new Date(y,mo-1,da)-new Date(ty,tmo-1,tda))/86400000);}
+function isTrulyOver(job){if(job.isClosed)return true;if(job.finalDate&&String(job.finalDate).slice(0,10)>=TODAY)return false;if(job.interviewDate&&String(job.interviewDate).slice(0,10)>=TODAY)return false;const dl=job.applyDeadline||job.docDate;return !!(dl&&String(dl).slice(0,10)<TODAY);}
+function dDayBadge(dateStr,closed){if(closed)return`<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">마감됨</span>`;const d=calcDDay(dateStr);if(d===null)return'';if(d<0)return`<span style="background:#F3F4F6;color:#9CA3AF;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #E5E7EB;white-space:nowrap">기간만료</span>`;if(d===0)return`<span style="background:#FEE2E2;color:#DC2626;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FECACA;white-space:nowrap">🔴 D-DAY</span>`;if(d<=3)return`<span style="background:#FEE2E2;color:#DC2626;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FECACA;white-space:nowrap">D-${d}</span>`;if(d<=7)return`<span style="background:#FEF3C7;color:#D97706;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #FDE68A;white-space:nowrap">D-${d}</span>`;return`<span style="background:#DBEAFE;color:#1D4ED8;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;border:1px solid #BFDBFE;white-space:nowrap">D-${d}</span>`;}
+function csvExport(data,name){if(!data||!data.length)return;const hdrs=Object.keys(data[0]);const rows=data.map(r=>hdrs.map(h=>`"${String(r[h]??'').replace(/"/g,'""')}"`).join(','));const csv=[hdrs.join(','),...rows].join('\n');const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name+'.csv';a.click();URL.revokeObjectURL(url);}
 function getApps(sid){return JOBS.flatMap(j=>j.applicants.filter(a=>a.studentId===sid).map(a=>({...a,jobName:j.name,category:j.category,docDate:j.docDate,finalDate:j.finalDate,interviewDate:j.interviewDate})));}
-/* ── 학생 상태 / 등급 배지 ── */
+/* ── 학생 상태/배지 ── */
 function getStudentStatus(sid){const apps=getApps(sid);if(!apps.length)return{label:'지원가능',emoji:'🟢',color:'#059669',bg:'#D1FAE5',border:'#6EE7B7'};if(apps.some(a=>a.status==='최종합격'||a.status==='취업성공'))return{label:'취업완료',emoji:'🔵',color:'#1D4ED8',bg:'#DBEAFE',border:'#93C5FD'};if(apps.some(a=>!['최종합격','취업성공','불합격'].includes(a.status)))return{label:'진행중',emoji:'🟡',color:'#D97706',bg:'#FEF3C7',border:'#FDE68A'};return{label:'지원가능',emoji:'🟢',color:'#059669',bg:'#D1FAE5',border:'#6EE7B7'};}
 function getRestrictionBadge(student){if(!student.restrictionLevel)return'';if(student.restrictionLevel==='제한')return`<span style="background:#DC2626;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:3px;vertical-align:middle;flex-shrink:0">🚫 제한</span>`;if(student.restrictionLevel==='주의')return`<span style="background:#FEF3C7;color:#000;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:800;border:1px solid #FDE68A;display:inline-flex;align-items:center;gap:3px;vertical-align:middle;flex-shrink:0">⚠️ 주의</span>`;return'';}
 function filterStudents(){const kw=studentFilter.kw.trim();return STUDENTS.filter(s=>{if(kw&&!s.name.includes(kw)&&!(s.phone||'').includes(kw)&&!(s.email||'').includes(kw))return false;if(studentFilter.grade!=='전체'&&!getApps(s.id).some(a=>a.grade===studentFilter.grade))return false;if(studentFilter.statusTab!=='전체'){const st=getStudentStatus(s.id);if(st.label!==studentFilter.statusTab)return false;}return true;});}
 
 /* ── 스마트 알림 ── */
-function getThisWeekInterviews(){const result=[];const todayMs=new Date(TODAY).getTime();const weekMs=todayMs+7*86400000;JOBS.forEach(j=>{if(!j.interviewDate)return;const d=new Date(String(j.interviewDate).slice(0,10)).getTime();if(d>=todayMs&&d<=weekMs){j.applicants.filter(a=>a.status==='면접대기').forEach(a=>{const st=STUDENTS.find(s=>s.id===a.studentId);if(st)result.push({studentName:st.name,jobName:j.name,interviewDate:j.interviewDate,category:j.category,studentId:st.id});});}});return result;}
-function getLongPendingNoReply(){const result=[];const todayMs=new Date(TODAY).getTime();JOBS.forEach(j=>{j.applicants.forEach(a=>{if(!a.interviewDocSent)return;const sentMs=new Date(String(a.interviewDocSent).slice(0,10)).getTime();const diff=Math.round((todayMs-sentMs)/86400000);if(diff>=7&&!(a.interviewFeedback||'').includes('회신완료')){const st=STUDENTS.find(s=>s.id===a.studentId);if(st)result.push({studentName:st.name,jobName:j.name,sentDate:a.interviewDocSent,daysDiff:diff,studentId:st.id,category:j.category});}});});return result;}
+function getThisWeekInterviews(){const result=[];const todayMs=new Date(TODAY).getTime();const weekMs=todayMs+7*86400000;JOBS.forEach(j=>{if(!j.interviewDate)return;const d=new Date(String(j.interviewDate).slice(0,10)).getTime();if(d>=todayMs&&d<=weekMs){j.applicants.filter(a=>a.status==='면접대기').forEach(a=>{const st=STUDENTS.find(s=>s.id===a.studentId);if(st)result.push({studentName:st.name,jobName:j.name,interviewDate:j.interviewDate,category:j.category});});}});return result;}
+function getLongPendingNoReply(){const result=[];const todayMs=new Date(TODAY).getTime();JOBS.forEach(j=>{j.applicants.forEach(a=>{if(!a.interviewDocSent)return;const sentMs=new Date(String(a.interviewDocSent).slice(0,10)).getTime();const diff=Math.round((todayMs-sentMs)/86400000);if(diff>=7&&!(a.interviewFeedback||'').includes('회신완료')){const st=STUDENTS.find(s=>s.id===a.studentId);if(st)result.push({studentName:st.name,jobName:j.name,daysDiff:diff,category:j.category});}});});return result;}
 function renderSmartAlerts(){
   const interviews=getThisWeekInterviews(),noReply=getLongPendingNoReply();if(!interviews.length&&!noReply.length)return'';
-  const ivHtml=interviews.length?`<div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:8px">📅 이번 주 면접 예정자 (${interviews.length}명)</div>${interviews.map(i=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #EDE9FE;flex-wrap:wrap"><span style="font-size:12px;font-weight:700;color:#1E293B">${esc(i.studentName)}</span><span style="font-size:10px;color:#7C3AED;background:#EDE9FE;padding:1px 6px;border-radius:4px">${esc(i.category)}</span><span style="font-size:11px;color:#6B7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:80px">${esc(i.jobName.length>18?i.jobName.slice(0,18)+'…':i.jobName)}</span><span style="margin-left:auto;font-size:11px;color:#7C3AED;font-weight:700;white-space:nowrap">${fmt(i.interviewDate)}</span></div>`).join('')}</div>`:'';
-  const nrHtml=noReply.length?`<div style="background:#FFF5F5;border:1px solid #FECACA;border-radius:10px;padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#DC2626;margin-bottom:8px">⚠️ 미회신 장기 방치 (${noReply.length}명)</div>${noReply.map(i=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #FEE2E2;flex-wrap:wrap"><span style="font-size:12px;font-weight:700;color:#1E293B">${esc(i.studentName)}</span><span style="font-size:10px;color:#DC2626;background:#FEE2E2;padding:1px 6px;border-radius:4px">${esc(i.category)}</span><span style="font-size:11px;color:#6B7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:80px">${esc(i.jobName.length>16?i.jobName.slice(0,16)+'…':i.jobName)}</span><span style="margin-left:auto;font-size:11px;color:#DC2626;font-weight:700;white-space:nowrap">${i.daysDiff}일 경과</span></div>`).join('')}</div>`:'';
+  const ivHtml=interviews.length?`<div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:8px">📅 이번 주 면접 예정자 (${interviews.length}명)</div>${interviews.map(i=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #EDE9FE;flex-wrap:wrap"><span style="font-size:12px;font-weight:700;color:#1E293B">${esc(i.studentName)}</span><span style="font-size:10px;color:#7C3AED;background:#EDE9FE;padding:1px 6px;border-radius:4px">${esc(i.category)}</span><span style="font-size:11px;color:#6B7280;flex:1;min-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.jobName.length>18?i.jobName.slice(0,18)+'…':i.jobName)}</span><span style="margin-left:auto;font-size:11px;color:#7C3AED;font-weight:700;white-space:nowrap">${fmt(i.interviewDate)}</span></div>`).join('')}</div>`:'';
+  const nrHtml=noReply.length?`<div style="background:#FFF5F5;border:1px solid #FECACA;border-radius:10px;padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#DC2626;margin-bottom:8px">⚠️ 미회신 장기 방치 (${noReply.length}명)</div>${noReply.map(i=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #FEE2E2;flex-wrap:wrap"><span style="font-size:12px;font-weight:700;color:#1E293B">${esc(i.studentName)}</span><span style="font-size:10px;color:#DC2626;background:#FEE2E2;padding:1px 6px;border-radius:4px">${esc(i.category)}</span><span style="font-size:11px;color:#6B7280;flex:1;min-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.jobName.length>16?i.jobName.slice(0,16)+'…':i.jobName)}</span><span style="margin-left:auto;font-size:11px;color:#DC2626;font-weight:700;white-space:nowrap">${i.daysDiff}일 경과</span></div>`).join('')}</div>`:'';
   return`<div id="dash-alerts"><div style="display:grid;grid-template-columns:${interviews.length&&noReply.length?'1fr 1fr':'1fr'};gap:10px">${ivHtml}${nrHtml}</div></div>`;
 }
 
 /* ── 퀵 메모 ── */
-function appendMemoText(fieldId,prefix){const el=$(fieldId);if(!el)return;const now=new Date(new Date().getTime()+9*3600000);const ds=now.toISOString().slice(0,10);const ts=now.toISOString().slice(11,16);const text=`${prefix} ${ds} ${ts}`;el.value=el.value?(el.value+'\n'+text):text;el.focus();}
+function appendMemoText(fieldId,prefix){const el=$(fieldId);if(!el)return;const now=new Date(new Date().getTime()+9*3600000);const text=`${prefix} ${now.toISOString().slice(0,10)} ${now.toISOString().slice(11,16)}`;el.value=el.value?(el.value+'\n'+text):text;el.focus();}
 function quickMemoButtons(fieldId){const btns=[{label:'📤 자료발송',p:'[자료발송]'},{label:'📣 회신당부',p:'[회신당부]'},{label:'📵 연락두절',p:'[연락두절]'},{label:'✅ 회신완료',p:'[회신완료]'}];return`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px">${btns.map(b=>`<button type="button" onclick="appendMemoText('${fieldId}','${b.p}')" style="background:#F1F5F9;color:#374151;border:1px solid #E2E8F0;padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">${b.label}</button>`).join('')}</div>`;}
 
 /* ── DB 변환 ── */
@@ -203,23 +156,39 @@ function dbToJob(r){return{
   startDate:r.start_date||'',endDate:r.end_date||'',note:r.note||'',
   submitDocs:r.submit_docs||'',submitDeadline:r.submit_deadline||'',
   managerName:r.manager_name||'',managerPhone:r.manager_phone||'',managerEmail:r.manager_email||'',
-  createdAt:r.created_at||'',
-  interviewMaterial:r.interview_material||'', /* ★ v7.2 면접 자료 */
-  applicants:[]
+  createdAt:r.created_at||'',applicants:[]
 };}
+/* ★ 면접 자료 보관함 변환 */
+function dbToVault(r){return{id:r.id,category:r.category||'',institutionName:r.institution_name||'',year:r.year||null,content:r.content||'',createdAt:r.created_at||''};}
 function dbToApplicant(r){return{id:r.id,jobId:r.job_id,studentId:r.student_id,status:r.status||'서류접수',grade:r.grade||'3급',announceType:r.announce_type||'홈페이지',memo:r.memo||'',examNumber:r.exam_number||'',interviewDocSent:r.interview_doc_sent||'',interviewFeedback:r.interview_feedback||''};}
 
 /* ── 데이터 로드 / 실시간 ── */
 async function loadAllData(){
   try{
-    const[{data:sd,error:e1},{data:jd,error:e2},{data:ad,error:e3}]=await Promise.all([SB.from('students').select('*').order('created_at',{ascending:false}),SB.from('jobs').select('*').order('created_at',{ascending:false}),SB.from('applicants').select('*')]);
+    const[{data:sd,error:e1},{data:jd,error:e2},{data:ad,error:e3},{data:vd,error:e4}]=await Promise.all([
+      SB.from('students').select('*').order('created_at',{ascending:false}),
+      SB.from('jobs').select('*').order('created_at',{ascending:false}),
+      SB.from('applicants').select('*'),
+      SB.from('interview_vault').select('*').order('year',{ascending:false}).order('created_at',{ascending:false})
+    ]);
     if(e1||e2||e3){console.error(e1,e2,e3);customAlert('데이터 로드 오류.\nSupabase 연결 정보를 확인하세요.');return;}
-    STUDENTS=(sd||[]).map(dbToStudent);const jobs=(jd||[]).map(dbToJob);const aps=(ad||[]).map(dbToApplicant);
-    JOBS=jobs.map(j=>({...j,applicants:aps.filter(a=>a.jobId===j.id)}));renderView();
+    /* interview_vault 없어도 graceful fallback */
+    STUDENTS=(sd||[]).map(dbToStudent);
+    const jobs=(jd||[]).map(dbToJob);const aps=(ad||[]).map(dbToApplicant);
+    JOBS=jobs.map(j=>({...j,applicants:aps.filter(a=>a.jobId===j.id)}));
+    VAULT=(vd||[]).map(dbToVault);
+    renderView();
   }catch(err){console.error(err);customAlert('네트워크 오류.');}
 }
 function scheduleReload(){clearTimeout(_reloadTimer);_reloadTimer=setTimeout(loadAllData,500);}
-function setupRealtime(){SB.channel('jobms-v70').on('postgres_changes',{event:'*',schema:'public',table:'students'},scheduleReload).on('postgres_changes',{event:'*',schema:'public',table:'jobs'},scheduleReload).on('postgres_changes',{event:'*',schema:'public',table:'applicants'},scheduleReload).subscribe(s=>{_dbConnected=(s==='SUBSCRIBED');const dot=$('_conn_dot'),txt=$('_conn_txt');if(dot)dot.style.background=_dbConnected?'#10B981':'#F59E0B';if(txt)txt.textContent=_dbConnected?'실시간 연동 활성':'연결 중...';});}
+function setupRealtime(){
+  SB.channel('jobms-v70')
+    .on('postgres_changes',{event:'*',schema:'public',table:'students'},scheduleReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'jobs'},scheduleReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'applicants'},scheduleReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'interview_vault'},scheduleReload)
+    .subscribe(s=>{_dbConnected=(s==='SUBSCRIBED');const dot=$('_conn_dot'),txt=$('_conn_txt');if(dot)dot.style.background=_dbConnected?'#10B981':'#F59E0B';if(txt)txt.textContent=_dbConnected?'실시간 연동 활성':'연결 중...';});
+}
 function showLoading(){if($('_loading'))return;const d=document.createElement('div');d.id='_loading';d.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:20000;backdrop-filter:blur(2px)';d.innerHTML=`<div style="background:#fff;border-radius:14px;padding:28px 36px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)"><div style="font-size:36px;animation:spin 1s linear infinite;display:inline-block">⟳</div><p style="margin:10px 0 0;font-size:13px;color:#6B7280;font-weight:600">Supabase 연결 중...</p></div>`;document.body.appendChild(d);}
 function hideLoading(){const el=$('_loading');if(el)el.remove();}
 /* ── 인포그래픽 ── */
@@ -228,7 +197,7 @@ function renderStatusInfographic(allAps){
   const PAL={'서류접수':{bg:'#94A3B8',dk:'#475569',light:'#F1F5F9'},'서류합격':{bg:'#60A5FA',dk:'#1D4ED8',light:'#DBEAFE'},'면접대기':{bg:'#FBBF24',dk:'#D97706',light:'#FEF3C7'},'최종합격':{bg:'#34D399',dk:'#059669',light:'#D1FAE5'},'취업성공':{bg:'#10B981',dk:'#047857',light:'#D1FAE5'},'불합격':{bg:'#F87171',dk:'#DC2626',light:'#FEE2E2'}};
   const items=STATUSES.map(s=>({s,...PAL[s]||{bg:'#CBD5E1',dk:'#6B7280',light:'#F3F4F6'},cnt:allAps.filter(a=>a.status===s).length})).filter(x=>x.cnt>0);
   const flowHtml=items.map((x,i)=>`${i>0?`<span style="color:#D1D5DB;font-size:11px">→</span>`:''}<span style="font-size:10px;font-weight:700;color:${x.dk};background:${x.light};padding:3px 9px;border-radius:99px;white-space:nowrap">${x.s}</span>`).join('');
-  const barSegs=items.map(x=>{const pct=(x.cnt/total*100);const showFull=pct>=18,showNum=pct>=9;return`<div style="width:${pct.toFixed(2)}%;background:${x.bg};display:flex;flex-direction:column;align-items:center;justify-content:center;transition:width .4s ease" title="${x.s}: ${x.cnt}명 (${pct.toFixed(1)}%)">${showFull?`<span style="font-size:22px;font-weight:900;color:#fff;line-height:1.1;text-shadow:0 1px 4px rgba(0,0,0,.2)">${x.cnt}</span><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.9)">${pct.toFixed(0)}%</span>`:showNum?`<span style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.2)">${x.cnt}</span>`:''}</div>`;}).join('');
+  const barSegs=items.map(x=>{const pct=(x.cnt/total*100);const sf=pct>=18,sn=pct>=9;return`<div style="width:${pct.toFixed(2)}%;background:${x.bg};display:flex;flex-direction:column;align-items:center;justify-content:center;transition:width .4s ease" title="${x.s}: ${x.cnt}명">${sf?`<span style="font-size:22px;font-weight:900;color:#fff;line-height:1.1;text-shadow:0 1px 4px rgba(0,0,0,.2)">${x.cnt}</span><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,.9)">${pct.toFixed(0)}%</span>`:sn?`<span style="font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.2)">${x.cnt}</span>`:''}</div>`;}).join('');
   const legendHtml=items.map(x=>{const pct=(x.cnt/total*100).toFixed(1);return`<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:#F8FAFC;border-radius:9px;border:1px solid #F1F5F9"><span style="width:10px;height:10px;border-radius:3px;background:${x.bg};flex-shrink:0;display:inline-block"></span><span style="font-size:11px;color:#64748B;font-weight:600;flex:1;white-space:nowrap">${x.s}</span><span style="font-size:17px;font-weight:900;color:#0F172A;line-height:1">${x.cnt}</span><span style="font-size:10px;color:#94A3B8;font-weight:500;margin-left:2px;white-space:nowrap">${pct}%</span></div>`;}).join('');
   const passCount=items.filter(x=>x.s==='최종합격'||x.s==='취업성공').reduce((s,x)=>s+x.cnt,0);const passRate=total>0?Math.round(passCount/total*100):0;
   return`<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px;flex-shrink:0">${flowHtml}</div><div style="display:flex;height:72px;border-radius:12px;overflow:hidden;border:1px solid #E2E8F0;flex-shrink:0">${barSegs}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px;flex:1;align-content:start">${legendHtml}</div><div style="margin-top:12px;padding:11px 16px;background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border-radius:11px;border:1px solid #BFDBFE;display:flex;gap:0;flex-shrink:0"><div style="flex:1;text-align:center;border-right:1px solid #DBEAFE;padding-right:12px"><p style="margin:0;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.04em">총 지원</p><p style="margin:3px 0 0;font-size:26px;font-weight:900;color:#0F172A;line-height:1">${total}<span style="font-size:11px;color:#94A3B8;font-weight:500;margin-left:2px">건</span></p></div><div style="flex:1;text-align:center;border-right:1px solid #DBEAFE;padding:0 12px"><p style="margin:0;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.04em">취업성사</p><p style="margin:3px 0 0;font-size:26px;font-weight:900;color:#059669;line-height:1">${passCount}<span style="font-size:11px;color:#94A3B8;font-weight:500;margin-left:2px">명</span></p></div><div style="flex:1;text-align:center;padding-left:12px"><p style="margin:0;font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:.04em">합격률</p><p style="margin:3px 0 0;font-size:26px;font-weight:900;color:#2563EB;line-height:1">${passRate}<span style="font-size:11px;color:#94A3B8;font-weight:500;margin-left:1px">%</span></p></div></div>`;
@@ -239,7 +208,7 @@ function renderAgeInfographic(finalSids){
   groups.forEach(g=>{g.cnt=0;finalSids.forEach(sid=>{const st=STUDENTS.find(s=>s.id===sid);if(!st||!st.age){if(g.label==='미상')g.cnt++;return;}if(g.label!=='미상'&&st.age>=g.min&&st.age<=g.max)g.cnt++;});});
   const total=groups.reduce((s,g)=>s+g.cnt,0);if(!total)return`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:#CBD5E1"><span style="font-size:52px">👥</span><span style="font-size:15px;font-weight:700">합격자 데이터 없음</span></div>`;
   const active=groups.filter(g=>g.cnt>0);
-  const barHtml=active.map(g=>{const pct=(g.cnt/total*100);const showFull=pct>=16,showMid=pct>=9;return`<div style="width:${pct.toFixed(2)}%;background:${g.color};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:width .4s" title="${g.label}: ${g.cnt}명 (${pct.toFixed(1)}%)">${showFull?`<span style="font-size:15px;font-weight:900;color:${g.textDk};line-height:1.15;white-space:nowrap">${g.label}</span><span style="font-size:14px;font-weight:800;color:${g.textDk};opacity:.85">${pct.toFixed(0)}%</span>`:showMid?`<span style="font-size:12px;font-weight:900;color:${g.textDk};white-space:nowrap">${pct.toFixed(0)}%</span>`:''}</div>`;}).join('');
+  const barHtml=active.map(g=>{const pct=(g.cnt/total*100);const sf=pct>=16,sm=pct>=9;return`<div style="width:${pct.toFixed(2)}%;background:${g.color};display:flex;flex-direction:column;align-items:center;justify-content:center;transition:width .4s" title="${g.label}: ${g.cnt}명">${sf?`<span style="font-size:15px;font-weight:900;color:${g.textDk};line-height:1.15;white-space:nowrap">${g.label}</span><span style="font-size:14px;font-weight:800;color:${g.textDk};opacity:.85">${pct.toFixed(0)}%</span>`:sm?`<span style="font-size:12px;font-weight:900;color:${g.textDk};white-space:nowrap">${pct.toFixed(0)}%</span>`:''}</div>`;}).join('');
   const rowHtml=active.map(g=>{const pct=(g.cnt/total*100);return`<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:9px;border:1px solid #F1F5F9"><div style="width:12px;height:12px;border-radius:50%;background:${g.color};flex-shrink:0"></div><span style="font-size:12px;font-weight:700;color:#374151;flex:1">${g.label}</span><div style="flex:2;height:8px;background:#F1F5F9;border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct.toFixed(1)}%;background:${g.color};border-radius:99px"></div></div><span style="font-size:13px;font-weight:900;color:#0F172A;min-width:36px;text-align:right">${pct.toFixed(0)}<span style="font-size:9px;color:#94A3B8;font-weight:500">%</span></span><span style="font-size:11px;color:#94A3B8;min-width:28px;text-align:right">${g.cnt}명</span></div>`;}).join('');
   const peak=[...active].sort((a,b)=>b.cnt-a.cnt)[0];
   return`<p style="margin:0 0 10px;font-size:11px;color:#94A3B8;font-weight:600;flex-shrink:0">최종합격자 ${total}명의 연령 분포</p><div style="display:flex;height:90px;border-radius:14px;overflow:hidden;border:1px solid #E2E8F0;flex-shrink:0">${barHtml}</div><div style="display:flex;flex-direction:column;gap:7px;margin-top:12px;flex:1;overflow-y:auto;min-height:0">${rowHtml}</div><div style="margin-top:12px;padding:11px 16px;background:linear-gradient(135deg,#FFFBEB,#FEF9C3);border-radius:11px;border:1px solid #FDE68A;display:flex;align-items:center;gap:12px;flex-shrink:0"><span style="font-size:22px;flex-shrink:0">🏆</span><div style="flex:1;min-width:0"><p style="margin:0;font-size:10px;color:#92400E;font-weight:700;text-transform:uppercase;letter-spacing:.04em">최빈 연령대</p><p style="margin:3px 0 0;font-size:16px;font-weight:900;color:#78350F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${peak.label}<span style="font-size:12px;color:#B45309;font-weight:600;margin-left:6px">${(peak.cnt/total*100).toFixed(0)}% · ${peak.cnt}명</span></p></div><div style="text-align:right;flex-shrink:0"><p style="margin:0;font-size:10px;color:#92400E;font-weight:700">총 합격자</p><p style="margin:3px 0 0;font-size:22px;font-weight:900;color:#0F172A;line-height:1">${total}<span style="font-size:11px;color:#94A3B8;margin-left:2px">명</span></p></div></div>`;
@@ -252,7 +221,8 @@ function fSel(label,id,opts,value){value=value||'';const options=opts.map(o=>`<o
 
 function customAlert(msg){var old=$('_alert');if(old)old.remove();var div=document.createElement('div');div.id='_alert';div.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:11000;backdrop-filter:blur(2px)';div.innerHTML=`<div style="background:#fff;border-radius:12px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden"><div style="padding:20px 20px 8px;display:flex;align-items:flex-start;gap:12px"><span style="font-size:22px">ℹ️</span><p style="margin:0;font-size:13px;color:#111827;line-height:1.6;white-space:pre-wrap">${esc(msg)}</p></div><div style="padding:12px 20px 18px;display:flex;justify-content:flex-end"><button onclick="document.getElementById('_alert').remove()" style="background:#2563EB;color:#fff;border:none;padding:8px 22px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">확인</button></div></div>`;document.body.appendChild(div);}
 function customConfirm(msg,onYes,yesLabel,yesColor){
-  yesLabel=yesLabel||'확인';yesColor=yesColor||'#2563EB';var old=$('_cfrm');if(old)old.remove();var fn='_cfrmYes_'+Date.now();
+  yesLabel=yesLabel||'확인';yesColor=yesColor||'#2563EB';var old=$('_cfrm');if(old)old.remove();
+  var fn='_cfrmYes_'+Date.now();
   window[fn]=async function(){var el=$('_cfrm');if(el)el.remove();delete window[fn];try{await onYes();}catch(e){customAlert('오류: '+e.message);}};
   var div=document.createElement('div');div.id='_cfrm';div.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;z-index:11000;backdrop-filter:blur(2px)';
   div.innerHTML=`<div style="background:#fff;border-radius:12px;width:380px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,.28);overflow:hidden"><div style="padding:20px 20px 8px;display:flex;align-items:flex-start;gap:12px"><span style="font-size:22px">${yesColor==='#DC2626'?'⚠️':'❓'}</span><p style="margin:0;font-size:14px;color:#111827;line-height:1.6;white-space:pre-wrap">${esc(msg)}</p></div><div style="padding:12px 20px 18px;display:flex;justify-content:flex-end;gap:8px"><button onclick="document.getElementById('_cfrm').remove()" style="background:#fff;color:#374151;border:1px solid #D1D5DB;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">취소</button><button onclick="${fn}()" style="background:${yesColor};color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">${yesLabel}</button></div></div>`;
@@ -271,30 +241,21 @@ function showMonthlyReport(){
   const rate=monthApplicants.length>0?Math.round(finalPass.length/monthApplicants.length*100):0;
   const catCounts={};finalPass.forEach(a=>{const job=JOBS.find(j=>j.id===a.jobId);if(job)catCounts[job.category]=(catCounts[job.category]||0)+1;});
   const top3=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
-  const catSummaryTxt=Object.keys(newJobsByCat).length>0?Object.entries(newJobsByCat).map(([c,n])=>`    · ${c}: ${n}건`).join('\n'):'    · 없음';
-  const top3Txt=top3.length>0?top3.map(([c,n],i)=>`    ${i+1}위. ${c} — ${n}명`).join('\n'):'    · 데이터 없음';
   const sep='─'.repeat(32);
-  const reportText=`📊 ${label} 취업 실적 보고서\n${sep}\n\n■ 신규 공고: ${newJobs.length}건\n${catSummaryTxt}\n\n■ 이번 달 총 지원자: ${monthApplicants.length}명\n■ 이번 달 최종합격: ${finalPass.length}명\n■ 취업 성공률: ${rate}%\n\n■ 주요 취업 기관 TOP 3\n${top3Txt}\n\n${sep}\n※ JobMS v7.2 자동 생성 · ${TODAY} KST 기준`;
+  const reportText=`📊 ${label} 취업 실적 보고서\n${sep}\n\n■ 신규 공고: ${newJobs.length}건\n${Object.keys(newJobsByCat).length>0?Object.entries(newJobsByCat).map(([c,n])=>`    · ${c}: ${n}건`).join('\n'):'    · 없음'}\n\n■ 이번 달 총 지원자: ${monthApplicants.length}명\n■ 이번 달 최종합격: ${finalPass.length}명\n■ 취업 성공률: ${rate}%\n\n■ 주요 취업 기관 TOP 3\n${top3.length>0?top3.map(([c,n],i)=>`    ${i+1}위. ${c} — ${n}명`).join('\n'):'    · 데이터 없음'}\n\n${sep}\n※ JobMS v7.2 자동 생성 · ${TODAY} KST 기준`;
   const catBadgesHtml=Object.keys(newJobsByCat).length>0?Object.entries(newJobsByCat).map(([c,n])=>`<span style="display:inline-flex;align-items:center;gap:4px;background:${CAT_COLORS[c]||'#6B7280'}18;color:${CAT_COLORS[c]||'#6B7280'};border:1px solid ${CAT_COLORS[c]||'#6B7280'}33;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">${c} <strong>${n}건</strong></span>`).join(''):'<span style="color:#CBD5E1;font-size:12px">없음</span>';
   const top3Html=top3.length>0?top3.map(([c,n],i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #F3F4F6;${i===0?'background:#FFFBEB;':i===1?'background:#F9FAFB;':''}"><div style="width:26px;height:26px;border-radius:50%;background:${['#F59E0B','#9CA3AF','#D97706'][i]};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">${i+1}</div>${badge(c)}<span style="flex:1;font-size:13px;font-weight:700;color:#374151">${c} 분야</span><span style="font-size:18px;font-weight:900;color:#0F172A">${n}<span style="font-size:11px;font-weight:500;color:#94A3B8;margin-left:2px">명</span></span></div>`).join(''):'<div style="padding:20px;text-align:center;color:#CBD5E1;font-size:12px">이번 달 최종합격 데이터 없음</div>';
   const kpiRow=(ic,lbl,val,sub,c,bg)=>`<div style="background:${bg};border-radius:12px;padding:14px 18px;border:1px solid ${c}33;flex:1;min-width:0"><p style="margin:0;font-size:10px;color:${c};font-weight:700">${ic} ${lbl}</p><p style="margin:4px 0 2px;font-size:28px;font-weight:900;color:#0F172A;line-height:1">${val}</p><p style="margin:0;font-size:10px;color:${c};opacity:.7">${sub}</p></div>`;
-  const bodyHtml=`<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">${kpiRow('📋','신규 공고',newJobs.length+'건','이번 달 등록','#2563EB','#EFF6FF')}${kpiRow('👤','총 지원자',monthApplicants.length+'명','서류접수일 기준','#7C3AED','#F5F3FF')}${kpiRow('🏆','최종합격',finalPass.length+'명','합격발표일 기준','#059669','#F0FDF4')}${kpiRow('📈','취업 성공률',rate+'%','합격/지원자','#D97706','#FFFBEB')}</div><div style="margin-bottom:16px"><p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">📋 신규 공고 카테고리별</p><div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;background:#F8FAFC;border-radius:8px;border:1px solid #E5E7EB">${catBadgesHtml}</div></div><div style="margin-bottom:16px"><p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">🥇 주요 취업 기관 TOP 3</p><div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden">${top3Html}</div></div><div style="background:#1E293B;border-radius:10px;padding:14px 16px;margin-bottom:16px"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em">📝 보고서 미리보기 (복사용)</p><pre style="margin:0;font-size:11px;color:#E2E8F0;line-height:1.75;white-space:pre-wrap;font-family:'Apple SD Gothic Neo','Malgun Gothic',monospace">${esc(reportText)}</pre></div><div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">${btn('✕ 닫기','closeModal()','outline')}<button onclick="copyReportText()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px;box-shadow:0 3px 10px rgba(5,150,105,.3)">📋 보고서 복사하기</button></div>`;
-  window._reportTextForCopy=reportText;showModal(`📊 ${label} 실적 보고서`,bodyHtml,'680px');
+  const bodyHtml=`<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">${kpiRow('📋','신규 공고',newJobs.length+'건','이번 달 등록','#2563EB','#EFF6FF')}${kpiRow('👤','총 지원자',monthApplicants.length+'명','서류접수일 기준','#7C3AED','#F5F3FF')}${kpiRow('🏆','최종합격',finalPass.length+'명','합격발표일 기준','#059669','#F0FDF4')}${kpiRow('📈','취업 성공률',rate+'%','합격/지원자','#D97706','#FFFBEB')}</div><div style="margin-bottom:16px"><p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">📋 신규 공고 카테고리별</p><div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;background:#F8FAFC;border-radius:8px;border:1px solid #E5E7EB">${catBadgesHtml}</div></div><div style="margin-bottom:16px"><p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">🥇 주요 취업 기관 TOP 3</p><div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden">${top3Html}</div></div><div style="background:#1E293B;border-radius:10px;padding:14px 16px;margin-bottom:16px"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em">📝 보고서 미리보기</p><pre style="margin:0;font-size:11px;color:#E2E8F0;line-height:1.75;white-space:pre-wrap;font-family:inherit">${esc(reportText)}</pre></div><div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">${btn('✕ 닫기','closeModal()','outline')}<button onclick="(()=>{const t=window._reportText||'';if(!t)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>customAlert('✅ 보고서가 클립보드에 복사되었습니다!')).catch(()=>{});}else{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');customAlert('✅ 복사 완료!');}catch(e){}document.body.removeChild(ta);}})()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px">📋 보고서 복사</button></div>`;
+  window._reportText=reportText;showModal(`📊 ${label} 실적 보고서`,bodyHtml,'680px');
 }
-function copyReportText(){const text=window._reportTextForCopy||'';if(!text)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>customAlert('✅ 보고서가 클립보드에 복사되었습니다!\n\n메신저나 한글 문서에 바로 붙여넣기 할 수 있습니다.')).catch(()=>fallbackCopy(text));}else{fallbackCopy(text);}}
-function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');customAlert('✅ 복사 완료!');}catch(e){customAlert('복사 실패.');}document.body.removeChild(ta);}
-/* ── 사이드바 (면접 자료실 추가) ── */
+
+/* ── 사이드바 ── */
 function renderSidebar(){
-  const nav=[
-    {id:'dashboard',label:'대시보드',icon:'📊'},
-    {id:'jobs',label:'공고 관리',icon:'📋'},
-    {id:'students',label:'학생 DB',icon:'👥'},
-    {id:'employment',label:'취업 현황',icon:'🏆'},
-    {id:'interview',label:'면접 자료실',icon:'📚'}
-  ];
+  const nav=[{id:'dashboard',label:'대시보드',icon:'📊'},{id:'jobs',label:'공고 관리',icon:'📋'},{id:'students',label:'학생 DB',icon:'👥'},{id:'employment',label:'취업 현황',icon:'🏆'},{id:'interview',label:'면접 자료실',icon:'📚'}];
   const totalEmp=getEmpData('전체').length;
   const ivCount=JOBS.flatMap(j=>j.applicants).filter(a=>a.status==='면접대기').length;
-  const ivMaterialCount=JOBS.filter(j=>j.interviewMaterial&&j.interviewMaterial.trim()).length;
+  const vaultCount=VAULT.length;
   return`<aside id="_sidebar" style="width:215px;background:#0F172A;display:flex;flex-direction:column;flex-shrink:0;box-shadow:2px 0 20px rgba(0,0,0,.3)">
     <div style="padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.06)">
       <p style="margin:0;font-size:9px;color:#475569;font-weight:700;letter-spacing:.2em;text-transform:uppercase">취업공고 관리 시스템</p>
@@ -302,12 +263,11 @@ function renderSidebar(){
       <p style="margin:0;font-size:9px;color:#334155">v7.2 · 면접 자료실</p>
     </div>
     <nav style="flex:1;padding:12px 8px">
-      ${nav.map(n=>{
-        const a=currentView===n.id;let badge2='';
-        if(n.id==='employment'&&totalEmp>0)badge2=`<span style="margin-left:auto;background:${a?'rgba(255,255,255,.25)':'#064E3B'};color:${a?'#fff':'#6EE7B7'};padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">${totalEmp}</span>`;
-        if(n.id==='jobs'&&ivCount>0)badge2=`<span style="margin-left:auto;background:${a?'rgba(255,255,255,.25)':'#1E3A5F'};color:${a?'#fff':'#93C5FD'};padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">면접 ${ivCount}</span>`;
-        if(n.id==='interview'&&ivMaterialCount>0)badge2=`<span style="margin-left:auto;background:${a?'rgba(255,255,255,.25)':'#3B1D6A'};color:${a?'#fff':'#C4B5FD'};padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">${ivMaterialCount}</span>`;
-        return`<button onclick="setView('${n.id}')" style="width:100%;text-align:left;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:${a?700:400};background:${a?'rgba(37,99,235,.4)':'transparent'};color:${a?'#93C5FD':'#64748B'};margin-bottom:3px;display:flex;align-items:center;gap:10px;font-family:inherit"><span style="font-size:16px">${n.icon}</span>${n.label}${badge2}</button>`;
+      ${nav.map(n=>{const a=currentView===n.id;let b2='';
+        if(n.id==='employment'&&totalEmp>0)b2=`<span style="margin-left:auto;background:${a?'rgba(255,255,255,.25)':'#064E3B'};color:${a?'#fff':'#6EE7B7'};padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">${totalEmp}</span>`;
+        if(n.id==='jobs'&&ivCount>0)b2=`<span style="margin-left:auto;background:${a?'rgba(255,255,255,.25)':'#1E3A5F'};color:${a?'#fff':'#93C5FD'};padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">면접 ${ivCount}</span>`;
+        if(n.id==='interview'&&vaultCount>0)b2=`<span style="margin-left:auto;background:${a?'rgba(255,255,255,.25)':'#3B1D6A'};color:${a?'#fff':'#C4B5FD'};padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">${vaultCount}</span>`;
+        return`<button onclick="setView('${n.id}')" style="width:100%;text-align:left;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:${a?700:400};background:${a?'rgba(37,99,235,.4)':'transparent'};color:${a?'#93C5FD':'#64748B'};margin-bottom:3px;display:flex;align-items:center;gap:10px;font-family:inherit"><span style="font-size:16px">${n.icon}</span>${n.label}${b2}</button>`;
       }).join('')}
     </nav>
     <div style="padding:12px 18px 16px;border-top:1px solid rgba(255,255,255,.06)">
@@ -320,23 +280,19 @@ function renderSidebar(){
 function getEmpData(cat){const result=[];JOBS.forEach(j=>{if(cat!=='전체'&&j.category!==cat)return;j.applicants.filter(a=>a.status==='최종합격'||a.status==='취업성공').forEach(a=>{const st=STUDENTS.find(s=>s.id===a.studentId);result.push({name:st?st.name:'(삭제된 학생)',phone:st?(st.phone||'-'):'-',email:st?(st.email||'-'):'-',jobName:j.name,category:j.category,finalDate:j.finalDate||'',grade:a.grade||'-',memo:a.memo||''});});});result.sort((a,b)=>(b.finalDate||'').localeCompare(a.finalDate||''));return result;}
 function setEmpCat(cat){empCat=cat;renderView();}
 function exportEmpCsv(){const list=getEmpData(empCat);if(!list.length)return customAlert('내보낼 취업자 데이터가 없습니다.');csvExport(list.map((r,i)=>({'No':i+1,'이름':r.name,'연락처':r.phone,'이메일':r.email,'기관유형':r.category,'공고명':r.jobName,'최종합격발표일':r.finalDate?fmt(r.finalDate):'-','급수':r.grade,'메모':r.memo})),`취업자명단_${empCat==='전체'?'전체기관':empCat}_${TODAY}`);}
-
 function renderEmployment(){
   const allList=getEmpData('전체'),list=getEmpData(empCat);
   const catCounts={};CATS.slice(1).forEach(c=>{catCounts[c]=getEmpData(c).length;});
   const tabs=[['전체',allList.length],...CATS.slice(1).map(c=>[c,catCounts[c]])].map(([c,cnt])=>{const active=empCat===c,cc=CAT_COLORS[c]||'#2563EB';return`<button onclick="setEmpCat('${c}')" style="white-space:nowrap;padding:7px 15px;border-radius:99px;border:1.5px solid ${active?cc:'#E2E8F0'};background:${active?cc:'#fff'};color:${active?'#fff':'#374151'};font-size:12px;font-weight:${active?700:500};cursor:pointer;font-family:inherit;flex-shrink:0;display:inline-flex;align-items:center;gap:6px">${c}<span style="font-size:10px;background:${active?'rgba(255,255,255,.28)':'#F3F4F6'};color:${active?'#fff':'#6B7280'};padding:1px 7px;border-radius:99px;font-weight:700">${cnt}</span></button>`;}).join('');
   const kpiCards=[{label:'전체 취업자',cnt:allList.length,cat:'전체',color:'#2563EB',bg:'#EFF6FF',icon:'🏆'},...CATS.slice(1).filter(c=>catCounts[c]>0).map(c=>({label:c,cnt:catCounts[c],cat:c,color:CAT_COLORS[c]||'#6B7280',bg:`${CAT_COLORS[c]||'#6B7280'}12`,icon:''}))];
   const kpiHtml=kpiCards.map(k=>{const active=(empCat===k.cat);return`<div onclick="setEmpCat('${k.cat}')" class="emp-kpi-card" style="background:${active?k.bg:'#F8FAFC'};border:1px solid ${active?k.color:'#E2E8F0'};${active?`box-shadow:0 0 0 2px ${k.color}25;`:''}"><p style="margin:0;font-size:10px;color:${k.color};font-weight:700">${k.icon} ${k.label}</p><p style="margin:2px 0 0;font-size:22px;font-weight:900;color:#0F172A;line-height:1.1">${k.cnt}<span style="font-size:11px;font-weight:500;color:#94A3B8;margin-left:3px">명</span></p></div>`;}).join('');
-  const byCat={};list.forEach(r=>{byCat[r.category]=(byCat[r.category]||0)+1;});
-  const statBadges=Object.entries(byCat).map(([c,n])=>`<span style="font-size:11px;color:${CAT_COLORS[c]||'#6B7280'};font-weight:700">${c}&nbsp;${n}명</span>`).join('<span style="color:#E2E8F0;margin:0 5px">·</span>');
   const tableRows=list.length===0?`<tr><td colspan="7" style="padding:56px 20px;text-align:center"><div style="display:flex;flex-direction:column;align-items:center;gap:10px"><span style="font-size:40px">🏢</span><span style="font-size:14px;color:#94A3B8;font-weight:700">${empCat==='전체'?'아직 취업자가 없습니다.':`[${empCat}] 분야 취업자가 없습니다.`}</span></div></td></tr>`:list.map((r,i)=>{const fd=calcDDay(r.finalDate);const fdText=fd===null?'-':fd===0?`<span style="color:#EA580C;font-weight:700">오늘</span>`:fd>0?`<span style="color:#94A3B8">${fd}일 후</span>`:`<span style="color:#94A3B8">${Math.abs(fd)}일 전</span>`;return`<tr class="emp-tr emp-row-anim" style="border-bottom:1px solid #F0FDF4;animation-delay:${Math.min(i*0.025,0.3)}s"><td style="padding:11px 16px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700">${i+1}</td><td style="padding:11px 14px"><span style="font-weight:800;font-size:13px;color:#0F172A">${esc(r.name)}</span></td><td style="padding:11px 14px;color:#374151;font-size:12px">${esc(r.phone)}</td><td style="padding:11px 14px"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">${badge(r.category)}<span style="font-size:12px;color:#374151;font-weight:600">${esc(r.jobName.length>32?r.jobName.slice(0,32)+'…':r.jobName)}</span></div></td><td style="padding:11px 14px;white-space:nowrap">${r.finalDate?`<div><span style="font-size:12px;font-weight:700;color:#059669">${fmt(r.finalDate)}</span><br><span style="font-size:10px">${fdText}</span></div>`:`<span style="color:#CBD5E1;font-size:11px">-</span>`}</td><td style="padding:11px 14px">${r.grade&&r.grade!=='-'?`<span style="background:#F1F5F9;color:#374151;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid #E2E8F0">${esc(r.grade)}</span>`:'<span style="color:#CBD5E1">-</span>'}</td><td style="padding:11px 14px;max-width:160px"><span style="font-size:11px;color:#9CA3AF;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.memo||'-')}</span></td></tr>`;}).join('');
   return`<div id="_view_scroll" style="padding:24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:16px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0"><div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">🏆 취업 현황</h2><p style="margin:4px 0 0;font-size:12px;color:#94A3B8">기관별 최종합격/취업성공자 명단</p></div><button onclick="exportEmpCsv()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(5,150,105,.35);flex-shrink:0">📥 현재 명단 다운로드<span style="font-size:11px;background:rgba(255,255,255,.25);padding:2px 9px;border-radius:99px">${empCat==='전체'?'전체':empCat} · ${list.length}명</span></button></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0"><div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">🏆 취업 현황</h2><p style="margin:4px 0 0;font-size:12px;color:#94A3B8">기관별 최종합격/취업성공자 명단</p></div><button onclick="exportEmpCsv()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(5,150,105,.35);flex-shrink:0">📥 명단 다운로드<span style="font-size:11px;background:rgba(255,255,255,.25);padding:2px 9px;border-radius:99px">${empCat==='전체'?'전체':empCat} · ${list.length}명</span></button></div>
     ${kpiCards.length>0?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;flex-shrink:0">${kpiHtml}</div>`:''}
     <div style="background:#fff;border-radius:14px;border:1px solid #D1FAE5;overflow:hidden;flex-shrink:0">
       <div style="padding:14px 20px;background:linear-gradient(135deg,#064E3B,#065F46);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🏢</span><div><p style="margin:0;font-size:9px;color:#6EE7B7;font-weight:700;letter-spacing:.14em;text-transform:uppercase">기관별 취업 현황</p><p style="margin:3px 0 0;font-size:16px;font-weight:800;color:#fff">${empCat==='전체'?'전체 기관':empCat}<span style="font-size:12px;font-weight:500;color:#6EE7B7;margin-left:8px">취업자 ${list.length}명</span></p></div></div>${list.length>0?`<button onclick="exportEmpCsv()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📥 CSV 다운로드</button>`:''}</div>
       <div style="padding:10px 16px 8px;border-bottom:1px solid #ECFDF5;background:#F0FDF4"><div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">${tabs}</div></div>
-      ${list.length>0&&empCat==='전체'?`<div style="padding:7px 20px;background:#F9FAFB;border-bottom:1px solid #F3F4F6;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><span style="font-size:11px;color:#6B7280;font-weight:700;white-space:nowrap">기관별 소계</span>${statBadges}</div>`:''}
       <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px"><thead><tr style="background:#F0FDF4;border-bottom:2px solid #D1FAE5">${['No.','이름','연락처','기관 / 공고명','최종합격발표일','급수','메모'].map(h=>`<th style="padding:10px 14px;text-align:left;font-weight:700;color:#065F46;font-size:11px;white-space:nowrap;letter-spacing:.04em">${h}</th>`).join('')}</tr></thead><tbody>${tableRows}</tbody></table></div>
       ${list.length>0?`<div style="padding:10px 20px;background:#F9FAFB;border-top:1px solid #F3F4F6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:12px;color:#6B7280">총 <strong style="color:#065F46">${list.length}</strong>명 · ${empCat==='전체'?'전체 기관':empCat}</span><button onclick="exportEmpCsv()" style="background:#059669;color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📥 엑셀(CSV)</button></div>`:''}
     </div>
@@ -354,12 +310,11 @@ function renderDashboard(){
   const kpis=[{label:'전체 공고',val:JOBS.length,icon:'📋',c:'#2563EB',bg:'#EFF6FF'},{label:'진행 중',val:active.length,icon:'🟢',c:'#059669',bg:'#F0FDF4'},{label:'전체 지원자',val:allAps.length,icon:'👤',c:'#7C3AED',bg:'#F5F3FF'},{label:'취업 완료',val:totalEmp,icon:'🏆',c:'#D97706',bg:'#FFFBEB'}];
   const eventContent=todayEvents.length===0?`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:#CBD5E1"><span style="font-size:52px">🗓️</span><span style="font-size:15px;font-weight:700">오늘 예정된 일정 없음</span><span style="font-size:12px;color:#E2E8F0">오늘 진행되는 공고 일정이 없습니다</span></div>`:`<div style="display:flex;flex-direction:column;gap:8px;flex:1">${todayEvents.map(ev=>`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#F8FAFC;border-radius:10px;border:1px solid #F1F5F9"><span style="background:${ev.c}18;color:${ev.c};padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;border:1px solid ${ev.c}33">${ev.type}</span><span style="font-size:13px;color:#0F172A;font-weight:600;line-height:1.4;flex:1">${esc(ev.jname.length>24?ev.jname.slice(0,24)+'…':ev.jname)}</span></div>`).join('')}</div>`;
   const activeContent=activeSorted.length===0?`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:#CBD5E1"><span style="font-size:52px">📋</span><span style="font-size:15px;font-weight:700">진행 중인 공고 없음</span></div>`:`<div style="display:flex;flex-direction:column;gap:6px">${activeSorted.map((j,i)=>{const isFT=isToday(j.finalDate);return`<div style="display:flex;align-items:center;gap:7px;padding:8px 10px;background:${isFT?'#FFF7ED':'#F8FAFC'};border-radius:9px;border:1px solid ${isFT?'#FED7AA':'#F1F5F9'}"><span style="min-width:20px;text-align:center;font-size:10px;font-weight:800;color:#94A3B8;flex-shrink:0">${i+1}</span>${badge(j.category)}${isFT?`<span style="font-size:9px;font-weight:800;color:#EA580C;white-space:nowrap">🔥발표</span>`:''}<span style="font-size:12px;flex:1;color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${esc(j.name.length>16?j.name.slice(0,16)+'…':j.name)}</span>${j.finalDate?dDayBadge(j.finalDate,false):''}<span style="font-size:10px;color:#CBD5E1;white-space:nowrap;flex-shrink:0">${j.applicants.length}명</span></div>`;}).join('')}</div>`;
-  const alertsHtml=renderSmartAlerts();
   return`<div id="dash-root">
     <div id="dash-header"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px"><div><h2 style="margin:0;font-size:18px;font-weight:800;color:#0F172A">대시보드</h2><p style="margin:3px 0 0;font-size:12px;color:#94A3B8">${TODAY} KST 기준 · v7.2</p></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button onclick="showMonthlyReport()" style="background:linear-gradient(135deg,#6D28D9,#7C3AED);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(109,40,217,.3)">📊 이번 달 실적 보고서</button>${totalEmp>0?`<button onclick="setView('employment')" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(5,150,105,.25)">🏆 취업 현황<span style="font-size:10px;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:99px">${totalEmp}명</span></button>`:''}</div></div></div>
-    ${alertsHtml}
+    ${renderSmartAlerts()}
     <div id="dash-kpi">${kpis.map(k=>`<div style="background:${k.bg};border-radius:10px;padding:10px 14px;border:1px solid ${k.c}33;display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:8px;background:${k.c}18;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${k.icon}</div><div><p style="margin:0;font-size:10px;color:${k.c};font-weight:700">${k.label}</p><p style="margin:1px 0 0;font-size:24px;font-weight:800;color:#0F172A;line-height:1">${k.val}</p></div></div>`).join('')}</div>
-    <div id="dash-monthly"><div style="background:linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%);border-radius:10px;padding:12px 18px;display:flex;align-items:center;flex-wrap:wrap;gap:10px"><div style="flex-shrink:0;margin-right:12px"><p style="margin:0;font-size:9px;color:#93C5FD;font-weight:800;letter-spacing:.12em;text-transform:uppercase">월별 현황</p><div style="display:flex;align-items:center;gap:6px;margin-top:4px"><input type="month" value="${selectedMonth}" onchange="selectedMonth=this.value;renderView()" style="padding:4px 8px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit;outline:none;cursor:pointer"><button onclick="selectedMonth=MONTH;renderView()" style="border:none;background:rgba(255,255,255,.15);color:#93C5FD;padding:4px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">이번 달</button><button onclick="showMonthlyReport()" style="border:none;background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📊 보고서</button></div></div><div style="display:flex;gap:0;flex:1;flex-wrap:wrap">${[['신규 공고',monthNewJobs,'📋','#60A5FA'],['서류 합격',monthDocPass,'📄','#34D399'],['최종 합격',monthFinal,'🏆','#FBBF24']].map(([lbl,val,ic,c],i)=>`<div style="${i>0?'border-left:1px solid rgba(255,255,255,.12);':''}padding:0 18px;${i===0?'padding-left:0':''}"><p style="margin:0;font-size:10px;color:${c};font-weight:700">${ic} ${lbl}</p><p style="margin:2px 0 0;font-size:22px;font-weight:900;color:#fff;line-height:1">${val}<span style="font-size:11px;font-weight:500;color:#93C5FD;margin-left:3px">${lbl.includes('공고')?'건':'명'}</span></p></div>`).join('')}</div></div></div>
+    <div id="dash-monthly"><div style="background:linear-gradient(135deg,#1E3A5F 0%,#1E40AF 100%);border-radius:10px;padding:12px 18px;display:flex;align-items:center;flex-wrap:wrap;gap:10px"><div style="flex-shrink:0;margin-right:12px"><p style="margin:0;font-size:9px;color:#93C5FD;font-weight:800;letter-spacing:.12em;text-transform:uppercase">월별 현황</p><div style="display:flex;align-items:center;gap:6px;margin-top:4px"><input type="month" value="${selectedMonth}" onchange="selectedMonth=this.value;renderView()" style="padding:4px 8px;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:12px;background:rgba(255,255,255,.1);color:#fff;font-family:inherit;outline:none;cursor:pointer"><button onclick="selectedMonth=MONTH;renderView()" style="border:none;background:rgba(255,255,255,.15);color:#93C5FD;padding:4px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">이번 달</button></div></div><div style="display:flex;gap:0;flex:1;flex-wrap:wrap">${[['신규 공고',monthNewJobs,'📋','#60A5FA'],['서류 합격',monthDocPass,'📄','#34D399'],['최종 합격',monthFinal,'🏆','#FBBF24']].map(([lbl,val,ic,c],i)=>`<div style="${i>0?'border-left:1px solid rgba(255,255,255,.12);':''}padding:0 18px;${i===0?'padding-left:0':''}"><p style="margin:0;font-size:10px;color:${c};font-weight:700">${ic} ${lbl}</p><p style="margin:2px 0 0;font-size:22px;font-weight:900;color:#fff;line-height:1">${val}<span style="font-size:11px;font-weight:500;color:#93C5FD;margin-left:3px">${lbl.includes('공고')?'건':'명'}</span></p></div>`).join('')}</div></div></div>
     <div id="dash-4grid">
       <div class="dash-card"><div class="dash-card-head"><span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800">TODAY</span><span style="font-size:13px;font-weight:700;color:#0F172A">오늘의 주요 일정</span>${todayEvents.length>0?`<span style="margin-left:auto;background:#FEE2E2;color:#DC2626;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${todayEvents.length}건</span>`:''}</div><div class="dash-card-body">${eventContent}</div></div>
       <div class="dash-card"><div class="dash-card-head"><span style="font-size:15px">📊</span><span style="font-size:13px;font-weight:700;color:#0F172A">지원 진행 상태</span><span style="margin-left:auto;background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600">전체 ${allAps.length}건</span></div><div class="dash-card-body">${renderStatusInfographic(allAps)}</div></div>
@@ -368,15 +323,8 @@ function renderDashboard(){
     </div>
   </div>`;
 }
-/* ══════════════════════════════════════════════════════════════
-   헤더 클릭 정렬 (v7.1 기능 유지)
-══════════════════════════════════════════════════════════════ */
-function setTableSort(col){
-  _saveScrollPositions();
-  if(tableSort.col===col){if(tableSort.dir==='asc'){tableSort.dir='desc';}else if(tableSort.dir==='desc'){tableSort.col=null;tableSort.dir='none';}else{tableSort.dir='asc';}}
-  else{tableSort.col=col;tableSort.dir='asc';}
-  renderView();
-}
+/* ── 헤더 클릭 정렬 (v7.1 기능 유지) ── */
+function setTableSort(col){_saveScrollPositions();if(tableSort.col===col){if(tableSort.dir==='asc')tableSort.dir='desc';else if(tableSort.dir==='desc'){tableSort.col=null;tableSort.dir='none';}else tableSort.dir='asc';}else{tableSort.col=col;tableSort.dir='asc';}renderView();}
 function getSorted(filtered){
   if(tableSort.col&&tableSort.dir!=='none'){
     const getVal=j=>{switch(tableSort.col){case 'docDate':return j.docDate||'';case 'deadline':return j.applyDeadline||j.docDate||'';case 'documentPassDate':return j.documentPassDate||'';case 'interviewDate':return j.interviewDate||'';case 'finalDate':return j.finalDate||'';default:return '';}};
@@ -386,16 +334,8 @@ function getSorted(filtered){
   }
   return sortByFinalDate(filtered);
 }
-function sortHeader(label,col){
-  const active=tableSort.col===col&&tableSort.dir!=='none';const arrow=active?(tableSort.dir==='asc'?'▲':'▼'):'';
-  const tip=active?(tableSort.dir==='asc'?'오래된순 · 클릭→최신순':'최신순 · 클릭→정렬해제'):'클릭→오래된순';
-  return`<th class="sort-th" onclick="setTableSort('${col}')" title="${tip}" style="padding:10px 10px;text-align:left;font-weight:700;color:${active?'#2563EB':'#374151'};font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC;cursor:pointer;user-select:none">${label}${active?` <span style="font-size:10px;color:#2563EB;font-weight:900">${arrow}</span>`:'<span style="font-size:9px;color:#D1D5DB;margin-left:2px;font-weight:400">↕</span>'}</th>`;
-}
-function sortByFinalDate(jobs){
-  const active=jobs.filter(j=>!j.isClosed),closed=jobs.filter(j=>j.isClosed);
-  active.sort((a,b)=>{const fa=a.finalDate?String(a.finalDate).slice(0,10):'',fb=b.finalDate?String(b.finalDate).slice(0,10):'';const aF=fa&&fa>=TODAY,bF=fb&&fb>=TODAY,aP=fa&&fa<TODAY,bP=fb&&fb<TODAY;if(aF&&bF)return fa.localeCompare(fb);if(aF&&!bF)return -1;if(!aF&&bF)return 1;if(aP&&bP)return fb.localeCompare(fa);if(aP&&!bP)return -1;if(!aP&&bP)return 1;return(a.applyDeadline||a.docDate||'9999').localeCompare(b.applyDeadline||b.docDate||'9999');});
-  return[...active,...closed];
-}
+function sortHeader(label,col){const active=tableSort.col===col&&tableSort.dir!=='none';const arrow=active?(tableSort.dir==='asc'?'▲':'▼'):'';const tip=active?(tableSort.dir==='asc'?'오래된순 · 클릭→최신순':'최신순 · 클릭→정렬해제'):'클릭→오래된순';return`<th class="sort-th" onclick="setTableSort('${col}')" title="${tip}" style="padding:10px 10px;text-align:left;font-weight:700;color:${active?'#2563EB':'#374151'};font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC;cursor:pointer;user-select:none">${label}${active?` <span style="font-size:10px;color:#2563EB;font-weight:900">${arrow}</span>`:'<span style="font-size:9px;color:#D1D5DB;margin-left:2px;font-weight:400">↕</span>'}</th>`;}
+function sortByFinalDate(jobs){const active=jobs.filter(j=>!j.isClosed),closed=jobs.filter(j=>j.isClosed);active.sort((a,b)=>{const fa=a.finalDate?String(a.finalDate).slice(0,10):'',fb=b.finalDate?String(b.finalDate).slice(0,10):'';const aF=fa&&fa>=TODAY,bF=fb&&fb>=TODAY,aP=fa&&fa<TODAY,bP=fb&&fb<TODAY;if(aF&&bF)return fa.localeCompare(fb);if(aF&&!bF)return -1;if(!aF&&bF)return 1;if(aP&&bP)return fb.localeCompare(fa);if(aP&&!bP)return -1;if(!aP&&bP)return 1;return(a.applyDeadline||a.docDate||'9999').localeCompare(b.applyDeadline||b.docDate||'9999');});return[...active,...closed];}
 function getFiltered(){return JOBS.filter(j=>{if(jobFilter.cat!=='전체'&&j.category!==jobFilter.cat)return false;if(jobFilter.year&&!(j.docDate||'').startsWith(jobFilter.year))return false;if(jobFilter.kw&&!j.name.includes(jobFilter.kw))return false;if(jobFilter.type==='추천'&&!j.isRec)return false;if(jobFilter.type==='지원'&&j.isRec)return false;if(jobFilter.dateFrom){const dl=j.applyDeadline||j.docDate||'';if(dl&&dl<jobFilter.dateFrom)return false;}if(jobFilter.dateTo){const dl=j.applyDeadline||j.docDate||'';if(dl&&dl>jobFilter.dateTo)return false;}return true;});}
 
 /* ── 스크롤 보존 ── */
@@ -412,10 +352,9 @@ function renderDetailPanel(job){
   if(job.jobUrl)rows+=`<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE;display:flex;align-items:center;gap:10px"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">공고 URL</span><a href="${esc(job.jobUrl)}" target="_blank" style="font-size:12px;color:#2563EB;text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">${esc(job.jobUrl)}</a></div>`;
   if(job.isRec)rows+=`<div style="padding:10px 16px;border-bottom:1px solid #DBEAFE;background:#F0F7FF"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.05em">📌 추천 공고 정보</p><div style="display:flex;flex-wrap:wrap;gap:14px 24px">${dl('제출 서류',job.submitDocs)}${dl('제출 기한',fmt(job.submitDeadline))}${dl('담당자',job.managerName)}${dl('연락처',job.managerPhone)}${dl('이메일',job.managerEmail)}</div></div>`;
   if(job.note)rows+=`<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">비고 </span><span style="font-size:12px;color:#374151">${esc(job.note)}</span></div>`;
-  if(job.interviewMaterial)rows+=`<div style="padding:10px 16px;border-bottom:1px solid #DBEAFE;background:#FEFCE8"><span style="font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.05em">📚 면접 자료 (족보) 등록됨 </span><button onclick="event.stopPropagation();printInterviewPDF(${job.id})" style="margin-left:8px;background:#D97706;color:#fff;border:none;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">📄 PDF 출력</button></div>`;
   return`<tr><td colspan="11" style="padding:0"><div class="job-detail-panel">${rows}</div></td></tr>`;
 }
-/* ── 공고 행 (PDF 버튼 추가) ── */
+/* ── 공고 행 (면접 자료 노출 없음) ── */
 function renderJobRow(job,rowNum){
   const deadline=job.applyDeadline||job.docDate,dlDNum=calcDDay(deadline),finalDNum=calcDDay(job.finalDate);
   const tD=isToday(job.docDate),tDP=isToday(job.documentPassDate),tI=isToday(job.interviewDate),tF=isToday(job.finalDate);
@@ -431,12 +370,10 @@ function renderJobRow(job,rowNum){
     apRows=`<tr><td colspan="11" style="padding:0"><div style="background:#F8FAFF;border-left:3px solid #2563EB"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:#EFF6FF">${['상태','이름','나이','연락처','이메일','급수','응시번호','메모','관리'].map(h=>`<th style="padding:7px 10px;text-align:left;font-weight:700;color:#1E40AF;font-size:11px;border-bottom:1px solid #DBEAFE;white-space:nowrap">${h}</th>`).join('')}</tr></thead><tbody>${apBody}</tbody></table></div></td></tr>`;
   }
   const hasScheduleToday=tD||tDP||tI;
-  const nameCell=`<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${isUrgent?`<span style="background:#FFEDD5;color:#EA580C;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FDBA74;white-space:nowrap">🔥최종발표</span>`:''}${hasScheduleToday?'<span style="color:#F59E0B;font-size:14px">★</span>':''}${job.isRec?badge('추천','#7C3AED'):''}${job.isReA?badge('재공고','#DC2626'):''}${job.isClosed?badge('마감','#9CA3AF'):''}<button class="job-name-btn" onclick="_saveScrollPositions();toggleDetail(${job.id})" style="border:none;background:none;padding:0;cursor:pointer;font-weight:700;font-size:13px;color:${isDetail?'#2563EB':'#0F172A'};text-align:left;font-family:inherit;display:inline-flex;align-items:center;gap:4px">${esc(job.name)}<span style="font-size:10px;color:${isDetail?'#2563EB':'#94A3B8'}">${isDetail?'▲':'▼'}</span></button>${hasScheduleToday?`<span style="font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:800">${[tD&&'서류접수',tDP&&'합격발표',tI&&'면접'].filter(Boolean).join('/')} D-DAY</span>`:''}${job.interviewMaterial?`<span style="font-size:9px;background:#FFFBEB;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #FEF3C7;cursor:pointer" onclick="event.stopPropagation();printInterviewPDF(${job.id})" title="면접 자료 PDF 출력">📚족보</span>`:''}</div>`;
+  const nameCell=`<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">${isUrgent?`<span style="background:#FFEDD5;color:#EA580C;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:800;border:1px solid #FDBA74;white-space:nowrap">🔥최종발표</span>`:''}${hasScheduleToday?'<span style="color:#F59E0B;font-size:14px">★</span>':''}${job.isRec?badge('추천','#7C3AED'):''}${job.isReA?badge('재공고','#DC2626'):''}${job.isClosed?badge('마감','#9CA3AF'):''}<button class="job-name-btn" onclick="_saveScrollPositions();toggleDetail(${job.id})" style="border:none;background:none;padding:0;cursor:pointer;font-weight:700;font-size:13px;color:${isDetail?'#2563EB':'#0F172A'};text-align:left;font-family:inherit;display:inline-flex;align-items:center;gap:4px">${esc(job.name)}<span style="font-size:10px;color:${isDetail?'#2563EB':'#94A3B8'}">${isDetail?'▲':'▼'}</span></button>${hasScheduleToday?`<span style="font-size:9px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:800">${[tD&&'서류접수',tDP&&'합격발표',tI&&'면접'].filter(Boolean).join('/')} D-DAY</span>`:''}</div>`;
   const countCell=`<div style="display:flex;flex-wrap:wrap;gap:3px;align-items:center"><span style="background:#DBEAFE;color:#1E40AF;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">지원 ${cTotal}</span>${cDocP>0?`<span style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">서류합격 ${cDocP}</span>`:''}${cInter>0?`<span style="background:#FDE68A;color:#78350F;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">면접대기 ${cInter}</span>`:''}${cPass>0?`<span style="background:#D1FAE5;color:#065F46;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">합격 ${cPass}</span>`:''}${cFail>0?`<span style="background:#FEE2E2;color:#991B1B;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">불합격 ${cFail}</span>`:''}<button onclick="_saveScrollPositions();toggleJob(${job.id})" style="border:none;background:${isOpen?'#2563EB':'#E2E8F0'};color:${isOpen?'#fff':'#475569'};border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;font-weight:700;font-family:inherit;white-space:nowrap">${isOpen?'▲':'▼'}</button></div>`;
   const urlBtn=job.jobUrl?`<a href="${esc(job.jobUrl)}" target="_blank" style="background:#F0FDF4;color:#059669;border:1px solid #6EE7B7;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">🔗 공고</a>`:'';
-  /* ★ PDF 버튼 (면접 자료 있을 때만) */
-  const pdfBtn=job.interviewMaterial?`<button onclick="printInterviewPDF(${job.id})" style="background:#D97706;color:#fff;border:none;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">📄 PDF</button>`:'';
-  const manageBtns=`<div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center">${urlBtn}${pdfBtn} ${btn('✏',`openJobModal(${job.id})`,'outline',true)} ${btn('🗑',`confirmDeleteJob(${job.id})`,'danger',true)} ${btn('+지원',`openAddApModal(${job.id})`,'primary',true)}</div>`;
+  const manageBtns=`<div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center">${urlBtn} ${btn('✏',`openJobModal(${job.id})`,'outline',true)} ${btn('🗑',`confirmDeleteJob(${job.id})`,'danger',true)} ${btn('+지원',`openAddApModal(${job.id})`,'primary',true)}</div>`;
   const docDateText=job.docDate?`<span style="color:${tD?'#DC2626':'#475569'};font-weight:${tD?700:400};font-size:11px">${fmt(job.docDate)}</span>`:`<span style="color:#E2E8F0;font-size:11px">-</span>`;
   const dlText=job.isClosed?`<span style="color:#9CA3AF;font-size:10px">마감됨</span>`:deadline?`<div style="display:flex;flex-direction:column;gap:2px">${dDayBadge(deadline,false)}<span style="color:${dlDNum!==null&&dlDNum>=0&&dlDNum<=3?'#DC2626':dlDNum!==null&&dlDNum>=0&&dlDNum<=7?'#D97706':'#6B7280'};font-size:10px;font-weight:${dlDNum!==null&&dlDNum>=0&&dlDNum<=7?700:400}">${fmt(deadline)}</span></div>`:`<span style="color:#E2E8F0">-</span>`;
   const dpText=job.documentPassDate?`<span style="color:${tDP?'#DC2626':'#475569'};font-weight:${tDP?700:400};font-size:11px">${fmt(job.documentPassDate)}</span>`:`<span style="color:#E2E8F0">-</span>`;
@@ -463,7 +400,7 @@ function renderJobs(){
   const catTabs=CATS.map(c=>{const cnt=c==='전체'?JOBS.length:JOBS.filter(j=>j.category===c).length,a=c===jobFilter.cat;return`<button onclick="jobFilter.cat='${c}';renderView()" style="white-space:nowrap;padding:6px 14px;border-radius:99px;border:1.5px solid ${a?'#2563EB':'#E2E8F0'};background:${a?'#2563EB':'#fff'};color:${a?'#fff':'#374151'};font-size:12px;font-weight:${a?700:500};cursor:pointer;font-family:inherit;flex-shrink:0">${c} <span style="font-size:10px;opacity:.75">${cnt}</span></button>`;}).join('');
   const sortHint=tableSort.col&&tableSort.dir!=='none'?`<span style="color:#2563EB;font-weight:600">${{docDate:'서류접수일',deadline:'서류마감일',documentPassDate:'서류합격발표일',interviewDate:'면접일',finalDate:'최종합격발표일'}[tableSort.col]} ${tableSort.dir==='asc'?'오래된순↑':'최신순↓'}</span>`:`<span style="color:#2563EB;font-weight:600">최종합격발표일 임박순</span>`;
   const tblRows=sorted.length===0?`<tr><td colspan="11" style="padding:40px;text-align:center;color:#CBD5E1;font-size:13px">공고가 없습니다.</td></tr>`:sorted.map((j,i)=>renderJobRow(j,i+1)).join('');
-  const staticTh=(label,extra)=>`<th style="padding:10px 10px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC${extra?';'+extra:''}">${label}</th>`;
+  const sTh=(label,extra)=>`<th style="padding:10px 10px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC${extra?';'+extra:''}">${label}</th>`;
   return`<div id="_view_scroll" style="padding:20px 24px 24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0"><div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">공고 관리</h2><p style="margin:3px 0 0;font-size:12px;color:#94A3B8">${sorted.length}건 표시 / 전체 ${JOBS.length}건 · ${sortHint}</p></div><div style="display:flex;gap:8px">${btn('📥 CSV 내보내기','exportJobs()','success')} ${btn('+ 새 공고 등록','openJobModal(null)','primary')}</div></div>
     <div class="cat-tab-wrap" style="flex-shrink:0">${catTabs}</div>
@@ -478,13 +415,9 @@ function renderJobs(){
     <div id="_tbl_scroll" style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">
       <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1280px">
         <thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">
-          ${staticTh('No.')}${staticTh('카테고리')}${staticTh('채용 형태')}${staticTh('공고명 (▼ 상세)')}
-          ${sortHeader('서류접수일','docDate')}
-          ${sortHeader('서류마감일 (D-Day)','deadline')}
-          ${sortHeader('서류합격발표일','documentPassDate')}
-          ${sortHeader('면접일','interviewDate')}
-          ${sortHeader('최종합격발표일 (D-Day)','finalDate')}
-          ${staticTh('지원현황')}${staticTh('관리')}
+          ${sTh('No.')}${sTh('카테고리')}${sTh('채용 형태')}${sTh('공고명 (▼ 상세)')}
+          ${sortHeader('서류접수일','docDate')}${sortHeader('서류마감일 (D-Day)','deadline')}${sortHeader('서류합격발표일','documentPassDate')}${sortHeader('면접일','interviewDate')}${sortHeader('최종합격발표일 (D-Day)','finalDate')}
+          ${sTh('지원현황')}${sTh('관리')}
         </tr></thead>
         <tbody>${tblRows}</tbody>
       </table>
@@ -492,55 +425,51 @@ function renderJobs(){
   </div>`;
 }
 /* ══════════════════════════════════════════════════════════════
-   ★ v7.2 면접 자료실 뷰
+   ★ 면접 자료실 — interview_vault 기반 독립 시스템
+   SQL:
+   CREATE TABLE IF NOT EXISTS interview_vault (
+     id BIGSERIAL PRIMARY KEY,
+     category TEXT NOT NULL DEFAULT '',
+     institution_name TEXT NOT NULL DEFAULT '',
+     year INTEGER,
+     content TEXT NOT NULL DEFAULT '',
+     created_at TIMESTAMPTZ DEFAULT NOW()
+   );
 ══════════════════════════════════════════════════════════════ */
 function renderInterviewRoom(){
-  /* IV 카테고리별 카운트 */
-  const ivJobs=JOBS.filter(j=>j.interviewMaterial&&j.interviewMaterial.trim());
-  const ivCounts={'전체':ivJobs.length};
-  IV_CATS.forEach(c=>{ivCounts[c]=ivJobs.filter(j=>jobCatToIV(j.category)===c).length;});
+  /* 카테고리별 카운트 */
+  const counts={};IV_CATS.forEach(c=>{counts[c]=VAULT.filter(v=>v.category===c).length;});
+  const total=VAULT.length;
 
-  /* 현황 배지 */
-  const badgesHtml=['전체',...IV_CATS].map(c=>{
-    const cnt=ivCounts[c]||0;const cc=IV_CAT_COLORS[c]||'#2563EB';const active=ivFilter===c;
-    return`<button onclick="setIvFilter('${c}')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:99px;border:1.5px solid ${active?cc:'#E2E8F0'};background:${active?cc:'#fff'};color:${active?'#fff':'#374151'};font-size:12px;font-weight:${active?700:500};cursor:pointer;font-family:inherit;flex-shrink:0;transition:all .12s">${c}<span style="font-size:10px;background:${active?'rgba(255,255,255,.28)':'#F3F4F6'};color:${active?'#fff':'#6B7280'};padding:1px 7px;border-radius:99px;font-weight:700">${cnt}</span></button>`;
+  /* 카테고리 배지 */
+  const catBadges=['전체',...IV_CATS].map(c=>{
+    const cnt=c==='전체'?total:(counts[c]||0);
+    const cc=IV_COLORS[c]||'#2563EB';const active=vaultFilter===c;
+    return`<button onclick="setVaultFilter('${c}')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:99px;border:1.5px solid ${active?cc:'#E2E8F0'};background:${active?cc:'#fff'};color:${active?'#fff':'#374151'};font-size:12px;font-weight:${active?700:500};cursor:pointer;font-family:inherit;flex-shrink:0;transition:all .12s">${c}<span style="font-size:10px;background:${active?'rgba(255,255,255,.28)':'#F3F4F6'};color:${active?'#fff':'#6B7280'};padding:1px 7px;border-radius:99px;font-weight:700">${cnt}</span></button>`;
   }).join('');
 
   /* 필터링 */
-  const filtered=ivFilter==='전체'?ivJobs:ivJobs.filter(j=>jobCatToIV(j.category)===ivFilter);
+  let filtered=vaultFilter==='전체'?[...VAULT]:VAULT.filter(v=>v.category===vaultFilter);
+  if(vaultKw.trim()){const kw=vaultKw.trim();filtered=filtered.filter(v=>v.institutionName.includes(kw)||v.content.includes(kw));}
+  filtered.sort((a,b)=>{if((b.year||0)!==(a.year||0))return(b.year||0)-(a.year||0);return(b.createdAt||'').localeCompare(a.createdAt||'');});
 
-  if(!filtered.length){
-    return`<div id="_view_scroll" style="padding:24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:16px">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0"><div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">📚 면접 자료실</h2><p style="margin:4px 0 0;font-size:12px;color:#94A3B8">7대 카테고리 면접 족보 관리</p></div></div>
-      <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:12px 16px;flex-shrink:0"><div class="cat-tab-wrap">${badgesHtml}</div></div>
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#CBD5E1"><span style="font-size:56px">📚</span><span style="font-size:16px;font-weight:700;color:#94A3B8">${ivFilter==='전체'?'면접 자료가 없습니다':ivFilter+' 자료가 없습니다'}</span><span style="font-size:12px;color:#CBD5E1">공고 등록 · 수정 시 면접 자료(족보)를 입력하면 여기에 표시됩니다</span><button onclick="openJobModal(null)" style="background:#2563EB;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 새 공고 등록</button></div>
-    </div>`;
-  }
-
-  /* 카드 목록 */
-  const sorted=[...filtered].sort((a,b)=>(b.docDate||'').localeCompare(a.docDate||''));
-  const cardsHtml=sorted.map(j=>{
-    const ivCat=jobCatToIV(j.category)||j.category;
-    const cc=IV_CAT_COLORS[ivCat]||CAT_COLORS[j.category]||'#6B7280';
-    const preview=j.interviewMaterial.length>120?j.interviewMaterial.slice(0,120)+'…':j.interviewMaterial;
-    const year=j.docDate?j.docDate.slice(0,4):'연도불명';
+  /* 카드 */
+  const cardsHtml=filtered.length===0?`<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;color:#CBD5E1"><span style="font-size:56px">📚</span><span style="font-size:16px;font-weight:700;color:#94A3B8">${vaultKw?`"${vaultKw}" 검색 결과 없음`:(vaultFilter==='전체'?'면접 자료가 없습니다':vaultFilter+' 자료가 없습니다')}</span><span style="font-size:12px;color:#CBD5E1">'새 면접 내용 등록' 버튼으로 자료를 추가하세요</span><button onclick="openVaultModal(null)" style="background:#2563EB;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 새 면접 내용 등록</button></div>`:filtered.map(v=>{
+    const cc=IV_COLORS[v.category]||'#6B7280';
+    const preview=v.content.length>140?v.content.slice(0,140)+'…':v.content;
     return`<div class="iv-card" style="border:1.5px solid ${cc}33">
-      <div style="padding:12px 14px;border-bottom:1px solid #F3F4F6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:${cc}08">
-        <span style="background:${cc};color:#fff;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:800;white-space:nowrap">${ivCat}</span>
-        ${j.interviewDate?`<span style="font-size:10px;color:#6B7280;font-weight:700;background:#F3F4F6;padding:2px 8px;border-radius:99px">${year}년 면접</span>`:`<span style="font-size:10px;color:#6B7280;background:#F3F4F6;padding:2px 8px;border-radius:99px">${year}</span>`}
-        ${j.isClosed?badge('마감','#9CA3AF'):''}
-        <span style="margin-left:auto;font-size:10px;color:#94A3B8;white-space:nowrap">${fmt(j.interviewDate||j.docDate)}</span>
+      <div style="padding:10px 14px;border-bottom:1px solid #F3F4F6;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:${cc}08">
+        <span style="background:${cc};color:#fff;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:800;white-space:nowrap">${esc(v.category)}</span>
+        ${v.year?`<span style="font-size:11px;color:${cc};font-weight:700;background:${cc}15;padding:2px 8px;border-radius:99px">${v.year}년</span>`:''}
+        <span style="margin-left:auto;font-size:10px;color:#94A3B8;white-space:nowrap">${v.createdAt?v.createdAt.slice(0,10).replace(/-/g,'.'):''}  등록</span>
       </div>
       <div style="padding:12px 14px">
-        <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#0F172A;line-height:1.4">${esc(j.name)}</p>
-        <p style="margin:0 0 10px;font-size:11px;color:#6B7280;line-height:1.6;white-space:pre-wrap;word-break:break-all">${esc(preview)}</p>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          ${j.interviewDate?`<span style="font-size:11px;color:#7C3AED;font-weight:600">면접일 ${fmt(j.interviewDate)}</span>`:''}
-          ${j.type?`<span style="background:#F1F5F9;color:#374151;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;border:1px solid #E2E8F0">${esc(j.type)}</span>`:''}
-          <div style="margin-left:auto;display:flex;gap:5px">
-            <button onclick="openJobModal(${j.id})" style="background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✏ 수정</button>
-            <button onclick="printInterviewPDF(${j.id})" style="background:#D97706;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px">📄 PDF 출력</button>
-          </div>
+        <p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#0F172A;line-height:1.4">${esc(v.institutionName)}</p>
+        <p style="margin:0 0 12px;font-size:11px;color:#6B7280;line-height:1.65;white-space:pre-wrap;word-break:break-all">${esc(preview)}</p>
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button onclick="openVaultModal(${v.id})" style="background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✏ 수정</button>
+          <button onclick="deleteVault(${v.id})" style="background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🗑 삭제</button>
+          <button onclick="printVaultPDF(${v.id})" style="background:#D97706;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:3px">📄 PDF</button>
         </div>
       </div>
     </div>`;
@@ -548,63 +477,85 @@ function renderInterviewRoom(){
 
   return`<div id="_view_scroll" style="padding:24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:16px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0">
-      <div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">📚 면접 자료실</h2><p style="margin:4px 0 0;font-size:12px;color:#94A3B8">7대 카테고리 · 전체 <strong>${ivJobs.length}</strong>건 · ${ivFilter==='전체'?'전체':ivFilter} <strong>${filtered.length}</strong>건</p></div>
-      <button onclick="openJobModal(null)" style="background:#2563EB;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px">+ 새 공고 등록</button>
+      <div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">📚 면접 자료실</h2><p style="margin:4px 0 0;font-size:12px;color:#94A3B8">공고 시스템과 독립된 면접 족보 전용 보관함 · 전체 <strong>${total}</strong>건</p></div>
+      <button onclick="openVaultModal(null)" style="background:linear-gradient(135deg,#1D4ED8,#2563EB);color:#fff;border:none;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px;box-shadow:0 3px 12px rgba(37,99,235,.3)">📝 새 면접 내용 등록</button>
     </div>
-    <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:12px 16px;flex-shrink:0"><div class="cat-tab-wrap">${badgesHtml}</div></div>
+    <!-- 카테고리 배지 + 검색 -->
+    <div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:14px 16px;flex-shrink:0;display:flex;flex-direction:column;gap:10px">
+      <div class="cat-tab-wrap">${catBadges}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="vaultSearchInput" value="${esc(vaultKw)}" oncompositionstart="onVaultKwCompositionStart()" oncompositionend="onVaultKwCompositionEnd(this)" oninput="onVaultKwInput(this)" placeholder="🔍 기관명 또는 내용으로 검색..." style="flex:1;padding:8px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:12px;outline:none;font-family:inherit" autocomplete="off">
+        ${vaultKw?`<button onclick="vaultKw='';renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:7px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">✕ 검색 초기화</button>`:''}
+        <span style="font-size:11px;color:#94A3B8;white-space:nowrap">${filtered.length}건</span>
+      </div>
+    </div>
+    <!-- 자료 카드 그리드 -->
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px">${cardsHtml}</div>
   </div>`;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ★ v7.2 PDF 보안 출력
-══════════════════════════════════════════════════════════════ */
-function printInterviewPDF(jobId){
-  const job=JOBS.find(j=>j.id===jobId);
-  if(!job){customAlert('공고를 찾을 수 없습니다.');return;}
-  if(!job.interviewMaterial||!job.interviewMaterial.trim()){customAlert('면접 자료(족보)가 등록되지 않은 공고입니다.\n\n공고 수정에서 면접 자료를 먼저 입력해주세요.');return;}
+/* ── 면접 자료 등록/수정 모달 ── */
+function openVaultModal(vaultId){
+  const v=vaultId!=null?VAULT.find(x=>x.id===vaultId):null;
+  const f=v||{category:IV_CATS[0],institutionName:'',year:new Date().getFullYear(),content:''};
+  const yearOpts=['',...Array.from({length:10},(_, i)=>new Date().getFullYear()-i)];
+  showModal(v?'면접 자료 수정':'새 면접 내용 등록',`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px;margin-bottom:4px">
+      ${fSel('① 카테고리','vf_cat',IV_CATS,f.category)}
+      ${fInp('② 기관명 *','vf_inst','text',f.institutionName,'placeholder="예: ○○지방법원, ○○시의회"')}
+      <div style="margin-bottom:10px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">③ 실시 연도</label><select id="vf_year" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">${yearOpts.map(y=>`<option value="${y}" ${String(y)===String(f.year||'')?'selected':''}>${y||'연도 미상'}</option>`).join('')}</select></div>
+    </div>
+    <div style="margin-bottom:4px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">④ 면접 내용 *</label><textarea id="vf_content" rows="12" placeholder="면접 질문, 기출문제, 면접 후기 등을 자유롭게 입력하세요.
 
-  /* 동일 기관 연도별 히스토리 수집 */
-  const ivCat=jobCatToIV(job.category)||job.category;
-  const history=JOBS.filter(j=>j.id!==jobId&&j.interviewMaterial&&j.interviewMaterial.trim()&&jobCatToIV(j.category)===ivCat).sort((a,b)=>(b.docDate||'').localeCompare(a.docDate||''));
+예)
+Q. 본인을 소개해 주세요.
+Q. 지원 동기를 말씀해 주세요.
+Q. 속기 경력에 대해 설명해 주세요." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit;line-height:1.75">${esc(f.content||'')}</textarea></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">${btn('취소','closeModal()','outline')} ${v?`${btn('📄 PDF 출력',`printVaultPDF(${v.id})`,'warn')} `:''}${btn(v?'💾 저장':'✅ 등록',`saveVault(${vaultId!=null?vaultId:'null'})`,'primary')}</div>
+  `,'720px');
+}
+async function saveVault(vaultId){
+  const cat=$('vf_cat')&&$('vf_cat').value;
+  const inst=$('vf_inst')&&$('vf_inst').value.trim();if(!inst)return customAlert('기관명을 입력하세요');
+  const cont=$('vf_content')&&$('vf_content').value.trim();if(!cont)return customAlert('면접 내용을 입력하세요');
+  const yr=$('vf_year')&&$('vf_year').value;
+  const f={category:cat,institution_name:inst,year:yr?parseInt(yr):null,content:cont};
+  const{error}=vaultId!=null?await SB.from('interview_vault').update(f).eq('id',vaultId):await SB.from('interview_vault').insert(f);
+  if(error){
+    if(error.message&&error.message.includes('interview_vault')){
+      customAlert('저장 오류: interview_vault 테이블이 없습니다.\n\nSupabase에서 아래 SQL을 실행하세요:\n\nCREATE TABLE IF NOT EXISTS interview_vault (\n  id BIGSERIAL PRIMARY KEY,\n  category TEXT NOT NULL DEFAULT \'\',\n  institution_name TEXT NOT NULL DEFAULT \'\',\n  year INTEGER,\n  content TEXT NOT NULL DEFAULT \'\',\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);');
+    }else{customAlert('저장 오류: '+error.message);}
+    return;
+  }
+  closeModal();await loadAllData();
+}
+function deleteVault(vaultId){
+  const v=VAULT.find(x=>x.id===vaultId);if(!v)return;
+  customConfirm(`"${v.institutionName}" (${v.year||'연도 미상'}년)\n\n이 면접 자료를 삭제하시겠습니까?\n삭제 후 복구가 불가합니다.`,async()=>{const{error}=await SB.from('interview_vault').delete().eq('id',vaultId);if(error){customAlert('삭제 오류: '+error.message);return;}await loadAllData();},'삭제','#DC2626');
+}
 
-  const cc=IV_CAT_COLORS[ivCat]||'#2563EB';
-  const historyHtml=history.length>0?`
-    <div style="margin-top:24pt;padding-top:16pt;border-top:1pt solid #E2E8F0">
-      <h3 style="font-size:12pt;font-weight:700;color:#374151;margin:0 0 12pt">📅 동일 카테고리 과거 자료 (${ivCat} · ${history.length}건)</h3>
-      ${history.map(h=>{const yr=h.docDate?h.docDate.slice(0,4):'?';return`<div style="margin-bottom:14pt;padding:10pt 12pt;border:1pt solid #E2E8F0;border-radius:6pt;page-break-inside:avoid"><p style="margin:0 0 5pt;font-size:10pt;font-weight:700;color:#6B7280">[${yr}년] ${h.name} ${h.interviewDate?'· 면접일: '+h.interviewDate.slice(0,10):''}</p><p style="margin:0;font-size:10pt;color:#374151;white-space:pre-wrap;line-height:1.7">${h.interviewMaterial.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p></div>`;}).join('')}
-    </div>`:'';
-
-  const printHtml=`<div class="pdf-page">
-    <div class="pdf-watermark">CONFIDENTIAL</div>
-    <div class="pdf-header">
-      <p style="margin:0 0 5pt;font-size:9pt;color:${cc};font-weight:800;letter-spacing:.1em;text-transform:uppercase">${ivCat} 면접 자료실</p>
-      <h1 class="pdf-title">${job.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</h1>
-      <div class="pdf-meta">
-        ${job.category?`<span>📂 ${job.category}</span>`:''}
-        ${job.type?`<span>💼 ${job.type}</span>`:''}
-        ${job.interviewDate?`<span>📅 면접일: ${job.interviewDate.slice(0,10).replace(/-/g,'.')}</span>`:''}
-        ${job.docDate?`<span>📋 서류접수: ${job.docDate.slice(0,10).replace(/-/g,'.')}</span>`:''}
-        ${job.finalDate?`<span>🏆 최종발표: ${job.finalDate.slice(0,10).replace(/-/g,'.')}</span>`:''}
-        <span style="margin-left:auto;color:#94A3B8">출력일: ${TODAY}</span>
+/* ── 면접 자료 PDF 출력 (클린 버전 · 히스토리 없음) ── */
+function printVaultPDF(vaultId){
+  const v=VAULT.find(x=>x.id===vaultId);if(!v){customAlert('자료를 찾을 수 없습니다.');return;}
+  const cc=IV_COLORS[v.category]||'#1D4ED8';
+  const printHtml=`<div class="pdf-wrap">
+    <div class="pdf-stamp">CONFIDENTIAL</div>
+    <div class="pdf-band" style="background:${cc}">
+      <div class="pdf-band-cat">${esc(v.category)} 면접 자료실</div>
+      <div class="pdf-band-title">${esc(v.institutionName)}</div>
+      <div class="pdf-band-meta">
+        ${v.year?`<span>📅 ${v.year}년 실시</span>`:''}
+        <span style="margin-left:auto">출력일: ${TODAY}</span>
       </div>
     </div>
-    <div class="pdf-body">
-      <h2 style="font-size:12pt;font-weight:700;color:#0F172A;margin:0 0 10pt;padding-bottom:6pt;border-bottom:1pt solid #E2E8F0">📚 면접 자료 (족보)</h2>
-      <div style="white-space:pre-wrap;line-height:1.85;font-size:11pt;color:#1E293B">${job.interviewMaterial.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-      ${historyHtml}
-    </div>
-    <div class="pdf-copyright">
+    <div class="pdf-content">${esc(v.content)}</div>
+    <div class="pdf-footer">
       ⚠️ 본 자료는 저작권법의 보호를 받는 소중한 자산입니다.<br>
-      무단 배포, 공유 및 수정을 엄격히 금지합니다.<br>
-      <span style="font-size:7.5pt;font-weight:400;color:#9CA3AF;display:block;margin-top:3pt">© JobMS · 출력일 ${TODAY} · ${job.name} 전용 자료</span>
+      무단 배포 및 공유를 엄격히 금지합니다.
     </div>
   </div>`;
-
   const pt=$('_print_target');if(!pt)return;
-  pt.innerHTML=printHtml;
-  window.print();
-  setTimeout(()=>{pt.innerHTML='';},1500);
+  pt.innerHTML=printHtml;window.print();setTimeout(()=>{pt.innerHTML='';},1500);
 }
 /* ── 학생 DB ── */
 function renderStudents(){
@@ -651,92 +602,63 @@ function renderView(){
   else if(currentView==='interview')main.innerHTML=renderInterviewRoom();
   const sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();
   _restoreScrollPositions();
-  const searchIds=['jobSearchInput','studentSearchInput'];
+  const searchIds=['jobSearchInput','studentSearchInput','vaultSearchInput'];
   if(focusedId&&searchIds.includes(focusedId)){requestAnimationFrame(()=>{const el=$(focusedId);if(el){el.focus();if(cursorPos!==null)try{el.setSelectionRange(cursorPos,cursorPos);}catch(e){}}});}
 }
 function setView(v){_savedScrollTop=0;_savedTblScrollTop=0;currentView=v;$('app').innerHTML=renderSidebar()+'<main id="_main" style="flex:1;overflow:hidden;background:#F0F2F5;display:flex;flex-direction:column;min-height:0"></main>';renderView();}
-/* ══════════════════════════════════════════════════════════════
-   ★ v7.2 공고 모달 (면접 자료 + 히스토리 추가)
-══════════════════════════════════════════════════════════════ */
-function buildRecSection(f){f=f||{};return`<div style="background:#F0F7FF;border-radius:8px;padding:14px;margin-bottom:8px"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em">📌 추천 공고 정보</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">${fInp('제출 서류','jf_sd','text',f.submitDocs||'')} ${fInp('제출 기한','jf_sl','date',f.submitDeadline||'')} ${fInp('담당자 이름','jf_mn','text',f.managerName||'')} ${fInp('담당자 연락처','jf_mp','text',f.managerPhone||'')}</div>${fInp('담당자 이메일','jf_me','email',f.managerEmail||'')}</div>`;}
-function toggleRecF(){const isRec=$('jf_rc')&&$('jf_rc').checked;const el=$('jf_rec');if(!el)return;el.innerHTML=isRec?buildRecSection({}):''; }
-
-/* 히스토리 패널: 같은 IV 카테고리 공고 중 면접 자료 있는 것 */
-function buildIVHistoryPanel(currentJobId, jobCat){
-  const ivCat=jobCatToIV(jobCat)||jobCat;
-  const history=JOBS.filter(j=>{if(currentJobId&&j.id===currentJobId)return false;if(!j.interviewMaterial||!j.interviewMaterial.trim())return false;return jobCatToIV(j.category)===ivCat||j.category===jobCat;}).sort((a,b)=>(b.docDate||'').localeCompare(a.docDate||'')).slice(0,5);
-  if(!history.length)return`<div style="padding:8px;font-size:11px;color:#CBD5E1;text-align:center">동일 카테고리 히스토리 없음</div>`;
-  return history.map((h,i)=>{
-    const yr=h.docDate?h.docDate.slice(0,4):'?';
-    const preview=h.interviewMaterial.length>60?h.interviewMaterial.slice(0,60)+'…':h.interviewMaterial;
-    const fnId='_ivHCopy_'+Date.now()+'_'+i;
-    window[fnId]=function(){const ta=$('jf_im');if(!ta)return;const cur=ta.value.trim();const sep=cur?'\n\n── '+yr+'년 '+h.name+' ──\n':'';ta.value=(cur+sep+h.interviewMaterial);ta.focus();customAlert('✅ 히스토리를 입력창에 추가했습니다.');};
-    return`<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-bottom:1px solid #F3F4F6;cursor:pointer" onclick="${fnId}()" title="클릭하면 입력창에 추가">
-      <div style="flex:1;min-width:0"><p style="margin:0 0 2px;font-size:11px;font-weight:700;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">[${yr}년] ${esc(h.name.length>20?h.name.slice(0,20)+'…':h.name)}</p><p style="margin:0;font-size:10px;color:#9CA3AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(preview)}</p></div>
-      <span style="font-size:10px;color:#2563EB;font-weight:700;white-space:nowrap;flex-shrink:0">+ 추가</span>
+/* ── 공고 모달 (vault 참조 사이드패널 — 읽기 전용) ── */
+function buildVaultRefPanel(jobCat){
+  const ivCat=jobCatToIV(jobCat)||null;if(!ivCat)return`<div style="padding:10px;font-size:11px;color:#CBD5E1;text-align:center">이 카테고리의 자료실 데이터 없음</div>`;
+  const related=VAULT.filter(v=>v.category===ivCat).sort((a,b)=>(b.year||0)-(a.year||0)).slice(0,6);
+  if(!related.length)return`<div style="padding:10px;font-size:11px;color:#CBD5E1;text-align:center">${ivCat} 카테고리 자료 없음<br><small style="font-size:10px">면접 자료실에서 등록 가능</small></div>`;
+  return related.map((v,i)=>{
+    const fnId='_vRef_'+Date.now()+'_'+i;
+    window[fnId]=function(){
+      const ta=document.createElement('textarea');ta.value=v.content;ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');customAlert(`✅ "${v.institutionName}" (${v.year||'?'}년) 내용이 클립보드에 복사되었습니다!\n메모장 등에 붙여넣기 해서 확인하세요.`);}catch(e){customAlert('복사 실패. 브라우저 제한으로 직접 면접 자료실에서 확인하세요.');}
+      document.body.removeChild(ta);
+    };
+    return`<div style="padding:8px 10px;border-bottom:1px solid #F3F4F6;cursor:pointer" onclick="${fnId}()" title="클릭→클립보드 복사">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div style="min-width:0;flex:1">
+          <p style="margin:0 0 2px;font-size:11px;font-weight:700;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.year?`[${v.year}년] `:''} ${esc(v.institutionName.length>18?v.institutionName.slice(0,18)+'…':v.institutionName)}</p>
+          <p style="margin:0;font-size:10px;color:#9CA3AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(v.content.length>40?v.content.slice(0,40)+'…':v.content)}</p>
+        </div>
+        <span style="font-size:9px;color:#2563EB;font-weight:700;white-space:nowrap;flex-shrink:0">📋 복사</span>
+      </div>
     </div>`;
   }).join('');
 }
 
+function buildRecSection(f){f=f||{};return`<div style="background:#F0F7FF;border-radius:8px;padding:14px;margin-bottom:8px"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em">📌 추천 공고 정보</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">${fInp('제출 서류','jf_sd','text',f.submitDocs||'')} ${fInp('제출 기한','jf_sl','date',f.submitDeadline||'')} ${fInp('담당자 이름','jf_mn','text',f.managerName||'')} ${fInp('담당자 연락처','jf_mp','text',f.managerPhone||'')}</div>${fInp('담당자 이메일','jf_me','email',f.managerEmail||'')}</div>`;}
+function toggleRecF(){const isRec=$('jf_rc')&&$('jf_rc').checked;const el=$('jf_rec');if(!el)return;el.innerHTML=isRec?buildRecSection({}):''; }
+
 function openJobModal(jobId){
   const job=jobId!=null?JOBS.find(j=>j.id===jobId):null;
-  const f=job||{name:'',category:'법원',type:'한시임기제',isRec:false,docDate:'',documentPassDate:'',interviewDate:'',finalDate:'',startDate:'',endDate:'',isReA:false,isClosed:false,note:'',applyDeadline:'',jobUrl:'',submitDocs:'',submitDeadline:'',managerEmail:'',managerName:'',managerPhone:'',interviewMaterial:''};
-  const ivCat=jobCatToIV(f.category)||f.category;
-  const historyHtml=buildIVHistoryPanel(jobId, f.category);
+  const f=job||{name:'',category:'법원',type:'한시임기제',isRec:false,docDate:'',documentPassDate:'',interviewDate:'',finalDate:'',startDate:'',endDate:'',isReA:false,isClosed:false,note:'',applyDeadline:'',jobUrl:'',submitDocs:'',submitDeadline:'',managerEmail:'',managerName:'',managerPhone:''};
+  const ivCat=jobCatToIV(f.category)||'';
+  const vaultPanel=buildVaultRefPanel(f.category);
 
   showModal(job?'공고 수정':'새 공고 등록',`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin-bottom:4px">${fSel('① 카테고리','jf_cat',CATS.slice(1),f.category)} ${fSel('② 채용 형태','jf_type',JOB_TYPES,f.type)}</div>
     ${fInp('③ 공고명 *','jf_name','text',f.name)}
     <div style="background:#F0FDF4;border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid #BBF7D0"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#15803D;text-transform:uppercase;letter-spacing:.06em">접수 단계</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">${fInp('④ 서류접수일','jf_dd','date',f.docDate||'')} ${fInp('⑤ 서류마감일 (D-Day 기준)','jf_ad','date',f.applyDeadline||'')}</div></div>
     <div style="background:#FFF7ED;border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid #FED7AA"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#C2410C;text-transform:uppercase;letter-spacing:.06em">심사 단계</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">${fInp('⑥ 서류합격발표일','jf_dpd','date',f.documentPassDate||'')} ${fInp('⑦ 면접일','jf_id','date',f.interviewDate||'')}</div></div>
-    <div style="background:#FFF1F2;border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid #FECDD3"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#BE123C;text-transform:uppercase;letter-spacing:.06em">합격 발표 — 정렬 기준 · D-Day 강조</p>${fInp('⑧ 최종합격발표일 ★','jf_fd','date',f.finalDate||'')}</div>
+    <div style="background:#FFF1F2;border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid #FECDD3"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#BE123C;text-transform:uppercase;letter-spacing:.06em">합격 발표</p>${fInp('⑧ 최종합격발표일 ★','jf_fd','date',f.finalDate||'')}</div>
     <div style="background:#F5F3FF;border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid #DDD6FE"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#6D28D9;text-transform:uppercase;letter-spacing:.06em">임용 단계</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">${fInp('⑨ 근무 시작일','jf_sd2','date',f.startDate||'')} ${fInp('⑩ 근무 종료일','jf_ed','date',f.endDate||'')}</div></div>
     ${fInp('⑪ 🔗 공고 원문 URL','jf_url','url',f.jobUrl||'','placeholder="https://..."')}
     <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">${[['isRec','jf_rc','📌 추천 채용'],['isReA','jf_ra','🔄 재공고'],['isClosed','jf_cl','🔒 마감']].map(x=>`<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:6px 12px;border:1px solid #E5E7EB;border-radius:6px;background:${f[x[0]]?'#EFF6FF':'#fff'};color:${f[x[0]]?'#2563EB':'#374151'}"><input type="checkbox" id="${x[1]}" ${f[x[0]]?'checked':''} onchange="toggleRecF()">${x[2]}</label>`).join('')}</div>
     <div id="jf_rec">${f.isRec?buildRecSection(f):''}</div>
     <div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">비고</label><textarea id="jf_note" rows="2" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">${esc(f.note||'')}</textarea></div>
-
-    <!-- ★ v7.2 면접 자료(족보) 입력 섹션 -->
-    <div style="background:#FFFBEB;border-radius:10px;padding:14px;margin-bottom:12px;border:1.5px solid #FDE68A">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <div><p style="margin:0;font-size:11px;font-weight:800;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📚 면접 자료 (족보)</p><p style="margin:2px 0 0;font-size:10px;color:#B45309">면접 자료실에 등록됩니다 · 카테고리: <strong>${ivCat}</strong></p></div>
-        ${job&&job.interviewMaterial?`<button type="button" onclick="printInterviewPDF(${job.id})" style="background:#D97706;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📄 PDF 미리보기</button>`:''}
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 300px;gap:10px;align-items:start">
-        <div>
-          <textarea id="jf_im" rows="8" placeholder="면접 질문, 기출문제, 면접 후기 등을 자유롭게 입력하세요.
-예) 
-Q. 본인을 소개해 주세요.
-Q. 입사 지원 동기를 말씀해 주세요.
-Q. 법원 업무에 대해 알고 있는 것을 말해보세요." style="width:100%;padding:10px;border:1px solid #FCD34D;border-radius:8px;font-size:12px;resize:vertical;font-family:inherit;line-height:1.7;background:#FFFEF5">${esc(f.interviewMaterial||'')}</textarea>
-        </div>
-        <div style="background:#fff;border-radius:8px;border:1px solid #FDE68A;overflow:hidden">
-          <div style="padding:8px 10px;background:#FEF9C3;border-bottom:1px solid #FDE68A"><p style="margin:0;font-size:10px;font-weight:800;color:#92400E">📅 ${ivCat} 히스토리 <span style="font-weight:400">(클릭→추가)</span></p></div>
-          <div style="max-height:180px;overflow-y:auto">${historyHtml}</div>
-        </div>
-      </div>
-    </div>
-
+    ${ivCat?`<div style="background:#EFF6FF;border-radius:10px;padding:12px;margin-bottom:4px;border:1px solid #BFDBFE"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><p style="margin:0;font-size:10px;font-weight:800;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em">📚 면접 자료실 참조 (${ivCat}) — 클릭 시 클립보드 복사</p><button type="button" onclick="setView('interview')" style="background:none;border:1px solid #BFDBFE;color:#2563EB;padding:3px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">자료실 열기 →</button></div><div style="background:#fff;border-radius:8px;border:1px solid #DBEAFE;max-height:160px;overflow-y:auto">${vaultPanel}</div></div>`:''}
     <div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">${btn('취소','closeModal()','outline')} ${btn(job?'💾 저장':'✅ 등록',`saveJob(${jobId!=null?jobId:'null'})`,'primary')}</div>
-  `,'780px');
+  `,'720px');
 }
-
 async function saveJob(jobId){
   const name=$('jf_name')&&$('jf_name').value.trim();if(!name)return customAlert('공고명을 입력하세요');
-  const f={name,category:$('jf_cat').value,type:$('jf_type').value,is_rec:!!$('jf_rc').checked,is_rea:!!$('jf_ra').checked,is_closed:!!$('jf_cl').checked,doc_date:dateOrNull($('jf_dd')&&$('jf_dd').value),apply_deadline:dateOrNull($('jf_ad')&&$('jf_ad').value),document_pass_date:dateOrNull($('jf_dpd')&&$('jf_dpd').value),interview_date:dateOrNull($('jf_id')&&$('jf_id').value),final_date:dateOrNull($('jf_fd')&&$('jf_fd').value),start_date:dateOrNull($('jf_sd2')&&$('jf_sd2').value),end_date:dateOrNull($('jf_ed')&&$('jf_ed').value),job_url:($('jf_url')&&$('jf_url').value)||'',note:($('jf_note')&&$('jf_note').value)||'',submit_docs:($('jf_sd')&&$('jf_sd').value)||'',submit_deadline:dateOrNull($('jf_sl')&&$('jf_sl').value),manager_name:($('jf_mn')&&$('jf_mn').value)||'',manager_phone:($('jf_mp')&&$('jf_mp').value)||'',manager_email:($('jf_me')&&$('jf_me').value)||'',
-    interview_material:($('jf_im')&&$('jf_im').value)||'' /* ★ v7.2 */
-  };
+  const f={name,category:$('jf_cat').value,type:$('jf_type').value,is_rec:!!$('jf_rc').checked,is_rea:!!$('jf_ra').checked,is_closed:!!$('jf_cl').checked,doc_date:dateOrNull($('jf_dd')&&$('jf_dd').value),apply_deadline:dateOrNull($('jf_ad')&&$('jf_ad').value),document_pass_date:dateOrNull($('jf_dpd')&&$('jf_dpd').value),interview_date:dateOrNull($('jf_id')&&$('jf_id').value),final_date:dateOrNull($('jf_fd')&&$('jf_fd').value),start_date:dateOrNull($('jf_sd2')&&$('jf_sd2').value),end_date:dateOrNull($('jf_ed')&&$('jf_ed').value),job_url:($('jf_url')&&$('jf_url').value)||'',note:($('jf_note')&&$('jf_note').value)||'',submit_docs:($('jf_sd')&&$('jf_sd').value)||'',submit_deadline:dateOrNull($('jf_sl')&&$('jf_sl').value),manager_name:($('jf_mn')&&$('jf_mn').value)||'',manager_phone:($('jf_mp')&&$('jf_mp').value)||'',manager_email:($('jf_me')&&$('jf_me').value)||''};
   let{error}=jobId!=null?await SB.from('jobs').update(f).eq('id',jobId):await SB.from('jobs').insert(f);
-  if(error){
-    const newCols=['apply_deadline','job_url','document_pass_date','interview_material'];
-    if(error.message&&newCols.some(c=>error.message.includes(c))){
-      const f2={...f};
-      ['apply_deadline','job_url','document_pass_date','interview_material'].forEach(c=>{if(error.message.includes(c))delete f2[c];});
-      const{error:e2}=jobId!=null?await SB.from('jobs').update(f2).eq('id',jobId):await SB.from('jobs').insert(f2);
-      if(e2){customAlert('저장 오류: '+e2.message);return;}
-      if(error.message.includes('interview_material'))customAlert('저장 완료.\n\n※ 면접 자료 저장을 위해 DB 컬럼 추가가 필요합니다:\nALTER TABLE jobs ADD COLUMN IF NOT EXISTS interview_material TEXT DEFAULT \'\';');
-    }else{customAlert('저장 오류: '+error.message);return;}
-  }
+  if(error){const nc=['apply_deadline','job_url','document_pass_date'];if(error.message&&nc.some(c=>error.message.includes(c))){const f2={...f};nc.forEach(c=>{if(error.message.includes(c))delete f2[c];});const{error:e2}=jobId!=null?await SB.from('jobs').update(f2).eq('id',jobId):await SB.from('jobs').insert(f2);if(e2){customAlert('저장 오류: '+e2.message);return;}}else{customAlert('저장 오류: '+error.message);return;}}
   closeModal();await loadAllData();
 }
 /* ── 지원자 CRUD ── */
@@ -762,7 +684,7 @@ async function saveEditAp(jobId,apId,studentId){
   let ap=null;for(const j of JOBS){const a=j.applicants.find(a=>a.id===apId);if(a){ap=a;break;}}
   const stuObj=STUDENTS.find(s=>s.id===studentId);
   if(newDocSent&&newDocSent!==(ap?.interviewDocSent||null)&&stuObj?.restrictionLevel==='제한'){
-    const ok=await new Promise(res=>{customConfirm(`⚠️ [${stuObj.name}]은 제한 등급 학생입니다.\n자료 발송 이력이 자동 기록됩니다.\n\n강제 발송하시겠습니까?`,()=>res(true),'강제 발송','#DC2626');});
+    const ok=await new Promise(res=>{customConfirm(`⚠️ [${stuObj.name}]은 제한 등급 학생입니다.\n강제 발송하시겠습니까?`,()=>res(true),'강제 발송','#DC2626');});
     if(!ok){const el=$('ea_docsent');if(el)el.value=ap?.interviewDocSent||'';return;}
     const now=new Date(new Date().getTime()+9*3600000);
     const note=`[강제발송승인] ${now.toISOString().slice(0,10)} ${now.toISOString().slice(11,16)} — 제한대상 강제발송`;
@@ -788,30 +710,24 @@ function openEditStudentModal(id){
 async function saveStudent(id){const nm=$('es_nm')&&$('es_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');const rl=document.querySelector('input[name="stu_restriction"]:checked')?.value||null;const f={name:nm,age:parseInt($('es_ag')&&$('es_ag').value)||null,phone:($('es_ph')&&$('es_ph').value)||'',email:($('es_em')&&$('es_em').value)||'',counseling_memo:($('es_cm')&&$('es_cm').value)||'',restriction_level:rl||null};const{error}=await SB.from('students').update(f).eq('id',id);if(error){if(error.message&&(error.message.includes('counseling_memo')||error.message.includes('restriction_level'))){const f2={name:f.name,age:f.age,phone:f.phone,email:f.email};const{error:e2}=await SB.from('students').update(f2).eq('id',id);if(e2){customAlert('저장 오류: '+e2.message);return;}}else{customAlert('저장 오류: '+error.message);return;}}closeModal();await loadAllData();}
 async function markStudentEmployed(stuId){const apps=getApps(stuId).filter(a=>!['최종합격','취업성공','불합격'].includes(a.status));if(!apps.length){customAlert('변경할 진행중 지원 건이 없습니다.');return;}customConfirm(`진행중인 지원 ${apps.length}건을 모두\n"취업성공" 상태로 변경하시겠습니까?`,async()=>{for(const a of apps){await SB.from('applicants').update({status:'취업성공'}).eq('id',a.id);}closeModal();await loadAllData();customAlert(`✅ ${apps.length}건이 취업성공으로 변경되었습니다.`);},'취업성공 처리','#059669');}
 function deleteStudent(id){customConfirm('학생을 삭제하면 관련 지원이력도 함께 삭제됩니다.\n계속하시겠습니까?',async function(){const{error}=await SB.from('students').delete().eq('id',id);if(error){customAlert('삭제 오류: '+error.message);return;}await loadAllData();},'삭제','#DC2626');}
+
 /* ── 지원이력 팝업 ── */
 let _historyExpandedJobId=null;
-function buildJobInlineDetail(jobId){
-  const job=JOBS.find(j=>j.id===jobId);if(!job)return'';
-  return`<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;margin-top:6px;font-size:11px"><div style="display:flex;flex-wrap:wrap;gap:10px 20px">${job.type?`<div><span style="color:#6B7280">채용형태</span> <strong>${esc(job.type)}</strong></div>`:''}${job.docDate?`<div><span style="color:#6B7280">서류접수</span> <strong>${fmt(job.docDate)}</strong></div>`:''}${job.applyDeadline?`<div><span style="color:#6B7280">서류마감</span> <strong>${fmt(job.applyDeadline)}</strong></div>`:''}${job.documentPassDate?`<div><span style="color:#6B7280">서류합격발표</span> <strong>${fmt(job.documentPassDate)}</strong></div>`:''}${job.interviewDate?`<div><span style="color:#6B7280">면접일</span> <strong style="color:#7C3AED">${fmt(job.interviewDate)}</strong></div>`:''}${job.finalDate?`<div><span style="color:#6B7280">최종합격발표</span> <strong style="color:#059669">${fmt(job.finalDate)}</strong></div>`:''}${job.startDate?`<div><span style="color:#6B7280">근무시작</span> <strong>${fmt(job.startDate)}</strong></div>`:''}${job.jobUrl?`<div style="flex:1;min-width:100%"><span style="color:#6B7280">공고URL</span> <a href="${esc(job.jobUrl)}" target="_blank" style="color:#2563EB;font-size:10px;word-break:break-all">${esc(job.jobUrl.length>40?job.jobUrl.slice(0,40)+'…':job.jobUrl)}</a></div>`:''}${job.note?`<div style="flex:1;min-width:100%"><span style="color:#6B7280">메모</span> ${esc(job.note)}</div>`:''}</div></div>`;
-}
+function buildJobInlineDetail(jobId){const job=JOBS.find(j=>j.id===jobId);if(!job)return'';return`<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;margin-top:6px;font-size:11px"><div style="display:flex;flex-wrap:wrap;gap:10px 20px">${job.type?`<div><span style="color:#6B7280">채용형태</span> <strong>${esc(job.type)}</strong></div>`:''}${job.docDate?`<div><span style="color:#6B7280">서류접수</span> <strong>${fmt(job.docDate)}</strong></div>`:''}${job.applyDeadline?`<div><span style="color:#6B7280">서류마감</span> <strong>${fmt(job.applyDeadline)}</strong></div>`:''}${job.documentPassDate?`<div><span style="color:#6B7280">서류합격발표</span> <strong>${fmt(job.documentPassDate)}</strong></div>`:''}${job.interviewDate?`<div><span style="color:#6B7280">면접일</span> <strong style="color:#7C3AED">${fmt(job.interviewDate)}</strong></div>`:''}${job.finalDate?`<div><span style="color:#6B7280">최종합격발표</span> <strong style="color:#059669">${fmt(job.finalDate)}</strong></div>`:''}${job.startDate?`<div><span style="color:#6B7280">근무시작</span> <strong>${fmt(job.startDate)}</strong></div>`:''}${job.jobUrl?`<div style="flex:1;min-width:100%"><span style="color:#6B7280">공고URL</span> <a href="${esc(job.jobUrl)}" target="_blank" style="color:#2563EB;font-size:10px;word-break:break-all">${esc(job.jobUrl.length>40?job.jobUrl.slice(0,40)+'…':job.jobUrl)}</a></div>`:''}${job.note?`<div style="flex:1;min-width:100%"><span style="color:#6B7280">메모</span> ${esc(job.note)}</div>`:''}</div></div>`;}
 function openHistoryModal(studentId){const s=STUDENTS.find(st=>st.id===studentId);if(!s)return;_historyExpandedJobId=null;_renderHistoryModal(studentId,s);}
 function _renderHistoryModal(studentId,s){
   const apps=getApps(studentId),sorted=[...apps].sort((a,b)=>(b.docDate||'').localeCompare(a.docDate||''));
-  const pass=apps.filter(a=>a.status==='최종합격'||a.status==='취업성공').length;
-  const ongoing=apps.filter(a=>!['최종합격','취업성공','불합격'].includes(a.status)).length;
-  const tlRows=sorted.length===0?`<div style="text-align:center;padding:30px;color:#CBD5E1;font-size:13px">지원 이력 없음</div>`:sorted.map((ap,i)=>{
-    const sc=STATUS_COLORS[ap.status]||'#6B7280',isLast=i===sorted.length-1,isExpanded=_historyExpandedJobId===ap.jobId;
-    return`<div style="position:relative;padding-left:28px;padding-bottom:${isLast?'0':'16px'}">${!isLast?`<div style="position:absolute;left:7px;top:18px;bottom:0;width:2px;background:#E5E7EB"></div>`:''}<div style="position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid #fff;box-shadow:0 0 0 2px ${sc}44"></div><div style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px 14px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px">${ap.docDate?`<span style="font-size:10px;color:#94A3B8;font-weight:600">${fmt(ap.docDate)}</span>`:''}${badge(ap.category)}<span style="background:${sc}22;color:${sc};padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid ${sc}44">${esc(ap.status)}</span>${ap.grade?`<span style="font-size:10px;color:#94A3B8">${esc(ap.grade)}</span>`:''}${(ap.status==='최종합격'||ap.status==='취업성공')?'<span style="font-size:11px">🎉</span>':''}</div><div style="display:flex;align-items:center;gap:6px"><button onclick="_historyExpandedJobId=${isExpanded?'null':ap.jobId};_reRenderHistory(${studentId})" style="border:none;background:none;cursor:pointer;color:#2563EB;font-weight:700;font-size:13px;text-decoration:underline;padding:0;font-family:inherit;text-align:left">${esc(ap.jobName)}</button><span style="font-size:10px;color:#94A3B8">${isExpanded?'▲ 닫기':'▼ 공고 상세'}</span></div>${isExpanded?buildJobInlineDetail(ap.jobId):''}${ap.memo?`<p style="margin:6px 0 0;font-size:11px;color:#6B7280">${esc(ap.memo)}</p>`:''}${ap.interviewDocSent?`<p style="margin:4px 0 0;font-size:10px;color:#94A3B8">자료발송: ${fmt(ap.interviewDocSent)}</p>`:''}${ap.interviewFeedback?`<p style="margin:3px 0 0;font-size:11px;color:#475569">${esc(ap.interviewFeedback)}</p>`:''}</div></div>`;
-  }).join('');
+  const pass=apps.filter(a=>a.status==='최종합격'||a.status==='취업성공').length;const ongoing=apps.filter(a=>!['최종합격','취업성공','불합격'].includes(a.status)).length;
+  const tlRows=sorted.length===0?`<div style="text-align:center;padding:30px;color:#CBD5E1;font-size:13px">지원 이력 없음</div>`:sorted.map((ap,i)=>{const sc=STATUS_COLORS[ap.status]||'#6B7280',isLast=i===sorted.length-1,isExpanded=_historyExpandedJobId===ap.jobId;return`<div style="position:relative;padding-left:28px;padding-bottom:${isLast?'0':'16px'}">${!isLast?`<div style="position:absolute;left:7px;top:18px;bottom:0;width:2px;background:#E5E7EB"></div>`:''}<div style="position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:${sc};border:3px solid #fff;box-shadow:0 0 0 2px ${sc}44"></div><div style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px 14px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px">${ap.docDate?`<span style="font-size:10px;color:#94A3B8;font-weight:600">${fmt(ap.docDate)}</span>`:''}${badge(ap.category)}<span style="background:${sc}22;color:${sc};padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid ${sc}44">${esc(ap.status)}</span>${ap.grade?`<span style="font-size:10px;color:#94A3B8">${esc(ap.grade)}</span>`:''}${(ap.status==='최종합격'||ap.status==='취업성공')?'<span style="font-size:11px">🎉</span>':''}</div><div style="display:flex;align-items:center;gap:6px"><button onclick="_historyExpandedJobId=${isExpanded?'null':ap.jobId};_reRenderHistory(${studentId})" style="border:none;background:none;cursor:pointer;color:#2563EB;font-weight:700;font-size:13px;text-decoration:underline;padding:0;font-family:inherit;text-align:left">${esc(ap.jobName)}</button><span style="font-size:10px;color:#94A3B8">${isExpanded?'▲ 닫기':'▼ 공고 상세'}</span></div>${isExpanded?buildJobInlineDetail(ap.jobId):''}${ap.memo?`<p style="margin:6px 0 0;font-size:11px;color:#6B7280">${esc(ap.memo)}</p>`:''}${ap.interviewDocSent?`<p style="margin:4px 0 0;font-size:10px;color:#94A3B8">자료발송: ${fmt(ap.interviewDocSent)}</p>`:''}${ap.interviewFeedback?`<p style="margin:3px 0 0;font-size:11px;color:#475569">${esc(ap.interviewFeedback)}</p>`:''}</div></div>`;}).join('');
   const memoSection=s.counselingMemo?`<div style="background:#FFFBEB;border:1px solid #FEF3C7;border-radius:8px;padding:12px 14px;margin-bottom:14px"><p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📝 상담 메모</p><p style="margin:0;font-size:13px;color:#374151;line-height:1.7;white-space:pre-wrap">${esc(s.counselingMemo)}</p></div>`:'';
   const resBadge=getRestrictionBadge(s),stObj=getStudentStatus(s.id);
   showModal(s.name+' — 지원이력 & 타임라인',`${memoSection}<div style="display:flex;gap:10px;margin-bottom:16px;padding:10px 14px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;flex-wrap:wrap;align-items:center"><span style="background:${stObj.bg};color:${stObj.color};border:1px solid ${stObj.border};padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">${stObj.emoji} ${stObj.label}</span>${resBadge?`<span style="color:#D1D5DB">|</span>${resBadge}`:''}<span style="color:#D1D5DB">|</span><span style="font-size:13px;color:#374151"><strong>${apps.length}</strong>건 지원</span><span style="color:#D1D5DB">|</span><span style="font-size:13px;color:#059669"><strong>${pass}</strong>건 합격</span><span style="color:#D1D5DB">|</span><span style="font-size:13px;color:#2563EB"><strong>${ongoing}</strong>건 진행 중</span></div><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">📅 지원 타임라인 · 기관명 클릭 시 공고 상세 토글</p><div style="padding-left:4px">${tlRows}</div><div style="display:flex;justify-content:space-between;margin-top:16px;padding-top:12px;border-top:1px solid #F3F4F6;gap:8px;flex-wrap:wrap">${btn('📥 CSV 내보내기',`exportHistory(${studentId})`,'success')} ${btn('✏ 학생 수정',`closeModal();openEditStudentModal(${studentId})`,'outline')}</div>`,'660px');
 }
 window._reRenderHistory=function(studentId){const s=STUDENTS.find(st=>st.id===studentId);if(!s)return;_renderHistoryModal(studentId,s);};
 
-/* ── CSV 내보내기 ── */
-function exportJobs(){csvExport(getSorted(getFiltered()).map((j,i)=>({'No':i+1,'카테고리':j.category,'채용형태':j.type,'공고명':j.name,'서류접수일':j.docDate||'','서류마감일':j.applyDeadline||'','서류합격발표일':j.documentPassDate||'','면접일':j.interviewDate||'','최종합격발표일':j.finalDate||'','공고URL':j.jobUrl||'','면접자료있음':j.interviewMaterial?'Y':'N','지원자수':j.applicants.length,'서류합격':j.applicants.filter(a=>a.status==='서류합격').length,'면접대기':j.applicants.filter(a=>a.status==='면접대기').length,'합격':j.applicants.filter(a=>a.status==='최종합격'||a.status==='취업성공').length,'불합격':j.applicants.filter(a=>a.status==='불합격').length,'상태':j.isClosed?'마감':'진행'})),'공고목록_v73');}
-function exportStudents(){const filtered=filterStudents();csvExport(filtered.map((s,i)=>{const apps=getApps(s.id),st=getStudentStatus(s.id);return{'No':i+1,'이름':s.name,'상태':st.label,'등급제한':s.restrictionLevel||'없음','나이':s.age||'미등록','연락처':s.phone,'이메일':s.email,'지원횟수':apps.length,'최종합격':apps.filter(a=>a.status==='최종합격'||a.status==='취업성공').length,'상담메모':s.counselingMemo||''};}),'학생DB_v73');}
+/* ── CSV ── */
+function exportJobs(){csvExport(getSorted(getFiltered()).map((j,i)=>({'No':i+1,'카테고리':j.category,'채용형태':j.type,'공고명':j.name,'서류접수일':j.docDate||'','서류마감일':j.applyDeadline||'','서류합격발표일':j.documentPassDate||'','면접일':j.interviewDate||'','최종합격발표일':j.finalDate||'','공고URL':j.jobUrl||'','지원자수':j.applicants.length,'서류합격':j.applicants.filter(a=>a.status==='서류합격').length,'면접대기':j.applicants.filter(a=>a.status==='면접대기').length,'합격':j.applicants.filter(a=>a.status==='최종합격'||a.status==='취업성공').length,'불합격':j.applicants.filter(a=>a.status==='불합격').length,'상태':j.isClosed?'마감':'진행'})),'공고목록_v74');}
+function exportStudents(){const filtered=filterStudents();csvExport(filtered.map((s,i)=>{const apps=getApps(s.id),st=getStudentStatus(s.id);return{'No':i+1,'이름':s.name,'상태':st.label,'등급제한':s.restrictionLevel||'없음','나이':s.age||'미등록','연락처':s.phone,'이메일':s.email,'지원횟수':apps.length,'최종합격':apps.filter(a=>a.status==='최종합격'||a.status==='취업성공').length,'상담메모':s.counselingMemo||''};}),'학생DB_v74');}
 function exportHistory(studentId){const s=STUDENTS.find(st=>st.id===studentId);if(!s)return;csvExport(getApps(studentId).map(a=>({'기관명':a.jobName,'카테고리':a.category,'서류접수일':a.docDate||'','최종합격발표일':a.finalDate||'','상태':a.status,'급수':a.grade,'발표방식':a.announceType,'메모':a.memo||''})),s.name+'_지원이력');}
 
 /* ── 초기화 ── */
