@@ -46,27 +46,39 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 #_print_target{display:none}
 @media print{
   body>*{display:none!important}
-  #_print_target{display:block!important;padding:0;margin:0}
-  @page{margin:0;size:A4}
-  .pdf-wrap{font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#1E293B;min-height:100vh;position:relative;overflow:hidden;background:#fff}
-  .pdf-wm{position:fixed;top:-15%;left:-15%;width:200%;height:200%;display:flex;flex-direction:column;gap:0;pointer-events:none;z-index:0;transform:rotate(-28deg)}
-  .pdf-wm-r{display:flex;gap:0;white-space:nowrap;height:54pt;align-items:center}
-  .pdf-wm-c{font-size:13pt;font-weight:900;color:rgba(180,180,180,.05);letter-spacing:.22em;padding:0 24pt;white-space:nowrap;user-select:none;flex-shrink:0}
-  .pdf-pg{position:relative;z-index:1;padding:20mm 22mm 18mm;min-height:100vh;display:flex;flex-direction:column;page-break-after:always;box-sizing:border-box}
-  .pdf-pg:last-child{page-break-after:auto}
-  .pdf-hdr{text-align:center;margin-bottom:20pt;padding-bottom:10pt;border-bottom:2.5pt solid #1E293B}
-  .pdf-hdr-sup{font-size:9.5pt;font-weight:600;color:#475569;letter-spacing:.2em;margin-bottom:4pt;display:block}
-  .pdf-hdr-title{font-size:30pt;font-weight:900;color:#0F172A;line-height:1.15;letter-spacing:-.02em}
-  .pdf-hdr-sub{font-size:10pt;font-weight:400;color:#64748B;margin-top:5pt;display:block}
-  .pdf-ql{flex:1;margin-top:16pt;display:flex;flex-direction:column;gap:0}
-  .pdf-qi{display:flex;align-items:flex-start;gap:14pt;padding:11pt 0;border:none!important;background:none!important;box-shadow:none!important;outline:none!important}
-  .pdf-qi-n{display:inline-flex;align-items:center;justify-content:center;width:26pt;height:26pt;border-radius:50%;background:#F5C030;color:#1A1A1A;font-size:10.5pt;font-weight:900;flex-shrink:0;line-height:1;letter-spacing:0;margin-top:1pt}
-  .pdf-qi-t{font-size:12.5pt;font-weight:700;color:#1E293B;line-height:1.65;flex:1}
-  .pdf-qi-date{font-size:8.5pt;color:#94A3B8;font-weight:700;white-space:nowrap;flex-shrink:0;align-self:flex-start;margin-top:6pt;letter-spacing:.02em;font-style:italic}
-  .pdf-raw{flex:1;font-size:11pt;line-height:2.0;color:#1E293B;white-space:pre-wrap;word-break:break-word;margin-top:10pt;background:none;border:none;padding:0}
-  .pdf-ftr{margin-top:auto;padding-top:10pt;border-top:0.75pt solid #CBD5E1;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-  .pdf-ftr-brand{font-size:9pt;font-weight:800;color:#334155;letter-spacing:.14em}
-  .pdf-ftr-sec{font-size:7pt;color:#94A3B8;text-align:right;line-height:1.7}
+  #_print_target{display:block!important;padding:0;margin:0;overflow:visible!important}
+  *{overflow:visible!important;max-height:none!important}
+  @page{margin:14mm 0 22mm;size:A4}
+  @page{@bottom-center{content:"— " counter(page) " —";font-family:'Malgun Gothic',sans-serif;font-size:9pt;color:#94A3B8;}@bottom-left{content:"Copyright \A9  SORIZAVA ACADEMY";font-family:'Malgun Gothic',sans-serif;font-size:7.5pt;color:#CBD5E1;margin-left:15mm;}}
+  .pdf-wrap{font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:#1E293B;background:#fff;position:relative;}
+  .pdf-wm{position:fixed;top:-15%;left:-15%;width:200%;height:200%;display:flex;flex-direction:column;gap:0;pointer-events:none;z-index:0;transform:rotate(-28deg);}
+  .pdf-wm-r{display:flex;gap:0;white-space:nowrap;height:54pt;align-items:center;}
+  .pdf-wm-c{font-size:13pt;font-weight:900;color:rgba(180,180,180,.05);letter-spacing:.22em;padding:0 24pt;white-space:nowrap;user-select:none;flex-shrink:0;}
+  .pdf-pg{position:relative;z-index:1;padding:6mm 22mm 8mm;box-sizing:border-box;}
+  /* ── 프리미엄 헤더 바 ── */
+  .pdf-hdr{background:linear-gradient(135deg,#0F172A 0%,#1E3A5F 55%,#1E40AF 100%);padding:16pt 24pt 14pt;margin-bottom:20pt;border-radius:5pt;display:flex;flex-direction:column;align-items:center;gap:3pt;}
+  .pdf-hdr-top{width:100%;display:flex;justify-content:flex-end;margin-bottom:2pt;}
+  .pdf-hdr-brand-top{font-size:7pt;font-weight:800;color:#93C5FD;letter-spacing:.3em;text-transform:uppercase;opacity:.8;}
+  .pdf-hdr-sup{font-size:9.5pt;font-weight:600;color:#93C5FD;letter-spacing:.18em;margin-bottom:3pt;display:block;text-align:center;}
+  .pdf-hdr-title{font-size:24pt;font-weight:900;color:#fff;line-height:1.2;text-align:center;letter-spacing:-.03em;}
+  .pdf-hdr-sub{font-size:10pt;font-weight:400;color:#CBD5E1;margin-top:5pt;display:block;text-align:center;}
+  /* ── 질문 목록 ── */
+  .pdf-ql{margin-top:6pt;display:flex;flex-direction:column;}
+  /* 개별 질문 — break-inside:avoid로 페이지 경계 짤림 방지 */
+  .pdf-qi{display:flex;align-items:flex-start;gap:12pt;padding:10pt 2pt;border:none!important;background:none!important;box-shadow:none!important;outline:none!important;border-bottom:.5pt solid #E8ECF0!important;break-inside:avoid;page-break-inside:avoid;}
+  .pdf-qi:last-child{border-bottom:none!important;}
+  /* 노란 원형 번호 */
+  .pdf-qi-n{display:inline-flex;align-items:center;justify-content:center;width:24pt;height:24pt;border-radius:50%;background:#F5C030;color:#0F172A;font-size:10pt;font-weight:900;flex-shrink:0;line-height:1;letter-spacing:0;margin-top:1.5pt;}
+  /* 질문 텍스트 */
+  .pdf-qi-t{font-size:12pt;font-weight:700;color:#1E293B;line-height:1.7;flex:1;}
+  /* 날짜 배지 — 연한 회색 라운드 박스 */
+  .pdf-qi-date{font-size:7.5pt;color:#64748B;font-weight:700;background:#F1F5F9;border:.5pt solid #CBD5E1;border-radius:3pt;padding:2pt 5pt;white-space:nowrap;flex-shrink:0;align-self:flex-start;margin-top:3.5pt;letter-spacing:.02em;}
+  /* 폴백: 자유형 텍스트 */
+  .pdf-raw{font-size:11pt;line-height:2.0;color:#1E293B;white-space:pre-wrap;word-break:break-word;margin-top:10pt;background:none;border:none;padding:0;}
+  /* 푸터 */
+  .pdf-ftr{margin-top:20pt;padding-top:8pt;border-top:.75pt solid #CBD5E1;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .pdf-ftr-brand{font-size:8pt;font-weight:800;color:#334155;letter-spacing:.14em;}
+  .pdf-ftr-sec{font-size:7pt;color:#94A3B8;text-align:right;line-height:1.7;}
 }
 @media(max-width:900px){#dash-4grid{grid-template-columns:1fr;gap:10px;padding:10px 14px 16px}.dash-card{height:380px}#dash-kpi{grid-template-columns:repeat(2,1fr);padding:0 14px}#dash-header,#dash-monthly{padding-left:14px;padding-right:14px}}
 @media(max-width:500px){.dash-card{height:340px}#dash-kpi{grid-template-columns:1fr 1fr}}
@@ -440,10 +452,7 @@ function confirmDeleteJob(jobId){var job=JOBS.find(function(j){return j.id===job
 async function executeDeleteJob(jobId){var r=await SB.from('jobs').delete().eq('id',jobId);if(r.error){customAlert('삭제 오류: '+(r.error.message||JSON.stringify(r.error)));return;}expandedJobs.delete(jobId);detailJobs.delete(jobId);await loadAllData();}
 
 /* ─ PDF 공용 ─ */
-function buildWatermark(){
-  var rows=Array.from({length:22},function(){return'<div class="pdf-wm-r">'+Array.from({length:8},function(){return'<span class="pdf-wm-c">SORIZAVA ACADEMY</span>';}).join('')+'</div>';}).join('');
-  return'<div class="pdf-wm">'+rows+'</div>';
-}
+function buildWatermark(){var rows=Array.from({length:22},function(){return'<div class="pdf-wm-r">'+Array.from({length:8},function(){return'<span class="pdf-wm-c">SORIZAVA ACADEMY</span>';}).join('')+'</div>';}).join('');return'<div class="pdf-wm">'+rows+'</div>';}
 function yearLabel(year){return year?'\''+String(year).slice(2)+'년':'';}
 
 /* ─ PDF: 단일 자료 출력 ─ */
@@ -454,12 +463,17 @@ function printVaultPDF(vaultId){
   var isQ=qs.length>=2;
   var catLabel=IV_CAT_LABEL[v.category]||v.category;
   var supTitle='전국 '+catLabel+' 공통 질문';
-  var mainTitle=esc(v.institutionName)+' 면접 가이드';
+  var mainTitle=esc(v.institutionName)+' 면접 기출 완벽 가이드';
   var yl=yearLabel(v.year);
+  var subParts=[];
+  if(isQ)subParts.push('총 '+qs.length+'개 문항');
+  if(yl)subParts.push(yl+' 기출 분석');
+  var subText=subParts.join(' · ');
   var bodyHtml=isQ
-    ?'<div class="pdf-ql">'+qs.map(function(q,i){return'<div class="pdf-qi"><span class="pdf-qi-n">'+String(i+1).padStart(2,'0')+'</span><span class="pdf-qi-t">'+esc(q)+'</span>'+(yl?'<span class="pdf-qi-date">('+yl+')</span>':'')+'</div>';}).join('')+'</div>'
+    ?'<div class="pdf-ql">'+qs.map(function(q,i){return'<div class="pdf-qi"><span class="pdf-qi-n">'+String(i+1).padStart(2,'0')+'</span><span class="pdf-qi-t">'+esc(q)+'</span>'+(yl?'<span class="pdf-qi-date">'+yl+'</span>':'')+'</div>';}).join('')+'</div>'
     :'<div class="pdf-raw">'+esc(v.content)+'</div>';
-  var html='<div class="pdf-wrap">'+buildWatermark()+'<div class="pdf-pg"><div class="pdf-hdr"><span class="pdf-hdr-sup">'+esc(supTitle)+'</span><div class="pdf-hdr-title">'+mainTitle+'</div>'+(isQ?'<span class="pdf-hdr-sub">총 '+qs.length+'개 문항'+(yl?' · '+yl+' 기출':'')+'</span>':'')+'</div>'+bodyHtml+'<div class="pdf-ftr"><div class="pdf-ftr-brand">SORIZAVA ACADEMY</div><div class="pdf-ftr-sec">본 자료의 저작권은 SORIZAVA ACADEMY에 있습니다.<br>무단 배포 시 법적 책임을 물을 수 있습니다.</div></div></div></div>';
+  var hdrHtml='<div class="pdf-hdr"><div class="pdf-hdr-top"><span class="pdf-hdr-brand-top">SORIZAVA ACADEMY</span></div><span class="pdf-hdr-sup">'+esc(supTitle)+'</span><div class="pdf-hdr-title">'+mainTitle+'</div>'+(subText?'<span class="pdf-hdr-sub">'+esc(subText)+'</span>':'')+'</div>';
+  var html='<div class="pdf-wrap">'+buildWatermark()+'<div class="pdf-pg">'+hdrHtml+bodyHtml+'<div class="pdf-ftr"><div class="pdf-ftr-brand">SORIZAVA ACADEMY</div><div class="pdf-ftr-sec">본 자료의 저작권은 SORIZAVA ACADEMY에 있습니다.<br>무단 배포 시 법적 책임을 물을 수 있습니다.</div></div></div></div>';
   var pt=$('_print_target');if(!pt)return;
   pt.innerHTML=html;window.print();setTimeout(function(){pt.innerHTML='';},1500);
 }
@@ -472,9 +486,9 @@ function printSelectedVaultPDF(){
   var instNames=[...new Set(selected.map(function(v){return v.institutionName;}))];
   var isSingle=instNames.length===1;
   var cats=[...new Set(selected.map(function(v){return v.category;}))];
-  var catLabel=cats.length===1?(IV_CAT_LABEL[cats[0]]||cats[0]):'';
+  var catLabel=cats.length===1?(IV_CAT_LABEL[cats[0]]||cats[0]):'복합';
   var supTitle=isSingle?'전국 '+(IV_CAT_LABEL[selected[0].category]||selected[0].category)+' 공통 질문':'면접 통합 자료';
-  var mainTitle=isSingle?esc(instNames[0])+' 면접 가이드':'통합 면접 가이드';
+  var mainTitle=isSingle?esc(instNames[0])+' 면접 기출 완벽 가이드':'통합 면접 기출 완벽 가이드';
   /* 연도 오름차순 → 중복 허용 */
   var sorted=selected.slice().sort(function(a,b){return (a.year||9999)-(b.year||9999)||a.institutionName.localeCompare(b.institutionName);});
   var allItems=[],hasQ=false;
@@ -484,11 +498,12 @@ function printSelectedVaultPDF(){
     if(qs.length>=2){hasQ=true;qs.forEach(function(q){allItems.push({q:q,yl:yl});});}
     else if(v.content.trim()){allItems.push({q:v.content.trim(),yl:yl,raw:true});}
   });
+  var subText=isSingle?('총 '+allItems.length+'개 문항 · '+selected.length+'개 연도 통합 분석'):(instNames.length+'개 기관 · 총 '+allItems.length+'개 문항');
   var bodyHtml=hasQ
-    ?'<div class="pdf-ql">'+allItems.map(function(item,i){return'<div class="pdf-qi"><span class="pdf-qi-n">'+String(i+1).padStart(2,'0')+'</span><span class="pdf-qi-t">'+esc(item.raw?item.q.slice(0,200):item.q)+'</span>'+(item.yl?'<span class="pdf-qi-date">('+item.yl+')</span>':'')+'</div>';}).join('')+'</div>'
+    ?'<div class="pdf-ql">'+allItems.map(function(item,i){return'<div class="pdf-qi"><span class="pdf-qi-n">'+String(i+1).padStart(2,'0')+'</span><span class="pdf-qi-t">'+esc(item.raw?item.q.slice(0,200):item.q)+'</span>'+(item.yl?'<span class="pdf-qi-date">'+item.yl+'</span>':'')+'</div>';}).join('')+'</div>'
     :'<div class="pdf-raw">'+allItems.map(function(i){return esc(i.q);}).join('\n\n')+'</div>';
-  var subText=isSingle?'총 '+allItems.length+'개 문항 · '+selected.length+'개 연도 자료 통합':instNames.length+'개 기관 · '+allItems.length+'개 문항';
-  var html='<div class="pdf-wrap">'+buildWatermark()+'<div class="pdf-pg"><div class="pdf-hdr"><span class="pdf-hdr-sup">'+esc(supTitle)+'</span><div class="pdf-hdr-title">'+mainTitle+'</div><span class="pdf-hdr-sub">'+esc(subText)+'</span></div>'+bodyHtml+'<div class="pdf-ftr"><div class="pdf-ftr-brand">SORIZAVA ACADEMY</div><div class="pdf-ftr-sec">본 자료의 저작권은 SORIZAVA ACADEMY에 있습니다.<br>무단 배포 시 법적 책임을 물을 수 있습니다.</div></div></div></div>';
+  var hdrHtml='<div class="pdf-hdr"><div class="pdf-hdr-top"><span class="pdf-hdr-brand-top">SORIZAVA ACADEMY</span></div><span class="pdf-hdr-sup">'+esc(supTitle)+'</span><div class="pdf-hdr-title">'+mainTitle+'</div><span class="pdf-hdr-sub">'+esc(subText)+'</span></div>';
+  var html='<div class="pdf-wrap">'+buildWatermark()+'<div class="pdf-pg">'+hdrHtml+bodyHtml+'<div class="pdf-ftr"><div class="pdf-ftr-brand">SORIZAVA ACADEMY</div><div class="pdf-ftr-sec">본 자료의 저작권은 SORIZAVA ACADEMY에 있습니다.<br>무단 배포 시 법적 책임을 물을 수 있습니다.</div></div></div></div>';
   var pt=$('_print_target');if(!pt)return;
   pt.innerHTML=html;window.print();setTimeout(function(){pt.innerHTML='';},1500);
 }
