@@ -412,11 +412,20 @@ function getLongPendingNoReply(){
   return result;
 }
 function renderSmartAlerts(){
-  var interviews=getThisWeekInterviews(),noReply=getLongPendingNoReply();
-  if(!interviews.length&&!noReply.length)return'';
-  var ivHtml=interviews.length?'<div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:8px">📅 이번 주 면접 예정자 ('+interviews.length+'명)</div>'+interviews.map(function(i){return'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #EDE9FE;flex-wrap:wrap"><span style="font-size:12px;font-weight:700;color:#1E293B">'+esc(i.studentName)+'</span><span style="font-size:10px;color:#7C3AED;background:#EDE9FE;padding:1px 6px;border-radius:4px">'+esc(i.category)+'</span><span style="font-size:11px;color:#6B7280;flex:1;min-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(i.jobName.length>18?i.jobName.slice(0,18)+'…':i.jobName)+'</span><span style="margin-left:auto;font-size:11px;color:#7C3AED;font-weight:700;white-space:nowrap">'+fmt(i.interviewDate)+'</span></div>';}).join('')+'</div>':'';
-  var nrHtml=noReply.length?'<div style="background:#FFF5F5;border:1px solid #FECACA;border-radius:10px;padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#DC2626;margin-bottom:8px">⚠️ 미회신 장기 방치 ('+noReply.length+'명)</div>'+noReply.map(function(i){return'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #FEE2E2;flex-wrap:wrap"><span style="font-size:12px;font-weight:700;color:#1E293B">'+esc(i.studentName)+'</span><span style="font-size:10px;color:#DC2626;background:#FEE2E2;padding:1px 6px;border-radius:4px">'+esc(i.category)+'</span><span style="font-size:11px;color:#6B7280;flex:1;min-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(i.jobName.length>16?i.jobName.slice(0,16)+'…':i.jobName)+'</span><span style="margin-left:auto;font-size:11px;color:#DC2626;font-weight:700;white-space:nowrap">'+i.daysDiff+'일 경과</span></div>';}).join('')+'</div>':'';
-  return'<div id="dash-alerts"><div style="display:grid;grid-template-columns:'+(interviews.length&&noReply.length?'1fr 1fr':'1fr')+';gap:10px">'+ivHtml+nrHtml+'</div></div>';
+  var interviews=getThisWeekInterviews();
+  if(!interviews.length)return'';
+  var ivHtml='<div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:12px 14px">'
+    +'<div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:8px">📅 이번 주 면접 예정자 ('+interviews.length+'명)</div>'
+    +interviews.map(function(i){
+      return'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid #EDE9FE;flex-wrap:wrap">'
+        +'<span style="font-size:12px;font-weight:700;color:#1E293B">'+esc(i.studentName)+'</span>'
+        +'<span style="font-size:10px;color:#7C3AED;background:#EDE9FE;padding:1px 6px;border-radius:4px">'+esc(i.category)+'</span>'
+        +'<span style="font-size:11px;color:#6B7280;flex:1;min-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(i.jobName.length>18?i.jobName.slice(0,18)+'…':i.jobName)+'</span>'
+        +'<span style="margin-left:auto;font-size:11px;color:#7C3AED;font-weight:700;white-space:nowrap">'+fmt(i.interviewDate)+'</span>'
+        +'</div>';
+    }).join('')
+    +'</div>';
+  return'<div id="dash-alerts">'+ivHtml+'</div>';
 }
 
 /* ─ 퀵 메모 ─ */
