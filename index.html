@@ -675,7 +675,10 @@ function trResultBadge(result){
 /* ─ CSV 양식 다운로드 ─ */
 function downloadTrTemplate(){
   /* 비전공자도 쉽게 채울 수 있는 헤더 + 예시 1행 */
-  var csv='\uFEFF이름,휴대전화,자격증,상태,1차점수,1차결과\n홍길동,010-0000-0000,3급,진행 중,85,합격\n';
+  /* CSV 헤더: 엑셀 파일 컬럼명 그대로 사용 (DB 컬럼명과의 매핑은 업로드 시 자동 처리) */
+  var csv='\uFEFF이름,휴대전화,자격증,상태,1차점수,1차결과\n'+
+          '홍길동,010-0000-0000,3급,진행 중,85,합격\n';
+  /* 상태 허용값: 수료 / 진행 중 / 중도포기 */
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');a.href=url;a.download='연수_등록양식.csv';a.click();
@@ -693,6 +696,7 @@ function openTrCourseModal(){
     '<div style="background:#F8FAFC;border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid #E5E7EB">'+
     '<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">CSV 컬럼 순서</p>'+
     '<code style="font-size:11px;color:#374151;background:#F1F5F9;padding:4px 8px;border-radius:4px;display:block">이름, 휴대전화, 자격증, 상태, 1차점수, 1차결과</code>'+
+    '<p style="margin:4px 0 0;font-size:10px;color:#94A3B8">※ DB 저장 컬럼: student_name / phone_number / license_info / status / first_test_score / first_test_result</p>'+
     '<p style="margin:6px 0 0;font-size:10px;color:#94A3B8">상태: <strong>수료</strong> / <strong>진행 중</strong> / <strong>중도포기</strong> 중 하나만 입력</p></div>'+
     '<div style="margin-bottom:12px">'+
     '<label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">CSV 파일 업로드 <span style="font-weight:400;color:#94A3B8">(선택 — 나중에 업로드 가능)</span></label>'+
@@ -740,7 +744,8 @@ async function saveTrCourse(){
   var name=document.getElementById('trc_name')&&document.getElementById('trc_name').value.trim();
   if(!name)return customAlert('기수 명칭을 입력하세요');
   /* 1단계: 기수 레코드 생성 */
-  var rc=await SB.from('training_courses').insert({name:name}).select().single();
+  /* course_name: training_courses 테이블의 실제 컬럼명 */
+  var rc=await SB.from('training_courses').insert({course_name:name}).select().single();
   if(rc.error){customAlert('기수 등록 오류: '+(rc.error.message||JSON.stringify(rc.error)));return;}
   var courseId=rc.data.id;
   /* 2단계: 수강생 일괄 등록 (파일이 있을 때만) */
@@ -766,19 +771,23 @@ async function _bulkUpsertParticipants(courseId,rows){
   for(var i=0;i<slice.length;i++){
     var r=slice[i];
     var status=allowedStatus.includes(r['상태'])?r['상태']:'진행 중';
+    /* DB 컬럼 매핑:
+       이름→student_name, 휴대전화→phone_number, 자격증→license_info
+       상태→status, 1차점수→first_test_score, 1차결과→first_test_result
+       course_id는 반드시 Number(정수)로 변환 */
     var obj={
-      course_id:courseId,
+      course_id:Number(courseId),
       student_name:(r['이름']||'').trim(),
-      phone:(r['휴대전화']||'').trim(),
-      grade:(r['자격증']||'').trim(),
+      phone_number:(r['휴대전화']||'').trim(),
+      license_info:(r['자격증']||'').trim()||null,
       status:status,
-      score1:r['1차점수']?Number(r['1차점수'].toString().replace(/[^0-9.]/g,''))||null:null,
-      result1:(r['1차결과']||'').trim()||null
+      first_test_score:r['1차점수']?Number(r['1차점수'].toString().replace(/[^0-9.]/g,''))||null:null,
+      first_test_result:(r['1차결과']||'').trim()||null
     };
     if(!obj.student_name)continue;
-    /* phone이 있으면 (course_id, phone) 복합키로 upsert */
-    var res=obj.phone
-      ?await SB.from('training_participants').upsert(obj,{onConflict:'course_id,phone'})
+    /* phone_number 기준으로 upsert (course_id, phone_number 복합 유니크 키) */
+    var res=obj.phone_number
+      ?await SB.from('training_participants').upsert(obj,{onConflict:'course_id,phone_number'})
       :await SB.from('training_participants').insert(obj);
     if(res.error)fail++;else ok++;
   }
@@ -789,7 +798,7 @@ async function _bulkUpsertParticipants(courseId,rows){
 function deleteTrCourse(id){
   var c=TR_COURSES.find(function(x){return x.id===id;});if(!c)return;
   var cnt=TR_PARTICIPANTS.filter(function(p){return p.course_id===id;}).length;
-  customConfirm('"'+c.name+'"\n\n기수를 삭제하시겠습니까?'+(cnt>0?'\n\n⚠️ 소속 수강생 '+cnt+'명 데이터도 삭제됩니다.':''),async function(){
+  customConfirm('"'+c.course_name+'"\n\n기수를 삭제하시겠습니까?'+(cnt>0?'\n\n⚠️ 소속 수강생 '+cnt+'명 데이터도 삭제됩니다.':''),async function(){
     var r=await SB.from('training_courses').delete().eq('id',id);
     if(r.error){customAlert('삭제 오류: '+r.error.message);return;}
     if(trCourseId===id)trCourseId=null;
@@ -800,9 +809,9 @@ function deleteTrCourse(id){
 /* ─ 수강생 CSV 일괄 업로드 (기수 선택 후) ─ */
 function openTrUploadModal(courseId){
   var c=TR_COURSES.find(function(x){return x.id===courseId;});
-  showModal('📤 수강생 일괄 업로드 — '+(c?esc(c.name):''),
+  showModal('📤 수강생 일괄 업로드 — '+(c?esc(c.course_name):''),
     '<div style="background:#EFF6FF;border-radius:8px;padding:10px 14px;margin-bottom:12px;border:1px solid #BFDBFE">'+
-    '<p style="margin:0;font-size:11px;color:#374151"><strong>CSV 컬럼 순서:</strong> 이름, 휴대전화, 자격증, 상태, 1차점수, 1차결과</p></div>'+
+    '<p style="margin:0;font-size:11px;color:#374151"><strong>CSV 컬럼 순서:</strong> 이름, 휴대전화, 자격증, 상태, 1차점수, 1차결과</p><p style="margin:4px 0 0;font-size:10px;color:#94A3B8">상태 허용값: <strong>수료</strong> / <strong>진행 중</strong> / <strong>중도포기</strong></p></div>'+
     '<div style="margin-bottom:12px">'+
     '<input type="file" id="tru_file" accept=".csv" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;font-family:inherit">'+
     '</div>'+
@@ -853,14 +862,15 @@ async function saveTrMember(courseId,participantId){
   var nm=document.getElementById('trm_nm')&&document.getElementById('trm_nm').value.trim();
   if(!nm)return customAlert('이름을 입력하세요');
   var s1El=document.getElementById('trm_s1');
+  /* course_id는 Number()로 정수 변환 필수 — "Key columns are of incompatible types" 방지 */
   var f={
-    course_id:courseId,
+    course_id:Number(courseId),
     student_name:nm,
-    phone:(document.getElementById('trm_ph')&&document.getElementById('trm_ph').value)||'',
-    grade:(document.getElementById('trm_gr')&&document.getElementById('trm_gr').value)||'',
+    phone_number:(document.getElementById('trm_ph')&&document.getElementById('trm_ph').value)||'',
+    license_info:(document.getElementById('trm_gr')&&document.getElementById('trm_gr').value)||null,
     status:(document.getElementById('trm_st')&&document.getElementById('trm_st').value)||'진행 중',
-    score1:(s1El&&s1El.value)?Number(s1El.value)||null:null,
-    result1:(document.getElementById('trm_r1')&&document.getElementById('trm_r1').value)||null
+    first_test_score:(s1El&&s1El.value)?Number(s1El.value)||null:null,
+    first_test_result:(document.getElementById('trm_r1')&&document.getElementById('trm_r1').value)||null
   };
   var r=participantId!=null
     ?await SB.from('training_participants').update(f).eq('id',participantId)
@@ -882,14 +892,14 @@ function onTrKwCompositionStart(){_trKwComposing=true;clearTimeout(_trKwTimer);}
 function onTrKwCompositionEnd(el){_trKwComposing=false;clearTimeout(_trKwTimer);var v=el.value;_trKwTimer=setTimeout(function(){trKw=v;renderView();},0);}
 function onTrKwInput(el){if(_trKwComposing)return;clearTimeout(_trKwTimer);var v=el.value;_trKwTimer=setTimeout(function(){trKw=v;renderView();},200);}
 function setTrStatus(s){trStatus=s;renderView();}
-function setTrCourse(v){trCourseId=v?Number(v):null;trKw='';trStatus='전체';renderView();}
+function setTrCourse(v){trCourseId=v?Number(v):null;/* Number()로 integer 타입 보장 */trKw='';trStatus='전체';renderView();}
 
 /* ─ 연수 관리 메인 뷰 ─ */
 function renderTraining(){
   var total=TR_PARTICIPANTS.length;
   /* 기수 선택 드롭다운 */
   var courseOpts=TR_COURSES.map(function(c){
-    return'<option value="'+c.id+'" '+(trCourseId===c.id?'selected':'')+'>'+esc(c.name)+'</option>';
+    return'<option value="'+c.id+'" '+(trCourseId===c.id?'selected':'')+'>'+esc(c.course_name)+'</option>';
   }).join('');
   var courseSel='<select onchange="setTrCourse(this.value)" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit;min-width:160px">'+
     '<option value="">기수 선택...</option>'+courseOpts+'</select>';
@@ -926,11 +936,11 @@ function renderTraining(){
       return'<tr class="tbl-tr" style="border-bottom:1px solid #F1F5F9">'+
         '<td style="padding:10px 12px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700">'+(i+1)+'</td>'+
         '<td style="padding:10px 12px"><span style="font-weight:700;font-size:13px;color:#0F172A">'+esc(p.student_name)+'</span></td>'+
-        '<td style="padding:10px 12px;color:#6B7280;font-size:12px">'+esc(p.phone||'-')+'</td>'+
-        '<td style="padding:10px 12px">'+(p.grade?'<span style="background:#EFF6FF;color:#2563EB;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid #BFDBFE">'+esc(p.grade)+'</span>':'<span style="color:#CBD5E1">-</span>')+'</td>'+
+        '<td style="padding:10px 12px;color:#6B7280;font-size:12px">'+esc(p.phone_number||'-')+'</td>'+
+        '<td style="padding:10px 12px">'+(p.license_info?'<span style="background:#EFF6FF;color:#2563EB;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid #BFDBFE">'+esc(p.license_info)+'</span>':'<span style="color:#CBD5E1">-</span>')+'</td>'+
         '<td style="padding:10px 12px">'+trStatusBadge(p.status)+'</td>'+
-        '<td style="padding:10px 12px;text-align:center">'+(p.score1!=null?'<span style="font-size:13px;font-weight:800;color:#0F172A">'+p.score1+'</span><span style="font-size:10px;color:#94A3B8">점</span>':'<span style="color:#CBD5E1;font-size:11px">-</span>')+'</td>'+
-        '<td style="padding:10px 12px">'+trResultBadge(p.result1)+'</td>'+
+        '<td style="padding:10px 12px;text-align:center">'+(p.first_test_score!=null?'<span style="font-size:13px;font-weight:800;color:#0F172A">'+p.first_test_score+'</span><span style="font-size:10px;color:#94A3B8">점</span>':'<span style="color:#CBD5E1;font-size:11px">-</span>')+'</td>'+
+        '<td style="padding:10px 12px">'+trResultBadge(p.first_test_result)+'</td>'+
         '<td style="padding:10px 12px;white-space:nowrap"><div style="display:flex;gap:4px">'+
         btn('✏','openTrMemberModal('+trCourseId+','+p.id+')','outline',true)+' '+
         btn('🗑','deleteTrMember('+p.id+')','danger',true)+'</div></td></tr>';
@@ -982,21 +992,21 @@ function renderTraining(){
 function getTrHistoryHtml(phone){
   if(!phone||!phone.trim())return'';
   var list=TR_PARTICIPANTS.filter(function(p){
-    return p.phone&&p.phone.replace(/\D/g,'')===phone.replace(/\D/g,'');
+    return p.phone_number&&p.phone_number.replace(/\D/g,'')===phone.replace(/\D/g,'');
   });
   if(!list.length)return'';
   var rows=list.map(function(p){
     var c=TR_COURSES.find(function(x){return x.id===p.course_id;});
     return'<div style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px 14px;margin-bottom:6px">'+
       '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
-      '<span style="font-size:13px;font-weight:700;color:#374151">'+(c?esc(c.name):'(삭제된 기수)')+'</span>'+
+      '<span style="font-size:13px;font-weight:700;color:#374151">'+(c?esc(c.course_name):'(삭제된 기수)')+'</span>'+
       trStatusBadge(p.status)+
-      (p.grade?'<span style="background:#EFF6FF;color:#2563EB;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid #BFDBFE">'+esc(p.grade)+'</span>':'')+
+      (p.license_info?'<span style="background:#EFF6FF;color:#2563EB;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid #BFDBFE">'+esc(p.license_info)+'</span>':'')+
       '</div>'+
       (p.score1!=null||p.result1?
         '<div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-        (p.score1!=null?'<span style="font-size:11px;color:#6B7280">1차 점수: <strong style="color:#0F172A">'+p.score1+'점</strong></span>':'')+
-        (p.result1?'<span style="font-size:11px;color:#6B7280">1차 결과:</span> '+trResultBadge(p.result1):'')+
+        (p.first_test_score!=null?'<span style="font-size:11px;color:#6B7280">1차 점수: <strong style="color:#0F172A">'+p.first_test_score+'점</strong></span>':'')+
+        (p.first_test_result?'<span style="font-size:11px;color:#6B7280">1차 결과:</span> '+trResultBadge(p.first_test_result):'')+
         '</div>':'')+
       '</div>';
   }).join('');
