@@ -653,7 +653,7 @@ function showMonthlyReport(){
      training_participants → id, course_id(integer), student_name,
                              phone_number, license_info, status,
                              first_test_score(TEXT = 특이사항),
-                             first_test_result(= 수료여부), created_at
+                             first_test_result(= 테스트통과유무), created_at
 ════════════════════════════════════════════════════════════ */
 
 /* ─ 수강 상태 배지: 수료(초록) / 진행 중(파랑) / 중도포기(회색) ─ */
@@ -667,7 +667,7 @@ function trStatusBadge(status){
   return'<span style="background:'+s.bg+';color:'+s.color+';border:1px solid '+s.border+';padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">'+esc(status||'-')+'</span>';
 }
 
-/* ─ 수료 여부 배지: 합격(초록) / 불합격(빨강) / 미입력(-) ─ */
+/* ─ 테스트 통과 유무 배지: 합격(초록) / 불합격(빨강) / 미입력(-) ─ */
 function trSuryoBadge(val){
   if(!val||val.trim()==='')return'<span style="color:#CBD5E1;font-size:11px">-</span>';
   var isPass=(val==='합격');
@@ -679,9 +679,10 @@ function trSuryoBadge(val){
 /* ─ CSV 양식 다운로드: 헤더는 엑셀 원본 컬럼명 그대로 ─ */
 function downloadTrTemplate(){
   /* BOM(\uFEFF) 추가로 한글 엑셀에서 깨짐 방지 */
-  var csv='\uFEFF이름,휴대전화,자격증,상태,특이사항,수료여부\n'
+  var csv='\uFEFF이름,휴대전화,자격증,상태,특이사항,테스트통과유무\n'
          +'홍길동,010-0000-0000,3급,진행 중,수업 태도 성실,합격\n';
-  /* 상태 허용값: 수료 / 진행 중 / 중도포기   수료여부 허용값: 합격 / 불합격 */
+  /* 테스트통과유무 컬럼 */
+  /* 상태 허용값: 수료 / 진행 중 / 중도포기   테스트통과유무 허용값: 합격 / 불합격 */
   var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');a.href=url;a.download='연수_등록양식.csv';a.click();
@@ -699,8 +700,8 @@ function openTrCourseModal(){
     '<p style="margin:0;font-size:11px;color:#374151;line-height:1.8">① 기수 명칭 입력 → ② CSV 양식 다운로드 → ③ 양식 작성 후 업로드 → ④ 등록 완료</p></div>'+
     '<div style="background:#F8FAFC;border-radius:8px;padding:10px 14px;margin-bottom:12px;border:1px solid #E5E7EB">'+
     '<p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase">CSV 컬럼 순서</p>'+
-    '<code style="font-size:11px;color:#374151;background:#F1F5F9;padding:4px 8px;border-radius:4px;display:block">이름, 휴대전화, 자격증, 상태, 특이사항, 수료여부</code>'+
-    '<p style="margin:5px 0 0;font-size:10px;color:#94A3B8">상태: <strong>수료</strong> / <strong>진행 중</strong> / <strong>중도포기</strong>&nbsp;&nbsp;수료여부: <strong>합격</strong> / <strong>불합격</strong></p></div>'+
+    '<code style="font-size:11px;color:#374151;background:#F1F5F9;padding:4px 8px;border-radius:4px;display:block">이름, 휴대전화, 자격증, 상태, 특이사항, 테스트통과유무</code>'+
+    '<p style="margin:5px 0 0;font-size:10px;color:#94A3B8">상태: <strong>수료</strong> / <strong>진행 중</strong> / <strong>중도포기</strong>&nbsp;&nbsp;테스트통과유무: <strong>합격</strong> / <strong>불합격</strong></p></div>'+
     '<div style="margin-bottom:12px">'+
     '<label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">CSV 파일 업로드 <span style="font-weight:400;color:#94A3B8">(선택)</span></label>'+
     '<input type="file" id="trc_file" accept=".csv" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;font-family:inherit">'+
@@ -778,7 +779,7 @@ async function _bulkUpsertParticipants(courseId,rows){
       license_info:(r['자격증']||'').trim()||null,
       status:status,
       first_test_score:(r['특이사항']||'').trim()||null,   /* TEXT: 데일리 피드백 등 */
-      first_test_result:(r['수료여부']||'').trim()||null   /* 합격 / 불합격 */
+      first_test_result:(r['테스트통과유무']||'').trim()||null   /* 합격 / 불합격 */
     };
     if(!obj.student_name)continue;
     /* phone_number 있으면 upsert, 없으면 insert */
@@ -808,7 +809,7 @@ function openTrUploadModal(courseId){
   var c=TR_COURSES.find(function(x){return x.id===courseId;});
   showModal('📤 수강생 일괄 업로드 — '+(c?esc(c.course_name):''),
     '<div style="background:#EFF6FF;border-radius:8px;padding:10px 14px;margin-bottom:12px;border:1px solid #BFDBFE">'+
-    '<p style="margin:0;font-size:11px;color:#374151"><strong>CSV 컬럼 순서:</strong> 이름, 휴대전화, 자격증, 상태, 특이사항, 수료여부</p></div>'+
+    '<p style="margin:0;font-size:11px;color:#374151"><strong>CSV 컬럼 순서:</strong> 이름, 휴대전화, 자격증, 상태, 특이사항, 테스트통과유무</p></div>'+
     '<div style="margin-bottom:12px"><input type="file" id="tru_file" accept=".csv" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;font-family:inherit"></div>'+
     '<div id="tru_preview" style="margin-bottom:8px"></div>'+
     '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #F3F4F6;gap:8px">'+
@@ -831,7 +832,7 @@ async function executeTrUpload(courseId){
 
 /* ─ 수강생 추가/수정 모달 ─
    특이사항: Textarea (줄바꿈 보존)
-   수료여부: 합격 / 불합격 선택
+   테스트 통과 유무: 합격 / 불합격 선택
    phone_number 초기화 버그 방지 (기존 값 명시적 바인딩) ─ */
 function openTrMemberModal(courseId,participantId){
   var p=participantId!=null?TR_PARTICIPANTS.find(function(x){return x.id===participantId;}):null;
@@ -849,7 +850,7 @@ function openTrMemberModal(courseId,participantId){
     fInp('자격증','trm_gr','text',f.license_info||'','placeholder="1급/2급/3급"')+
     fSel('상태','trm_st',['진행 중','수료','중도포기'],f.status||'진행 중')+
     /* 수료 여부: 합격/불합격만 (빈칸 제거) */
-    '<div style="margin-bottom:10px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">수료 여부</label>'+
+    '<div style="margin-bottom:10px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">테스트 통과 유무</label>'+
     '<select id="trm_r1" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">'+
     '<option value="">미입력</option>'+suryoOpts+'</select></div></div>'+
     /* 특이사항: Textarea, white-space:pre-wrap 로 줄바꿈 보존 */
@@ -876,7 +877,7 @@ async function saveTrMember(courseId,participantId){
     license_info:(document.getElementById('trm_gr')&&document.getElementById('trm_gr').value)||null,
     status:(document.getElementById('trm_st')&&document.getElementById('trm_st').value)||'진행 중',
     first_test_score:(document.getElementById('trm_s1')&&document.getElementById('trm_s1').value)||null, /* 특이사항 TEXT */
-    first_test_result:(document.getElementById('trm_r1')&&document.getElementById('trm_r1').value)||null  /* 수료여부 */
+    first_test_result:(document.getElementById('trm_r1')&&document.getElementById('trm_r1').value)||null  /* 테스트 통과 유무 */
   };
   var r=participantId!=null
     ?await SB.from('training_participants').update(f).eq('id',participantId)
@@ -1024,20 +1025,14 @@ function renderTraining(){
       (sub?'<p style="margin:0;font-size:10px;color:'+c+';opacity:.7">'+sub+'</p>':'')+
       '</div>';
   }
-  var statsHtml=
+  /* 기수별 통계만 표시 (누적 총원 카드 제거) */
+  var statsHtml=trCourseId!=null?
     '<div style="display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap">'+
-    /* 누적 통계 */
-    statCard('🎥','VOD 연수 총원',stats.vodTotal,'누적','#2563EB','#EFF6FF')+
-    statCard('📝','회의록 연수 총원',stats.meetTotal,'누적','#7C3AED','#F5F3FF')+
-    (trCourseId!=null?
-      /* 기수별 실시간 통계 */
-      '<div style="width:1px;background:#E2E8F0;flex-shrink:0;margin:4px 0"></div>'+
-      statCard('👥','선택 기수 총원',stats.course.total,curCourse?esc(curCourse.course_name.slice(0,10)):'-','#374151','#F8FAFC')+
-      statCard('✅','수료',stats.course.suryo,'','#059669','#F0FDF4')+
-      statCard('📘','진행 중',stats.course.ongoing,'','#2563EB','#EFF6FF')+
-      statCard('⬜','중도포기',stats.course.drop,'','#6B7280','#F9FAFB')
-    :'')+
-    '</div>';
+    statCard('👥','기수 총원',stats.course.total,curCourse?esc(curCourse.course_name.slice(0,12)):'-','#374151','#F8FAFC')+
+    statCard('✅','수료',stats.course.suryo,'','#059669','#F0FDF4')+
+    statCard('📘','진행 중',stats.course.ongoing,'','#2563EB','#EFF6FF')+
+    statCard('⬜','중도포기',stats.course.drop,'','#6B7280','#F9FAFB')+
+    '</div>':'';
 
   /* ── 수강생 테이블 ── */
   var tbody='';
@@ -1076,7 +1071,7 @@ function renderTraining(){
     '<th style="padding:10px 8px;text-align:center;background:#F8FAFC;width:36px">'+
     (trCourseId!=null&&visibleIds.length>0?'<input type="checkbox" '+(allChecked?'checked':'')+' onchange="toggleTrSelectAll(['+visibleIds.join(',')+'])" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">':'')+
     '</th>'+
-    ['No.','이름','연락처','자격증','상태','특이사항','수료여부','관리'].map(function(h){
+    ['No.','이름','연락처','자격증','상태','특이사항','테스트 통과 유무','관리'].map(function(h){
       return'<th style="padding:10px 12px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">'+h+'</th>';
     }).join('')+'</tr>';
 
@@ -1084,7 +1079,7 @@ function renderTraining(){
     /* 헤더 */
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0">'+
     '<div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">🎓 연수 관리</h2>'+
-    '<p style="margin:3px 0 0;font-size:12px;color:#94A3B8">기수별 수강생 관리 · 상태 추적 · 수료 여부 · 전체 <strong>'+total+'</strong>명</p></div>'+
+    '<p style="margin:3px 0 0;font-size:12px;color:#94A3B8">기수별 수강생 관리 · 상태 추적 · 테스트 통과 유무</p></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     (trSelectedIds.size>0?'<button onclick="bulkCompleteTr()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">✅ 선택 '+trSelectedIds.size+'명 수료 처리</button>':'')+
     (trCourseId!=null?btn('+ 수강생 추가','openTrMemberModal('+trCourseId+',null)','primary'):'')+
@@ -1635,7 +1630,7 @@ function renderView(){
   }catch(e){console.error('renderView error',e);main.innerHTML='<div style="padding:40px;text-align:center;color:#DC2626">렌더링 오류: '+(e.message||String(e))+'</div>';}
   var sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();
   _restoreScrollPositions();
-  var searchIds=['jobSearchInput','studentSearchInput','vaultSearchInput'];
+  var searchIds=['jobSearchInput','studentSearchInput','vaultSearchInput','trSearchInput'];
   if(focusedId&&searchIds.indexOf(focusedId)>=0){requestAnimationFrame(function(){var el=$(focusedId);if(el){el.focus();if(cursorPos!==null){try{el.setSelectionRange(cursorPos,cursorPos);}catch(e){}}}});}
 }
 function setView(v){_savedScrollTop=0;_savedTblScrollTop=0;currentView=v;$('app').innerHTML=renderSidebar()+'<main id="_main" style="flex:1;overflow:hidden;background:#F0F2F5;display:flex;flex-direction:column;min-height:0"></main>';renderView();}
