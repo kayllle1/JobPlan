@@ -212,7 +212,8 @@ let trCourseId=null;      /* 현재 선택된 기수 ID */
 let trKw='';              /* 검색어 */
 let trStatus='전체';      /* 상태 필터: 전체|수료|진행 중|중도포기 */
 let _trKwComposing=false,_trKwTimer=null;  /* 한국어 IME 이중입력 방지 */
-let trSelectedIds=new Set();  /* 체크박스 선택된 수강생 ID 집합 */
+let trSelectedIds=new Set();
+let trTestFilter='';  /* 테스트 필터: 빈문자=전체, '합격', '불합격' */
 
 /* ─ IME ─ */
 let _jobComposing=false,_stuComposing=false,_jobDebTimer=null,_stuDebTimer=null;
@@ -949,10 +950,14 @@ async function bulkCompleteTr(){
 function onTrKwCompositionStart(){_trKwComposing=true;clearTimeout(_trKwTimer);}
 function onTrKwCompositionEnd(el){_trKwComposing=false;clearTimeout(_trKwTimer);var v=el.value;_trKwTimer=setTimeout(function(){trKw=v;renderView();},0);}
 function onTrKwInput(el){if(_trKwComposing)return;clearTimeout(_trKwTimer);var v=el.value;_trKwTimer=setTimeout(function(){trKw=v;renderView();},200);}
-function setTrStatus(s){trStatus=s;renderView();}
+function setTrStatus(s){trTestFilter='';trStatus=s;renderView();}
+function resetTrKw(){trKw='';renderView();}
+function resetTrTestFilter(){trTestFilter='';renderView();}
+function setTrTestFilter(v){trTestFilter=(trTestFilter===v)?'':v;trStatus='전체';renderView();}
 function setTrCourse(v){
   trCourseId=v?Number(v):null;
   trStatus='전체';
+  trTestFilter='';
   trSelectedIds.clear();
   renderView();
 }
@@ -995,16 +1000,49 @@ function getTrStats(){
   return{course:course};
 }
 
-/* ─ 연수 관리 메인 뷰 v4.0 ─ */
+/* ─ 기수 전체 수료/진행중 일괄 처리 ─ */
+async function bulkCourseStatus(courseId,newStatus){
+  var allM=TR_PARTICIPANTS.filter(function(p){return p.course_id===courseId;});
+  if(!allM.length)return customAlert('해당 기수에 수강생이 없습니다.');
+  var cName=(TR_COURSES.find(function(c){return c.id===courseId;})||{course_name:'해당 기수'}).course_name;
+  var label=newStatus==='수료'?'수료 완료':'진행중';
+  var yLabel=newStatus==='수료'?'전체 수료 완료':'진행중으로 해제';
+  var yColor=newStatus==='수료'?'#059669':'#2563EB';
+  customConfirm(cName+' — 전체 '+allM.length+'명을 ['+label+'] 상태로 변경하시겠습니까?',async function(){
+    var ok=0,fail=0;
+    for(var i=0;i<allM.length;i++){
+      var r=await SB.from('training_participants').update({status:newStatus}).eq('id',allM[i].id);
+      if(r.error)fail++;else ok++;
+    }
+    trSelectedIds.clear();await loadAllData();
+    customAlert('완료! '+label+' '+ok+'명'+(fail>0?' / 실패 '+fail+'명':''));
+  },yLabel,yColor);
+}
+
+/* ─ 현재 보이는 수강생 엑셀(CSV) 내보내기 ─ */
+function exportTrMembers(mems){
+  if(!mems||!mems.length)return customAlert('내보낼 데이터가 없습니다.');
+  var cmap={};TR_COURSES.forEach(function(c){cmap[c.id]=c.course_name;});
+  var stLabel={'수료':'수료 완료','진행 중':'진행중','중도포기':'중도 포기'};
+  var data=mems.map(function(p,i){
+    return{'No':i+1,'기수명':cmap[p.course_id]||'-','이름':p.student_name||'',
+      '휴대전화':p.phone_number||'','자격증':p.license_info||'',
+      '연수 진행 상태':stLabel[p.status]||p.status||'',
+      '테스트 통과 유무':(p.first_test_result==='합격'?'합격 (2차 심화 가능)':
+                         p.first_test_result==='불합격'?'불합격 (1차 재시험)':'-'),
+      '특이사항':p.first_test_score||''};
+  });
+  csvExport(data,'연수수강생명단_'+TODAY);
+}
+
+/* ─ 연수 관리 메인 뷰 v5.0 ─ */
 function renderTraining(){
   var stats=getTrStats();
   var curCourse=trCourseId!=null?TR_COURSES.find(function(c){return c.id===trCourseId;}):null;
 
-  /* ── 전체 기수 통합 검색 (kw가 있으면 trCourseId 무관하게 전체 검색) ─ */
-  var isGlobalSearch=trKw.trim().length>0&&trCourseId==null;
+  /* ── 필터링 ── */
   var members;
   if(trKw.trim()){
-    /* 검색어 있으면 전 기수 검색 */
     var kw=trKw.trim();
     members=TR_PARTICIPANTS.filter(function(p){
       return p.student_name.indexOf(kw)>=0||(p.phone_number||'').slice(-4).indexOf(kw)>=0;
@@ -1014,55 +1052,71 @@ function renderTraining(){
   }else{
     members=[];
   }
-  /* 상태 필터 (검색 중에도 적용) */
   if(trStatus!=='전체')members=members.filter(function(p){return p.status===trStatus;});
+  if(trTestFilter==='합격')members=members.filter(function(p){return p.first_test_result==='합격';});
+  else if(trTestFilter==='불합격')members=members.filter(function(p){return p.first_test_result==='불합격';});
+  window._trCurrentMembers=members;
 
   var visibleIds=members.map(function(p){return p.id;});
-
-  /* 상태 카운트 (기수 기준) */
   var allInCourse=trCourseId!=null?TR_PARTICIPANTS.filter(function(p){return p.course_id===trCourseId;}):[];
   var cntMap={'전체':allInCourse.length,'수료':0,'진행 중':0,'중도포기':0};
   allInCourse.forEach(function(p){if(cntMap[p.status]!=null)cntMap[p.status]++;});
 
-  /* 상태 필터 탭 */
+  /* ── 상태 탭 ── */
   var statusTabs=['전체','수료','진행 중','중도포기'].map(function(s){
-    var active=trStatus===s;
+    var active=(trTestFilter===''&&trStatus===s);
     var cc=s==='수료'?'#059669':s==='진행 중'?'#2563EB':s==='중도포기'?'#6B7280':'#374151';
-    var labels={'전체':'전체','수료':'수료 완료','진행 중':'진행중','중도포기':'중도 포기'};
-    return'<button onclick="setTrStatus(\''+s+'\')" style="white-space:nowrap;padding:5px 13px;border-radius:99px;border:1.5px solid '+(active?cc:'#E2E8F0')+';background:'+(active?cc:'#fff')+';color:'+(active?'#fff':'#374151')+';font-size:12px;font-weight:'+(active?700:500)+';cursor:pointer;font-family:inherit;flex-shrink:0">'+
-      labels[s]+' <span style="font-size:10px;opacity:.8">'+cntMap[s]+'</span></button>';
+    var lbl={'전체':'전체','수료':'수료 완료','진행 중':'진행중','중도포기':'중도 포기'}[s];
+    return'<button onclick="setTrStatus(\''+s+'\')" style="white-space:nowrap;padding:5px 13px;border-radius:99px;'+
+      'border:1.5px solid '+(active?cc:'#E2E8F0')+';background:'+(active?cc:'#fff')+';color:'+(active?'#fff':'#374151')+';'+
+      'font-size:12px;font-weight:'+(active?700:500)+';cursor:pointer;font-family:inherit;flex-shrink:0">'+
+      lbl+' <span style="font-size:10px;opacity:.8">'+cntMap[s]+'</span></button>';
   }).join('');
 
-  /* ── 기수별 집계 카드 ── */
-  function statCard(icon,label,val,sub,c,bg){
-    return'<div style="background:'+bg+';border:1px solid '+c+'33;border-radius:10px;padding:12px 16px;flex:1;min-width:100px;max-width:160px">'+
-      '<p style="margin:0;font-size:10px;color:'+c+';font-weight:700">'+icon+' '+label+'</p>'+
-      '<p style="margin:4px 0 1px;font-size:24px;font-weight:900;color:#0F172A;line-height:1">'+val+'<span style="font-size:10px;color:#94A3B8;font-weight:400;margin-left:2px">명</span></p>'+
-      (sub?'<p style="margin:0;font-size:9px;color:'+c+';opacity:.7">'+sub+'</p>':'')+
+  /* ── 집계 카드 (클릭 필터링) ── */
+  function sc(icon,label,val,sub,c,bg,filterType,filterVal){
+    var isA=(filterType==='status')?(trTestFilter===''&&trStatus===filterVal)
+              :(filterType==='test'?trTestFilter===filterVal:false);
+    var clickFn=(filterType==='status')?"setTrStatus('"+filterVal+"')"
+                :(filterType==='test')?"setTrTestFilter('"+filterVal+"')":'';
+    return'<div onclick="'+clickFn+'" style="background:'+(isA?c:'#fff')+';border:2px solid '+(isA?c:c+'33')+';'+
+      'border-radius:10px;padding:10px 14px;flex:1;min-width:88px;max-width:148px;'+
+      'cursor:'+(clickFn?'pointer':'default')+';transition:all .12s;user-select:none">'+
+      '<p style="margin:0;font-size:10px;color:'+(isA?'rgba(255,255,255,.9)':c)+';font-weight:700">'+icon+' '+label+'</p>'+
+      '<p style="margin:4px 0 1px;font-size:22px;font-weight:900;color:'+(isA?'#fff':'#0F172A')+';line-height:1">'+val+
+      '<span style="font-size:10px;color:'+(isA?'rgba(255,255,255,.7)':'#94A3B8')+';font-weight:400;margin-left:2px">명</span></p>'+
+      (sub?'<p style="margin:0;font-size:9px;color:'+(isA?'rgba(255,255,255,.8)':c)+';opacity:.85">'+sub+'</p>':'')+
       '</div>';
   }
+
   var statsHtml=trCourseId!=null?
     '<div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;align-items:stretch">'+
-    /* 기수명 표시 */
-    '<div style="background:#1E293B;border-radius:10px;padding:10px 16px;display:flex;flex-direction:column;justify-content:center;min-width:120px;flex-shrink:0">'+
+    '<div style="background:#1E293B;border-radius:10px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;min-width:110px;flex-shrink:0">'+
     '<p style="margin:0;font-size:9px;color:#64748B;font-weight:700;text-transform:uppercase;letter-spacing:.08em">선택 기수</p>'+
-    '<p style="margin:4px 0 0;font-size:12px;font-weight:800;color:#E2E8F0;line-height:1.3">'+esc((curCourse?curCourse.course_name:'').slice(0,14))+'</p>'+
+    '<p style="margin:4px 0 0;font-size:12px;font-weight:800;color:#E2E8F0;line-height:1.3">'+esc((curCourse?curCourse.course_name:'').slice(0,12))+'</p>'+
     '</div>'+
+    sc('👥','총원',stats.course.total,'클릭하여 전체','#374151','#F8FAFC','status','전체')+
+    sc('✅','수료 완료',stats.course.suryo,'클릭하여 필터','#059669','#F0FDF4','status','수료')+
+    sc('📘','진행중',stats.course.ongoing,'클릭하여 필터','#2563EB','#EFF6FF','status','진행 중')+
+    sc('⬜','중도 포기',stats.course.drop,'클릭하여 필터','#6B7280','#F9FAFB','status','중도포기')+
     '<div style="width:1px;background:#E2E8F0;flex-shrink:0;margin:2px 0"></div>'+
-    statCard('👥','총원',stats.course.total,'','#374151','#F8FAFC')+
-    statCard('✅','수료 완료',stats.course.suryo,'','#059669','#F0FDF4')+
-    statCard('📘','진행중',stats.course.ongoing,'','#2563EB','#EFF6FF')+
-    statCard('⬜','중도 포기',stats.course.drop,'','#6B7280','#F9FAFB')+
-    '<div style="width:1px;background:#E2E8F0;flex-shrink:0;margin:2px 0"></div>'+
-    statCard('🏆','테스트 합격',stats.course.pass,'2차 심화 가능','#059669','#F0FDF4')+
-    statCard('🔄','테스트 불합격',stats.course.fail,'1차 재시험','#DC2626','#FEF2F2')+
+    sc('🏆','테스트 합격',stats.course.pass,'2차 심화 가능','#059669','#F0FDF4','test','합격')+
+    sc('🔄','테스트 불합격',stats.course.fail,'재시험 대상','#DC2626','#FEF2F2','test','불합격')+
     '</div>':'';
 
-  /* ── 수강생 테이블 ── */
+  /* ── 활성 필터 표시 ── */
+  var filterBadge='';
+  if(trTestFilter==='합격')filterBadge=
+    '<span style="background:#D1FAE5;color:#065F46;border:1px solid #A7F3D0;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px">'+
+    '🏆 테스트 합격자만 표시 <button onclick="resetTrTestFilter()" style="border:none;background:none;color:#065F46;cursor:pointer;font-size:13px;font-weight:900;line-height:1">✕</button></span>';
+  else if(trTestFilter==='불합격')filterBadge=
+    '<span style="background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px">'+
+    '🔄 테스트 불합격(재시험 대상)만 표시 <button onclick="resetTrTestFilter()" style="border:none;background:none;color:#991B1B;cursor:pointer;font-size:13px;font-weight:900;line-height:1">✕</button></span>';
+
+  /* ── 테이블 ── */
   var allChecked=visibleIds.length>0&&visibleIds.every(function(id){return trSelectedIds.has(id);});
   var tbody='';
   if(!trKw.trim()&&trCourseId==null){
-    /* 기수 미선택, 검색어 없음 */
     tbody='<tr><td colspan="9" style="padding:60px 20px;text-align:center">'+
       '<div style="display:flex;flex-direction:column;align-items:center;gap:12px">'+
       '<span style="font-size:48px">🎓</span>'+
@@ -1073,29 +1127,24 @@ function renderTraining(){
     tbody='<tr><td colspan="9" style="padding:48px 20px;text-align:center">'+
       '<div style="display:flex;flex-direction:column;align-items:center;gap:10px">'+
       '<span style="font-size:40px">🔍</span>'+
-      '<span style="font-size:14px;color:#94A3B8;font-weight:700">검색 결과가 없습니다</span>'+
+      '<span style="font-size:14px;color:#94A3B8;font-weight:700">검색/필터 결과가 없습니다</span>'+
       '</div></td></tr>';
   }else{
     tbody=members.map(function(p,i){
       var isSel=trSelectedIds.has(p.id);
-      /* 소속 기수명 (전체 검색 시 표시) */
       var courseInfo='';
-      if(isGlobalSearch||trKw.trim()){
-        var pCourse=TR_COURSES.find(function(c){return c.id===p.course_id;});
-        if(pCourse)courseInfo='<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+esc(pCourse.course_name.slice(0,12))+'</div>';
+      if(trKw.trim()){
+        var pC=TR_COURSES.find(function(c){return c.id===p.course_id;});
+        if(pC)courseInfo='<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+esc(pC.course_name.slice(0,14))+'</div>';
       }
-      /* 특이사항 미리보기 */
-      var notePreview=(p.first_test_score||'').split('\n')[0].slice(0,20);
-      var noteHasMore=(p.first_test_score||'').indexOf('\n')>=0||(p.first_test_score||'').length>20;
+      var noteLines=(p.first_test_score||'').split('\n');
+      var notePreview=noteLines[0].slice(0,20);
+      var noteMore=noteLines.length>1||noteLines[0].length>20;
       var noteCell=p.first_test_score
         ?'<div title="'+esc(p.first_test_score)+'" style="max-width:130px;cursor:help">'+
-          '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#374151">'+esc(notePreview)+(noteHasMore?'…':'')+'</div>'+
-          (noteHasMore?'<div style="font-size:9px;color:#94A3B8;margin-top:1px">▼ '+((p.first_test_score||'').split('\n').length)+'줄 (마우스 오버)</div>':'')+'</div>'
+          '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#374151">'+esc(notePreview)+(noteMore?'…':'')+'</div>'+
+          (noteMore?'<div style="font-size:9px;color:#94A3B8;margin-top:1px">▼ '+noteLines.length+'줄 (마우스 오버)</div>':'')+'</div>'
         :'<span style="color:#CBD5E1;font-size:11px">-</span>';
-      /* 상태+결과 조합 아이콘 */
-      var comboIcon='';
-      if(p.status==='수료'&&p.first_test_result==='불합격')comboIcon='<span title="연수 이수, 재시험 필요" style="font-size:13px;margin-left:4px;vertical-align:middle">⚠️</span>';
-      if(p.status==='진행 중'&&p.first_test_result==='합격')comboIcon='<span title="수료 처리 권장" style="font-size:13px;margin-left:4px;vertical-align:middle">🎯</span>';
       return'<tr class="tbl-tr'+(isSel?' row-urgent':'')+'" style="border-bottom:1px solid #F1F5F9">'+
         '<td style="padding:10px 8px;text-align:center"><input type="checkbox" '+(isSel?'checked':'')+
         ' onchange="toggleTrSelect('+p.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB"></td>'+
@@ -1103,19 +1152,15 @@ function renderTraining(){
         '<td style="padding:8px 12px"><span style="font-weight:700;font-size:13px;color:#0F172A">'+esc(p.student_name)+'</span>'+courseInfo+'</td>'+
         '<td style="padding:10px 12px;color:#6B7280;font-size:12px">'+esc(p.phone_number||'-')+'</td>'+
         '<td style="padding:10px 12px">'+(p.license_info?'<span style="background:#EFF6FF;color:#2563EB;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid #BFDBFE">'+esc(p.license_info)+'</span>':'<span style="color:#CBD5E1">-</span>')+'</td>'+
-        /* 연수 진행 상태 컬럼 */
-        '<td style="padding:8px 12px">'+trStatusBadge(p.status)+comboIcon+'</td>'+
-        /* 특이사항 컬럼 */
+        '<td style="padding:8px 12px">'+trStatusBadge(p.status)+'</td>'+
         '<td style="padding:8px 12px">'+noteCell+'</td>'+
-        /* 테스트 통과 유무 컬럼 */
         '<td style="padding:8px 12px">'+trSuryoBadge(p.first_test_result)+'</td>'+
         '<td style="padding:10px 12px;white-space:nowrap"><div style="display:flex;gap:4px">'+
-        btn('✏','openTrMemberModal('+p.course_id+','+p.id+')','outline',true)+' '+
-        btn('🗑','deleteTrMember('+p.id+')','danger',true)+'</div></td></tr>';
+        btn('\u270F','openTrMemberModal('+p.course_id+','+p.id+')','outline',true)+' '+
+        btn('\uD83D\uDDD1','deleteTrMember('+p.id+')','danger',true)+'</div></td></tr>';
     }).join('');
   }
 
-  /* 컬럼 헤더 */
   var thead='<tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">'+
     '<th style="padding:10px 8px;text-align:center;background:#F8FAFC;width:36px">'+
     (visibleIds.length>0?'<input type="checkbox" '+(allChecked?'checked':'')+
@@ -1126,17 +1171,16 @@ function renderTraining(){
     }).join('')+'</tr>';
 
   return'<div id="_view_scroll" style="padding:20px 24px 24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:12px">'+
-    /* ── 상단 헤더 ── */
+    /* 헤더 */
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0">'+
     '<div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">🎓 연수 관리</h2>'+
     '<p style="margin:3px 0 0;font-size:12px;color:#94A3B8">기수별 수강생 관리 · 연수 진행 상태 · 테스트 통과 유무</p></div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    (trSelectedIds.size>0?
-      '<button onclick="bulkCompleteTr()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:5px">✅ 선택 '+trSelectedIds.size+'명 수료 완료 처리</button>':'')+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+    (trSelectedIds.size>0?'<button onclick="bulkCompleteTr()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✅ 선택 '+trSelectedIds.size+'명 수료 완료</button>':'')+
     (trCourseId!=null?btn('+ 수강생 추가','openTrMemberModal('+trCourseId+',null)','primary'):'')+
     btn('+ 기수 추가','openTrCourseModal()','outline')+
     '</div></div>'+
-    /* ── 상시 검색창 (기수 선택 여부 무관 항상 표시) ── */
+    /* 이름 상시 검색 */
     '<div style="background:#fff;border-radius:10px;padding:12px 16px;border:1.5px solid #BFDBFE;flex-shrink:0">'+
     '<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#2563EB;text-transform:uppercase;letter-spacing:.06em">🔍 이름 상시 검색 — 전체 기수에서 즉시 검색</p>'+
     '<div style="display:flex;gap:8px;align-items:center">'+
@@ -1146,35 +1190,44 @@ function renderTraining(){
     'oninput="onTrKwInput(this)" '+
     'placeholder="수강생 이름 또는 전화번호 뒷 4자리 입력..." '+
     'style="flex:1;padding:9px 14px;border:1.5px solid '+(trKw?'#2563EB':'#E2E8F0')+';border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:'+(trKw?'#EFF6FF':'#fff')+'" autocomplete="off">'+
-    (trKw?'<button onclick="trKw=\'\';renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:9px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600">✕ 검색 초기화</button>':'')+
+    (trKw?'<button onclick="resetTrKw()" style="border:none;background:#F1F5F9;color:#64748B;padding:9px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;font-weight:600">✕ 초기화</button>':'')+
     (trKw?'<span style="font-size:12px;color:#2563EB;font-weight:700;white-space:nowrap">'+members.length+'명 발견</span>':'')+
     '</div>'+
-    (trKw?'<p style="margin:6px 0 0;font-size:11px;color:#6B7280">'+
-      (members.length>0?'전체 기수에서 검색됩니다. 특정 기수로 좁히려면 아래에서 기수를 선택하세요.':'일치하는 수강생이 없습니다.')+
-    '</p>':'<p style="margin:6px 0 0;font-size:11px;color:#94A3B8">기수를 선택하지 않아도 이름만 입력하면 전체 수강생에서 검색합니다.</p>')+
+    (trKw?'<p style="margin:6px 0 0;font-size:11px;color:#6B7280">'+(members.length>0?'전체 기수에서 검색됩니다.':'일치하는 수강생이 없습니다.')+'</p>':
+    '<p style="margin:6px 0 0;font-size:11px;color:#94A3B8">기수를 선택하지 않아도 이름만 입력하면 전체 수강생에서 검색합니다.</p>')+
     '</div>'+
-    /* ── 기수 선택 + 관리 버튼 패널 ── */
+    /* 기수 선택 + 관리 */
     '<div style="background:#fff;border-radius:10px;padding:12px 16px;border:1px solid #E5E7EB;flex-shrink:0">'+
-    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:'+(trCourseId!=null?'10px':'0')+'">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:'+(trCourseId!=null?'10px':'0')+'">'+
     '<span style="font-size:11px;font-weight:700;color:#374151;white-space:nowrap">기수 선택:</span>'+
     renderTrCourseSelect()+
-    (trCourseId!=null?'<button onclick="openTrUploadModal('+trCourseId+')" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📤 CSV 업로드</button>':'')+
-    (trCourseId!=null?'<button onclick="downloadTrTemplate()" style="background:#F1F5F9;color:#374151;border:1px solid #E2E8F0;padding:7px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📥 양식 다운로드</button>':'')+
-    (trCourseId!=null?'<button onclick="deleteTrCourse('+trCourseId+')" style="background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;padding:7px 14px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🗑 기수 삭제</button>':'')+
+    (trCourseId!=null?'<button onclick="openTrUploadModal('+trCourseId+')" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📤 CSV 업로드</button>':'')+
+    (trCourseId!=null?'<button onclick="downloadTrTemplate()" style="background:#F1F5F9;color:#374151;border:1px solid #E2E8F0;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📥 양식</button>':'')+
+    /* 기수 전체 수료/해제 버튼 */
+    (trCourseId!=null?'<button onclick="bulkCourseStatus('+trCourseId+',\'수료\')" style="background:#059669;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✅ 기수 전체 수료</button>':'')+
+    (trCourseId!=null?'<button onclick="bulkCourseStatus('+trCourseId+',\'진행 중\')" style="background:#2563EB;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔄 진행중으로 해제</button>':'')+
+    (trCourseId!=null?'<button onclick="deleteTrCourse('+trCourseId+')" style="background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🗑 기수 삭제</button>':'')+
     '</div>'+
     (trCourseId!=null?
       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
       '<div class="cat-tab-wrap" style="flex:1">'+statusTabs+'</div>'+
-      '<span style="font-size:11px;color:#94A3B8;white-space:nowrap">'+allInCourse.length+'명</span></div>'
+      (filterBadge?filterBadge:'')+
+      '<span style="font-size:11px;color:#94A3B8;white-space:nowrap;margin-left:auto">'+allInCourse.length+'명</span></div>'
     :'')+
     '</div>'+
-    /* ── 집계 카드 ── */
+    /* 집계 카드 */
     statsHtml+
-    /* ── 테이블 ── */
+    /* 엑셀 다운로드 버튼 */
+    (members.length>0?
+      '<div style="display:flex;justify-content:flex-end;flex-shrink:0">'+
+      '<button onclick="exportTrMembers(window._trCurrentMembers)" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px">📥 현재 명단 엑셀 다운로드 <span style="font-size:10px;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:99px">'+members.length+'명</span></button></div>'
+    :'')+
+    /* 테이블 */
     '<div id="_tbl_scroll" style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">'+
     '<table style="width:100%;border-collapse:collapse;font-size:13px;min-width:850px">'+
     '<thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div></div>';
 }
+
 
 /* ─ 통합 이력 모달: 연수 참여 이력 ─ */
 function getTrHistoryHtml(phone){
