@@ -671,16 +671,17 @@ function trStatusBadge(status){
 }
 
 /* ─ 테스트 통과 유무 배지 (텍스트 중심) ─ */
+/* ─ 테스트 통과 유무 배지: 아이콘 없이 텍스트 위주 ─ */
 function trSuryoBadge(val){
-  if(!val||val.trim()==='')return'<span style="color:#CBD5E1;font-size:11px;font-style:italic">미입력</span>';
+  if(!val||val.trim()==='')return'<span style="color:#CBD5E1;font-size:11px">미입력</span>';
   var isPass=(val==='합격');
   return isPass
-    ?'<div style="display:inline-flex;flex-direction:column;gap:1px">'+
-      '<span style="background:#D1FAE5;color:#065F46;border:1px solid #A7F3D0;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;display:block">✅ 합격</span>'+
-      '<span style="font-size:9px;color:#059669;font-weight:600;text-align:center;padding-top:1px">2차 심화 가능</span></div>'
-    :'<div style="display:inline-flex;flex-direction:column;gap:1px">'+
-      '<span style="background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800;display:block">❌ 불합격</span>'+
-      '<span style="font-size:9px;color:#DC2626;font-weight:600;text-align:center;padding-top:1px">1차 재시험</span></div>';
+    ?'<div style="display:inline-flex;flex-direction:column;gap:2px">'+
+      '<span style="background:#D1FAE5;color:#065F46;border:1px solid #A7F3D0;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800">합격</span>'+
+      '<span style="font-size:9px;color:#059669;font-weight:600;text-align:center">2차 심화 가능</span></div>'
+    :'<div style="display:inline-flex;flex-direction:column;gap:2px">'+
+      '<span style="background:#FEE2E2;color:#991B1B;border:1px solid #FECACA;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:800">불합격</span>'+
+      '<span style="font-size:9px;color:#DC2626;font-weight:600;text-align:center">1차 재시험</span></div>';
 }
 
 /* ─ 상태+결과 조합 경고 메시지 생성 ─ */
@@ -699,6 +700,49 @@ function trComboWarning(status,result){
       '<p style="margin:0;font-size:11px;color:#166534">테스트 합격이 확인되었습니다. 연수 수료 처리를 진행해 주세요.</p></div>';
   }
   return'';
+}
+
+/* ─ 특이사항 팝업 모달 ─
+   테이블의 특이사항 칸을 클릭하면 전체 내용이 팝업으로 표시되고
+   textarea에서 직접 수정 후 저장할 수 있습니다.
+─ */
+function openTrNoteModal(participantId){
+  var p=TR_PARTICIPANTS.find(function(x){return x.id===participantId;});
+  if(!p)return;
+  var c=TR_COURSES.find(function(x){return x.id===p.course_id;});
+  var cName=c?c.course_name:'(기수 미상)';
+  var typeIcon=c&&c.type==='meeting'?'📝':'🎥';
+  /* 수강생 정보 헤더 + 편집 가능한 textarea */
+  var body=
+    '<div style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+    '<span style="font-size:16px;font-weight:900;color:#0F172A">'+esc(p.student_name)+'</span>'+
+    '<span style="font-size:11px;color:#6B7280">'+esc(p.phone_number||'')+'</span>'+
+    (p.license_info?'<span style="background:#EFF6FF;color:#2563EB;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid #BFDBFE">'+esc(p.license_info)+'</span>':'')+
+    '<span style="font-size:11px;color:#94A3B8;margin-left:auto">'+typeIcon+' '+esc(cName)+'</span>'+
+    '</div>'+
+    '<p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📝 특이사항 / 데일리 피드백</p>'+
+    '<p style="margin:0 0 8px;font-size:11px;color:#B45309">Enter 키로 날짜별 내용을 구분해 입력하면 줄바꿈이 그대로 저장됩니다.</p>'+
+    /* 줄바꿈 완벽 적용된 편집 textarea */
+    '<textarea id="tn_content" rows="12" '+
+    'placeholder="예)&#10;4/1 수업 태도 매우 성실&#10;4/2 과제 미제출&#10;4/3 출석 확인" '+
+    'style="width:100%;padding:12px 14px;border:1.5px solid #FDE68A;border-radius:8px;'+
+    'font-size:13px;line-height:1.8;resize:vertical;font-family:inherit;'+
+    'background:#FFFBEB;color:#1E293B;outline:none;white-space:pre-wrap">'+esc(p.first_test_score||'')+'</textarea>'+
+    '<div style="display:flex;justify-content:flex-end;gap:8px;padding-top:14px;border-top:1px solid #F3F4F6;margin-top:14px">'+
+    btn('취소','closeModal()','outline')+' '+
+    btn('💾 저장','saveTrNote('+participantId+')','primary')+
+    '</div>';
+  showModal('📝 특이사항 / 데일리 피드백 — '+esc(p.student_name),body,'560px');
+}
+
+/* 특이사항 저장 (Supabase 즉시 반영) */
+async function saveTrNote(participantId){
+  var el=document.getElementById('tn_content');
+  if(!el)return;
+  var val=el.value;
+  var r=await SB.from('training_participants').update({first_test_score:val||null}).eq('id',participantId);
+  if(r.error){customAlert('저장 오류: '+(r.error.message||JSON.stringify(r.error)));return;}
+  closeModal();await loadAllData();
 }
 
 /* ─ CSV 양식 다운로드 ─ */
@@ -874,8 +918,8 @@ function openTrMemberModal(courseId,participantId){
     '<div style="margin-bottom:10px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">테스트 통과 유무</label>'+
     '<select id="trm_r1" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">'+
     '<option value="">미입력</option>'+
-    '<option value="합격" '+(f.first_test_result==='합격'?'selected':'')+'>합격 (2차 심화 가능)</option>'+
-    '<option value="불합격" '+(f.first_test_result==='불합격'?'selected':'')+'>불합격 (1차 재시험)</option>'+
+    '<option value="합격" '+(f.first_test_result==='합격'?'selected':'')+'>합격 — 2차 심화 가능</option>'+
+    '<option value="불합격" '+(f.first_test_result==='불합격'?'selected':'')+'>불합격 — 1차 재시험</option>'+
     '</select></div></div>'+
     /* 특이사항 Textarea */
     '<div style="background:#FFFBEB;border-radius:8px;padding:12px 14px;margin-bottom:12px;border:1px solid #FEF3C7">'+
@@ -1171,15 +1215,23 @@ function renderTraining(){
         var pC=TR_COURSES.find(function(c){return c.id===p.course_id;});
         if(pC)courseInfo='<div style="font-size:9px;color:#94A3B8;margin-top:2px">'+(pC.type==='meeting'?'📝':'🎥')+' '+esc(pC.course_name.slice(0,14))+'</div>';
       }
-      /* 특이사항: 첫 줄 미리보기 + 마우스 오버 시 전체 표시 */
+      /* 특이사항: 첫 줄 미리보기 + 클릭 시 전체 팝업 편집 모달 오픈 */
       var noteLines=(p.first_test_score||'').split('\n');
-      var notePreview=noteLines[0].slice(0,20);
-      var noteMore=noteLines.length>1||noteLines[0].length>20;
+      var notePreview=noteLines[0].slice(0,18);
+      var noteMore=noteLines.length>1||noteLines[0].length>18;
       var noteCell=p.first_test_score
-        ?'<div title="'+esc(p.first_test_score)+'" style="max-width:130px;cursor:help">'+
-          '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#374151">'+esc(notePreview)+(noteMore?'…':'')+'</div>'+
-          (noteMore?'<div style="font-size:9px;color:#94A3B8;margin-top:1px">▼ '+noteLines.length+'줄</div>':'')+'</div>'
-        :'<span style="color:#CBD5E1;font-size:11px">-</span>';
+        /* 내용 있음: 미리보기 텍스트 + 클릭 버튼 */
+        ?'<div style="max-width:140px">'+
+          '<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:#374151;margin-bottom:3px">'+esc(notePreview)+(noteMore?'…':'')+'</div>'+
+          '<button onclick="openTrNoteModal('+p.id+')" '+
+          'style="border:none;background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;'+
+          'padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">'+
+          (noteMore?'▼ '+noteLines.length+'줄 전체 보기':'✏ 수정')+'</button></div>'
+        /* 내용 없음: 추가 버튼 */
+        :'<button onclick="openTrNoteModal('+p.id+')" '+
+          'style="border:none;background:#F8FAFC;color:#94A3B8;border:1px solid #E5E7EB;'+
+          'padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;white-space:nowrap">'+
+          '+ 입력</button>';
       return'<tr class="tbl-tr'+(isSel?' row-urgent':'')+'" style="border-bottom:1px solid #F1F5F9">'+
         '<td style="padding:10px 8px;text-align:center"><input type="checkbox" '+(isSel?'checked':'')+
         ' onchange="toggleTrSelect('+p.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB"></td>'+
