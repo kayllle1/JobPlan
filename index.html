@@ -1793,7 +1793,7 @@ async function saveJob(jobId){
 }
 /* ─ 지원자 CRUD ─ */
 var _addApJobId=null,_addApSelectedSid=null;
-function openAddApModal(jobId){_addApJobId=jobId;_addApSelectedSid=null;var job=JOBS.find(function(j){return j.id===jobId;});if(!job)return;showModal('지원자 추가 — '+job.name.slice(0,22),'<div style="margin-bottom:4px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">학생 이름 검색</label><input id="ap_search" oninput="updateApSearch('+jobId+')" placeholder="이름 입력 → 기존 학생 검색 / 없으면 신규 등록" style="width:100%;padding:9px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;outline:none;font-family:inherit" autocomplete="off"></div><div id="ap_search_results" style="margin-bottom:4px"></div><div id="ap_selected_info"></div><hr style="border:none;border-top:1px solid #F3F4F6;margin:12px 0"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">지원 정보</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">'+fSel('상태','ap_st',STATUSES,'서류접수')+' '+fSel('급수','ap_gr',GRADES,'3급')+' '+fSel('발표방식','ap_an',ANNOUNCE,'홈페이지')+' <div></div></div>'+quickMemoButtons('ap_mm')+'<div style="margin-bottom:10px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">메모</label><textarea id="ap_mm" rows="2" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit"></textarea></div><div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">'+btn('취소','closeModal()','outline')+' '+btn('추가','saveAddAp('+jobId+')','primary')+'</div>','580px');}
+function openAddApModal(jobId){_addApJobId=jobId;_addApSelectedSid=null;var job=JOBS.find(function(j){return j.id===jobId;});if(!job)return;showModal('지원자 추가 — '+job.name.slice(0,22),'<div style="margin-bottom:4px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">학생 이름 검색</label><input id="ap_search" oninput="updateApSearch('+jobId+')" placeholder="이름 입력 → 기존 학생 검색 / 없으면 신규 등록" style="width:100%;padding:9px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;outline:none;font-family:inherit" autocomplete="off"></div><div id="ap_search_results" style="margin-bottom:4px"></div><div id="ap_selected_info"></div><hr style="border:none;border-top:1px solid #F3F4F6;margin:12px 0"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">지원 정보</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">'+fSel('상태','ap_st',STATUSES,'서류접수')+' '+fSel('급수','ap_gr',GRADES,'3급')+' '+fSel('발표방식','ap_an',ANNOUNCE,'홈페이지')+' <div></div></div>'+quickMemoButtons('ap_mm')+'<div style="margin-bottom:10px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">메모</label><textarea id="ap_mm" rows="2" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit"></textarea></div><div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">'+btn('취소','closeModal()','outline')+' '+'<button id="_ap_save_btn" onclick="saveAddAp('+jobId+')" style="background:#2563EB;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit">추가</button>'+'</div>','580px');}
 function updateApSearch(jobId){
   var val=$('ap_search')&&$('ap_search').value.trim();
   var results=$('ap_search_results'),selInfo=$('ap_selected_info');
@@ -1852,17 +1852,51 @@ function selectExistingAp(sid,name){
     else if(isNoReply)customAlert('⚠️ 이 학생은 과거 미회신 이력이 있는 블랙리스트입니다!\n\n'+name+' / '+(st.phone||'-')+'\n\n신중히 검토 후 진행하세요.');
   }
   _addApSelectedSid=sid;
+  /* Feature 2: 급수 자동 완성 — 해당 학생의 가장 최근 지원 기록에서 grade 추출 */
+  (function(){
+    var _grEl=$('ap_gr');if(!_grEl)return;
+    var _allAps=[];
+    JOBS.forEach(function(j){j.applicants.forEach(function(a){
+      if(a.studentId===sid)_allAps.push(a);
+    });});
+    if(_allAps.length){
+      /* 가장 최근(id 기준 내림차순) 지원의 grade 사용 */
+      _allAps.sort(function(a,b){return b.id-a.id;});
+      var _latestGrade=_allAps[0].grade||'';
+      if(_latestGrade){_grEl.value=_latestGrade;}
+    }
+  })();
   var r=$('ap_search_results');if(r)r.innerHTML='';
   var s=$('ap_search');if(s){s.value=name;s.disabled=true;s.style.background='#F3F4F6';}
   var si=$('ap_selected_info');if(si)si.innerHTML='<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:#1E40AF">✅ 기존 학생 선택됨: '+esc(name)+'</span><button onclick="clearApSelection()" style="background:none;border:1px solid #93C5FD;color:#2563EB;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div>';
 }
-function selectNewAp(nameVal){_addApSelectedSid='new';var r=$('ap_search_results');if(r)r.innerHTML='';var s=$('ap_search');if(s){s.disabled=true;s.style.background='#F3F4F6';}var si=$('ap_selected_info');if(si)si.innerHTML='<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.06em">신규 학생 정보 입력</span><button onclick="clearApSelection()" style="background:none;border:1px solid #86EFAC;color:#15803D;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">'+fInp('이름 *','ns_nm','text',nameVal)+' '+fInp('나이','ns_ag','number')+' '+fInp('연락처','ns_ph')+' '+fInp('이메일','ns_em','email')+'</div></div>';}
+
+/* ─ 신규 등록 시 이름 중복 체크 (Feature 1) ─ */
+function checkDupApName(){
+  var nm=$('ns_nm');var warn=$('_ns_dup_warn');var saveBtn=$('_ap_save_btn');
+  if(!nm)return;
+  var val=nm.value.trim();
+  if(!val){if(warn)warn.style.display='none';if(saveBtn)saveBtn.disabled=false;return;}
+  var job=JOBS.find(function(j){return j.id===_addApJobId;});
+  if(!job){if(warn)warn.style.display='none';return;}
+  /* 이미 이 공고 지원자 중 동일 이름 존재 여부 */
+  var isDup=job.applicants.some(function(ap){
+    var st=STUDENTS.find(function(s){return s.id===ap.studentId;});
+    return st&&st.name===val;
+  });
+  if(warn)warn.style.display=isDup?'block':'none';
+  if(saveBtn)saveBtn.disabled=!!isDup;
+}
+function selectNewAp(nameVal){_addApSelectedSid='new';var r=$('ap_search_results');if(r)r.innerHTML='';var s=$('ap_search');if(s){s.disabled=true;s.style.background='#F3F4F6';}var si=$('ap_selected_info');if(si)si.innerHTML='<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.06em">신규 학생 정보 입력</span><button onclick="clearApSelection()" style="background:none;border:1px solid #86EFAC;color:#15803D;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">'+fInp('이름 *','ns_nm','text',nameVal,'oninput="checkDupApName()"')+'<div id="_ns_dup_warn" style="display:none;color:#DC2626;font-size:11px;font-weight:700;margin:-6px 0 8px;padding:4px 8px;background:#FEE2E2;border-radius:5px;border:1px solid #FECACA">⚠️ 이미 이 공고에 등록된 지원자입니다.</div>'+fInp('나이','ns_ag','number')+'  '+fInp('연락처','ns_ph')+'  '+fInp('이메일','ns_em','email')+'</div></div>';}
 function clearApSelection(){_addApSelectedSid=null;var s=$('ap_search');if(s){s.value='';s.disabled=false;s.style.background='';s.focus();}var r=$('ap_search_results');if(r)r.innerHTML='';var si=$('ap_selected_info');if(si)si.innerHTML='';}
 async function saveAddAp(jobId){
   if(!_addApSelectedSid)return customAlert('학생을 검색하여 선택하거나 신규 등록을 먼저 해주세요.');
   var sid;
   if(_addApSelectedSid==='new'){
     var nm=$('ns_nm')&&$('ns_nm').value.trim();if(!nm)return customAlert('이름을 입력하세요');
+    /* Feature 1: 이름 중복 최종 방어 */
+    var _dupJob=JOBS.find(function(j){return j.id===_addApJobId;});
+    if(_dupJob&&_dupJob.applicants.some(function(ap){var _ds=STUDENTS.find(function(s){return s.id===ap.studentId;});return _ds&&_ds.name===nm;})){return customAlert('⚠️ 이미 이 공고에 등록된 지원자입니다.\n\n['+nm+']');}
     var ph=($('ns_ph')&&$('ns_ph').value)||'';
     if(ph.trim()){
       var normalized=ph.replace(/\D/g,'');
