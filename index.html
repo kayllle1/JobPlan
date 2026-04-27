@@ -1801,6 +1801,46 @@ function updateApSearch(jobId){
   if(!val){results.innerHTML='';if(selInfo)selInfo.innerHTML='';_addApSelectedSid=null;return;}
   var job=JOBS.find(function(j){return j.id===jobId;});
   if(!job)return;
+
+  /* ── [Step 1] 현재 공고 기등록 지원자 이름 실시간 매칭 ── */
+  var alreadyAps=job.applicants.filter(function(ap){
+    var st=STUDENTS.find(function(s){return s.id===ap.studentId;});
+    return st&&st.name.indexOf(val)>=0;
+  });
+  if(alreadyAps.length>0){
+    /* 이미 등록된 지원자 발견 → 경고 카드 + 신규 등록 차단 */
+    var dupCards=alreadyAps.map(function(ap){
+      var st=STUDENTS.find(function(s){return s.id===ap.studentId;})||{};
+      var sc=STATUS_COLORS[ap.status]||'#94A3B8';
+      return'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #FEE2E2;flex-wrap:wrap;gap:8px">'
+        +'<div>'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
+        +'<span style="font-weight:800;font-size:13px;color:#991B1B">'+esc(st.name||'?')+'</span>'
+        +'<span style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700">'+esc(ap.status)+'</span>'
+        +'<span style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700">'+esc(ap.grade||'-')+'급</span>'
+        +'</div>'
+        +'<span style="font-size:11px;color:#6B7280">'+(st.phone?esc(st.phone):'연락처 없음')+(st.age?' · '+st.age+'세':'')+'</span>'
+        +'</div>'
+        +'<span style="font-size:10px;color:#DC2626;font-weight:700;white-space:nowrap">등록 완료</span>'
+        +'</div>';
+    }).join('');
+    results.innerHTML='<div style="background:#FFF5F5;border:1.5px solid #FCA5A5;border-radius:10px;overflow:hidden;margin-bottom:4px">'
+      +'<div style="background:linear-gradient(135deg,#DC2626,#B91C1C);padding:9px 14px;display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:15px">⚠️</span>'
+      +'<span style="font-size:12px;font-weight:800;color:#fff">이미 이 공고에 등록된 지원자입니다</span>'
+      +'<span style="font-size:10px;color:#FECACA;margin-left:4px">'+alreadyAps.length+'명 일치</span>'
+      +'</div>'
+      +dupCards
+      +'<div style="padding:8px 14px;background:#FEF2F2;border-top:1px solid #FEE2E2">'
+      +'<p style="margin:0;font-size:11px;color:#991B1B">중복 등록은 불가합니다. 기존 지원자를 수정하려면 공고 행의 ▼ 버튼을 눌러 지원자 목록에서 수정하세요.</p>'
+      +'</div></div>';
+    /* 저장 버튼 비활성화 */
+    var saveBtn=$('_ap_save_btn');if(saveBtn)saveBtn.disabled=true;
+    return;
+  }
+
+  /* ── [Step 2] 중복 없음 → 기존 학생 검색 로직 ── */
+  var saveBtn=$('_ap_save_btn');if(saveBtn)saveBtn.disabled=false;
   var available=STUDENTS.filter(function(s){return !job.applicants.find(function(a){return a.studentId===s.id;});});
   var matches=available.filter(function(s){return s.name.indexOf(val)>=0;});
   var todayMs=new Date(TODAY).getTime();
