@@ -6,12 +6,10 @@
 <title>Sorizava Archive v1.0</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:#F0F2F5;font-size:13px}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif;background:#FFFFFF;font-size:13px;color:#000000}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}::-webkit-scrollbar-track{background:transparent}
 button{cursor:pointer;font-family:inherit}input,select,textarea{font-family:inherit}
 .tbl-tr:hover{background:#F8FAFC!important}.acc-tr:hover{background:#EFF6FF!important}.emp-tr:hover{background:#F0FDF4!important}
@@ -168,7 +166,7 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 @media(max-width:900px){#dash-4grid{grid-template-columns:1fr;gap:10px;padding:10px 14px 16px}.dash-card{height:380px}#dash-kpi{grid-template-columns:repeat(2,1fr);padding:0 14px}#dash-header,#dash-monthly{padding-left:14px;padding-right:14px}}
 @media(max-width:500px){.dash-card{height:340px}#dash-kpi{grid-template-columns:1fr 1fr}}
 /* ═══ DASHBOARD LIGHT THEME ═══ */
-#dash-root{background:#F0F2F5;color:#1E293B}
+#dash-root{background:#FFFFFF;color:#1E293B}
 .dk-card{background:#fff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)}
 .dk-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 24px;flex-shrink:0}
 .dk-kpi-card{border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;cursor:default;transition:transform .15s,box-shadow .15s}
@@ -204,6 +202,12 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 .map-fallback-tab:hover{border-color:#2563EB;background:#EFF6FF;color:#1D4ED8}
 .map-fallback-tab.sel{background:#2563EB;border-color:#2563EB;color:#fff}
 @media(max-width:900px){.dk-kpi{grid-template-columns:repeat(2,1fr);padding:0 14px}.dk-4grid{grid-template-columns:1fr;gap:10px;padding:10px 14px 16px}.dk-grid-card{height:360px}.dk-map-section,.dk-monthly,.dk-recruit{padding-left:14px;padding-right:14px}}
+
+/* ═══ 전국 채용현황 SVG 지도 스타일 ═══ */
+#nat-korea-svg path{transition:fill .2s,stroke-width .15s}
+#nat-korea-svg path:hover{stroke:#F59E0B!important;stroke-width:2!important}
+#nat-right-panel::-webkit-scrollbar{width:5px}
+#nat-right-panel::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
 </style>
 </head>
 <body>
@@ -287,6 +291,7 @@ let studentFilter={kw:'',grade:'전체',statusTab:'전체'};
 let STUDENTS=[],JOBS=[],VAULT=[];
 let _dashInstSel=null;
 let _dashMapLocation=null,_mapChartInstance=null,_mapGeoJSON=null;
+let _nationalSelectedLoc=null;
 let _savedScrollTop=0,_savedTblScrollTop=0;
 let tableSort={col:null,dir:'none'};
 let _selectedJobIds=new Set();
@@ -1643,7 +1648,7 @@ function renderBlacklist(){
     +'</tr></thead><tbody>'+confirmedRows+'</tbody></table></div></div></div>';
 }
 function renderSidebar(){
-  var nav=[{id:'dashboard',label:'대시보드',icon:'📊'},{id:'jobs',label:'공고 관리',icon:'📋'},{id:'students',label:'취업 DB',icon:'👥'},{id:'employment',label:'취업 현황',icon:'🏆'},{id:'interview',label:'면접 자료실',icon:'📚'},{id:'blacklist',label:'블랙리스트',icon:'🚫'},{id:'training',label:'연수 관리',icon:'🎓'}];
+  var nav=[{id:'dashboard',label:'대시보드',icon:'📊'},{id:'national',label:'전국 채용현황',icon:'🗺️'},{id:'jobs',label:'공고관리',icon:'📋'},{id:'students',label:'학생관리',icon:'👥'},{id:'employment',label:'취업 현황',icon:'🏆'},{id:'interview',label:'면접 자료실',icon:'📚'},{id:'blacklist',label:'블랙리스트',icon:'🚫'},{id:'training',label:'연수 관리',icon:'🎓'}];
   var totalEmp=getEmpData('전체').length;
   var ivCount=JOBS.reduce(function(acc,j){return acc+j.applicants.filter(function(a){return a.status==='면접대기';}).length;},0);
   var vaultCount=VAULT.length;var _blCands=getBlacklistCandidates();var blTotal=_blCands.length+STUDENTS.filter(function(s){return s.restrictionLevel==='제한';}).length;
@@ -1822,9 +1827,9 @@ function renderDashboard(){
     +'</div></div>';
   }
 
-  return'<div id="dash-root" style="display:flex;flex-direction:column;height:100%;overflow-y:auto;background:#F0F2F5">'
+  return'<div id="dash-root" style="display:flex;flex-direction:column;height:100%;overflow-y:auto;background:#FFFFFF">'
   /* ① 헤더 */
-  +'<div id="dash-header" style="padding:16px 24px 10px;flex-shrink:0;background:#F0F2F5;position:relative">'
+  +'<div id="dash-header" style="padding:16px 24px 10px;flex-shrink:0;background:#FFFFFF;position:relative">'
   
   +'<div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">'
     +'<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><span style="width:3px;height:18px;background:linear-gradient(180deg,#3B82F6,#7C3AED);border-radius:99px;display:inline-block;flex-shrink:0"></span><p style="margin:0;font-size:10px;color:#3B82F6;font-weight:700;letter-spacing:.18em;text-transform:uppercase">SORIZAVA ARCHIVE</p></div><h2 style="margin:0 0 2px 11px;font-size:22px;font-weight:900;background:linear-gradient(90deg,#DBEAFE,#A5B4FC,#E2E8F0);-webkit-background-clip:text;-webkit-text-fill-color:transparent">대시보드</h2><p style="margin:0 0 0 11px;font-size:11px;color:#64748B">'+TODAY+' KST · 실시간 채용 현황 분석</p></div>'
@@ -1839,25 +1844,7 @@ function renderDashboard(){
   +'</div>'
   /* ③ Smart Alerts */
   +alertHtml
-  /* ④ 3D 지도 섹션 */
-  +'<div class="dk-map-section" style="margin-top:10px">'
-  +'<div class="dk-map-card">'
-    +'<div class="dk-map-head">'
-      +'<div class="dk-section-title"><span style="font-size:18px">🗺️</span> <span style="background:linear-gradient(90deg,#60A5FA,#A5B4FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent">지역별 채용 현황 — 3D 인터랙티브 지도</span></div>'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-        +(_dashMapLocation?'<button onclick="setMapLocationFilter(null)" style="background:#FFFBEB;color:#D97706;border:1px solid #FCD34D;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✕ '+esc(_dashMapLocation)+' 필터 해제</button>':'')
-        +'<span style="font-size:11px;color:#475569">클릭 시 공고 목록 필터링</span>'
-      +'</div>'
-    +'</div>'
-    +'<div id="korea-map-3d" style="height:360px;width:100%"><div style="display:flex;align-items:center;justify-content:center;height:100%;gap:12px;color:#475569"><span style="font-size:28px;animation:spin 1.2s linear infinite;display:inline-block">⟳</span><span style="font-size:13px;font-weight:600">지도 데이터 로딩 중...</span></div></div>'
-    +'<div style="padding:10px 16px 14px;border-top:1px solid #F1F5F9">'
-      +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
-        +'<span style="font-size:10px;color:#475569;font-weight:700;letter-spacing:.08em;text-transform:uppercase;flex-shrink:0;margin-right:4px">📍 지역 필터</span>'
-        +locChips
-      +'</div>'
-    +'</div>'
-  +'</div></div>'
-  /* ⑤ 월별 현황 바 */
+    /* ⑤ 월별 현황 바 */
   +'<div class="dk-monthly" style="margin-top:10px">'
   +'<div class="dk-monthly-bar">'
     +'<div style="flex-shrink:0;margin-right:16px">'
@@ -1941,8 +1928,6 @@ function initDashAnimations(){
       if(progress<1)requestAnimationFrame(tick);
     })(startTime);
   });
-  /* Init 3D map */
-  setTimeout(initKoreaMap,80);
 }
 
 /* ── ECharts 3D 대한민국 지도 ── */
@@ -2540,6 +2525,193 @@ function exportJobs(){csvExport(getSorted(getFiltered()).map(function(j,i){retur
 function exportStudents(){var filtered=filterStudents();csvExport(filtered.map(function(s,i){var apps=getApps(s.id),st=getStudentStatus(s.id);return{'No':i+1,'이름':s.name,'상태':st.label,'등급제한':s.restrictionLevel||'없음','나이':s.age||'미등록','연락처':s.phone,'이메일':s.email,'지원횟수':apps.length,'최종합격':apps.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length,'상담메모':s.counselingMemo||''};}),'학생DB_v75');}
 function exportHistory(studentId){var s=STUDENTS.find(function(st){return st.id===studentId;});if(!s)return;csvExport(getApps(studentId).map(function(a){return{'기관명':a.jobName,'카테고리':a.category,'서류접수일':a.docDate||'','최종합격발표일':a.finalDate||'','상태':a.status,'급수':a.grade,'발표방식':a.announceType,'메모':a.memo||''};}),s.name+'_지원이력');}
 /* ─ renderView / setView / init ─ */
+
+/* ══════════════════════════════════════════════════════════════
+   🗺️  전국 채용현황 페이지 (인라인 SVG 지도)
+══════════════════════════════════════════════════════════════ */
+function setNationalLoc(loc,e){
+  if(e&&e.preventDefault)e.preventDefault();
+  _nationalSelectedLoc=(_nationalSelectedLoc===loc)?null:loc;
+  /* 지도 재렌더 */
+  initNationalSVGMap();
+  /* 우측 패널만 업데이트 */
+  var panel=document.getElementById('nat-right-panel');
+  if(panel)panel.innerHTML=_renderNatPanel();
+}
+
+function _renderNatPanel(){
+  var locCounts={};
+  LOCATIONS.forEach(function(l){locCounts[l]=JOBS.filter(function(j){return j.location===l;}).length;});
+  var totalCount=LOCATIONS.reduce(function(s,l){return s+(locCounts[l]||0);},0);
+
+  /* 상단: 선택 지역 또는 전체 요약 */
+  var topHtml='';
+  if(_nationalSelectedLoc){
+    var cnt=locCounts[_nationalSelectedLoc]||0;
+    var pct=totalCount>0?(cnt/totalCount*100).toFixed(1):'0.0';
+    topHtml='<div style="padding:18px 20px;background:#FFFBEB;border-bottom:1px solid #FDE68A">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +'<span style="font-size:11px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📍 선택 지역</span>'
+      +'<button onclick="setNationalLoc(\''+_nationalSelectedLoc+'\',event)" style="border:none;background:#FDE68A;color:#78350F;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">✕ 해제</button>'
+      +'</div>'
+      +'<p style="margin:0 0 10px;font-size:26px;font-weight:900;color:#000000">'+esc(_nationalSelectedLoc)+'</p>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+      +'<div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #FDE68A">'
+      +'<p style="margin:0;font-size:10px;color:#92400E;font-weight:700">공고 수</p>'
+      +'<p style="margin:4px 0 0;font-size:28px;font-weight:900;color:#F59E0B;line-height:1">'+cnt+'<span style="font-size:12px;color:#92400E;margin-left:2px">건</span></p>'
+      +'</div>'
+      +'<div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #FDE68A">'
+      +'<p style="margin:0;font-size:10px;color:#92400E;font-weight:700">전체 비중</p>'
+      +'<p style="margin:4px 0 0;font-size:28px;font-weight:900;color:#F59E0B;line-height:1">'+pct+'<span style="font-size:12px;color:#92400E;margin-left:1px">%</span></p>'
+      +'</div></div></div>';
+  }else{
+    topHtml='<div style="padding:18px 20px;background:#EFF6FF;border-bottom:1px solid #BFDBFE">'
+      +'<p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em">📊 전체 현황</p>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
+      +'<div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #BFDBFE">'
+      +'<p style="margin:0;font-size:10px;color:#1D4ED8;font-weight:700">총 공고</p>'
+      +'<p style="margin:4px 0 0;font-size:28px;font-weight:900;color:#2563EB;line-height:1">'+totalCount+'<span style="font-size:12px;color:#1D4ED8;margin-left:2px">건</span></p>'
+      +'</div>'
+      +'<div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #BFDBFE">'
+      +'<p style="margin:0;font-size:10px;color:#1D4ED8;font-weight:700">집계 지역</p>'
+      +'<p style="margin:4px 0 0;font-size:28px;font-weight:900;color:#2563EB;line-height:1">'+LOCATIONS.length+'<span style="font-size:12px;color:#1D4ED8;margin-left:1px">개</span></p>'
+      +'</div></div></div>';
+  }
+
+  /* 순위 리스트 */
+  var sorted=LOCATIONS.slice().sort(function(a,b){return(locCounts[b]||0)-(locCounts[a]||0);});
+  var RANK_MEDALS=['🥇','🥈','🥉'];
+  var listHtml='<div style="padding:12px 20px 8px;border-bottom:1px solid #F3F4F6">'
+    +'<p style="margin:0;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.08em">지역별 순위</p></div>';
+
+  var tableRows=sorted.map(function(loc,i){
+    var cnt=locCounts[loc]||0;
+    var pct=totalCount>0?(cnt/totalCount*100).toFixed(1):'0.0';
+    var isSel=_nationalSelectedLoc===loc;
+    var rank=RANK_MEDALS[i]||(i+1)+'위';
+    var barW=totalCount>0?Math.max(4,Math.round(cnt/totalCount*100))+'%':'4%';
+    return'<div onclick="setNationalLoc(\''+loc+'\',event)" style="display:flex;align-items:center;gap:8px;padding:9px 20px;cursor:pointer;border-bottom:1px solid #F9FAFB;background:'+(isSel?'#FFF8E1':'#FFFFFF')+';transition:background .1s">'
+      +'<span style="min-width:28px;font-size:'+(i<3?'14px':'11px')+';font-weight:900;color:'+(i<3?'inherit':'#6B7280')+'">'+rank+'</span>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
+      +'<span style="font-size:13px;font-weight:'+(isSel?'900':'700')+';color:#000000">'+esc(loc)+'</span>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:13px;font-weight:800;color:#2563EB">'+cnt+'건</span>'
+      +'<span style="font-size:11px;color:#9CA3AF;min-width:38px;text-align:right">'+pct+'%</span>'
+      +'</div></div>'
+      +'<div style="height:4px;background:#E2E8F0;border-radius:99px;overflow:hidden">'
+      +'<div style="height:100%;width:'+barW+';background:'+(isSel?'#F59E0B':'#2563EB')+';border-radius:99px;transition:width .3s"></div>'
+      +'</div></div></div>';
+  }).join('');
+
+  return topHtml+listHtml+tableRows;
+}
+
+function renderNationalStatus(){
+  return'<div id="_view_scroll" style="height:100%;overflow:hidden;background:#FFFFFF;display:flex;flex-direction:column">'
+    /* 헤더 */
+    +'<div style="padding:16px 24px 12px;border-bottom:1px solid #E5E7EB;flex-shrink:0;background:#FFFFFF">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:22px">🗺️</span>'
+        +'<div>'
+          +'<h2 style="margin:0;font-size:20px;font-weight:900;color:#000000">전국 채용현황</h2>'
+          +'<p style="margin:2px 0 0;font-size:11px;color:#6B7280">Supabase jobs 테이블 location 필드 기반 · 지역 클릭 시 필터</p>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    /* 본문: 좌/우 레이아웃 */
+    +'<div style="display:flex;flex:1;overflow:hidden;min-height:0">'
+      /* 좌측: 지도 */
+      +'<div style="flex:1;min-width:0;overflow:hidden;background:#F8FAFF;position:relative;display:flex;align-items:center;justify-content:center">'
+        +'<svg id="nat-korea-svg" viewBox="0 0 400 560" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;max-height:100%;padding:16px;box-sizing:border-box">'
+          +'<rect width="400" height="560" fill="#F0F9FF" rx="8"/>'
+          +'<text x="200" y="280" text-anchor="middle" fill="#94A3B8" font-size="13" font-weight="600">지도 로딩 중...</text>'
+        +'</svg>'
+      +'</div>'
+      /* 우측: 패널 */
+      +'<div id="nat-right-panel" style="width:300px;flex-shrink:0;overflow-y:auto;border-left:1.5px solid #E5E7EB;background:#FFFFFF">'
+        +_renderNatPanel()
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+/* ── SVG 한국 지도 렌더러 (인라인 GeoJSON 기반) ── */
+function initNationalSVGMap(){
+  var svg=document.getElementById('nat-korea-svg');
+  if(!svg||typeof KOREA_MAP_DATA==='undefined')return;
+
+  /* 지역별 공고 수 */
+  var locCounts={};
+  LOCATIONS.forEach(function(l){locCounts[l]=JOBS.filter(function(j){return j.location===l;}).length;});
+  var maxCnt=Math.max.apply(null,Object.values(locCounts).concat([1]));
+
+  /* 좌표 투영 */
+  var minLon=124.4,maxLon=131.0,minLat=32.9,maxLat=38.95;
+  var W=400,H=560,PAD=22;
+  function px(lon){return(PAD+(lon-minLon)/(maxLon-minLon)*(W-PAD*2)).toFixed(2);}
+  function py(lat){return(PAD+(maxLat-lat)/(maxLat-minLat)*(H-PAD*2)).toFixed(2);}
+  function ringToD(ring){return ring.map(function(pt,i){return(i===0?'M':'L')+px(pt[0])+','+py(pt[1]);}).join(' ')+' Z';}
+  function geomToD(g){
+    if(g.type==='Polygon')return g.coordinates.map(ringToD).join(' ');
+    if(g.type==='MultiPolygon')return g.coordinates.map(function(poly){return poly.map(ringToD).join(' ');}).join(' ');
+    return '';
+  }
+  function getCentroid(g){
+    var ring=g.type==='Polygon'?g.coordinates[0]:g.coordinates[0][0];
+    var sumX=0,sumY=0;
+    ring.forEach(function(pt){sumX+=pt[0];sumY+=pt[1];});
+    return{lon:sumX/ring.length,lat:sumY/ring.length};
+  }
+  function getColor(loc,cnt){
+    if(_nationalSelectedLoc&&_nationalSelectedLoc===loc)return'#F59E0B';
+    if(!loc||LOCATIONS.indexOf(loc)<0)return'#E2E8F0';
+    if(cnt===0)return'#DBEAFE';
+    var r=cnt/maxCnt;
+    if(r>0.7)return'#1D4ED8';
+    if(r>0.4)return'#2563EB';
+    if(r>0.2)return'#60A5FA';
+    return'#93C5FD';
+  }
+
+  /* 각 feature 렌더 */
+  var pathEls='',labelEls='',labelDone={};
+  KOREA_MAP_DATA.features.forEach(function(feat){
+    var gName=feat.properties&&(feat.properties.name||feat.properties.CTP_KOR_NM)||'';
+    var loc=geoNameToLoc(gName);
+    var cnt=loc?(locCounts[loc]||0):0;
+    var isSel=_nationalSelectedLoc&&loc===_nationalSelectedLoc;
+    var d=geomToD(feat.geometry);
+    if(!d)return;
+    var fill=getColor(loc,cnt);
+    var stroke=isSel?'#D97706':'#BFDBFE';
+    var sw=isSel?'2':'0.8';
+    var clickFn=loc?"onclick=\"setNationalLoc('"+loc+"',event)\"":"";
+    pathEls+='<path d="'+d+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'" '+clickFn+' style="cursor:'+(loc?'pointer':'default')+';transition:fill .2s"/>';
+
+    /* DB 지역별 라벨은 한 번만 */
+    if(loc&&LOCATIONS.indexOf(loc)>=0&&!labelDone[loc]){
+      labelDone[loc]=true;
+      var c=getCentroid(feat.geometry);
+      var lx=parseFloat(px(c.lon));
+      var ly=parseFloat(py(c.lat));
+      var lbl=loc+' '+cnt+'건';
+      /* 작은 라벨 배경 */
+      var bgW=lbl.length*6+8;
+      var bgH=18;
+      labelEls+='<g onclick="setNationalLoc(\''+loc+'\',event)" style="cursor:pointer">'
+        +'<rect x="'+(lx-bgW/2)+'" y="'+(ly-bgH+3)+'" width="'+bgW+'" height="'+bgH+'" rx="3" fill="'+(isSel?'#F59E0B':'rgba(255,255,255,0.85)')+'"/>'
+        +'<text x="'+lx+'" y="'+(ly-1)+'" text-anchor="middle" font-size="9" font-weight="800" fill="'+(isSel?'#fff':'#1E293B')+'" font-family="Apple SD Gothic Neo,Malgun Gothic,sans-serif">'+loc+' '+cnt+'건</text>'
+        +'</g>';
+    }
+  });
+
+  /* 배경 + 바다색 rect */
+  svg.innerHTML='<rect width="400" height="560" fill="#EFF6FF" rx="8"/>'
+    +pathEls
+    +labelEls;
+}
+
 function renderView(){
   _saveScrollPositions();
   var focusedId=document.activeElement?document.activeElement.id:null;
@@ -2547,6 +2719,7 @@ function renderView(){
   var main=$('_main');if(!main)return;
   try{
     if(currentView==='dashboard'){main.innerHTML=renderDashboard();setTimeout(initDashAnimations,60);}
+    else if(currentView==='national'){main.innerHTML=renderNationalStatus();setTimeout(initNationalSVGMap,60);}
     else if(currentView==='jobs')main.innerHTML=renderJobs();
     else if(currentView==='students')main.innerHTML=renderStudents();
     else if(currentView==='employment')main.innerHTML=renderEmployment();
@@ -2560,7 +2733,7 @@ function renderView(){
   if(focusedId&&searchIds.indexOf(focusedId)>=0){requestAnimationFrame(function(){var el=$(focusedId);if(el){el.focus();if(cursorPos!==null){try{el.setSelectionRange(cursorPos,cursorPos);}catch(e){}}}});}
 }
 function setView(v){
-  _savedScrollTop=0;_savedTblScrollTop=0;currentView=v;$('app').innerHTML=renderSidebar()+'<main id="_main" style="flex:1;overflow:hidden;background:#F0F2F5;display:flex;flex-direction:column;min-height:0"></main>';renderView();
+  _savedScrollTop=0;_savedTblScrollTop=0;currentView=v;$('app').innerHTML=renderSidebar()+'<main id="_main" style="flex:1;overflow:hidden;background:#FFFFFF;display:flex;flex-direction:column;min-height:0"></main>';renderView();
 }
 async function init(){
   /* 로그인 없이 바로 대시보드 진입 */
