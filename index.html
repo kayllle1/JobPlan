@@ -2715,7 +2715,8 @@ function renderNationalStatus(){
   /* ════ 데이터 집계 ════ */
   var locCounts={};
   LOCATIONS.forEach(function(l){locCounts[l]=JOBS.filter(function(j){return j.location===l;}).length;});
-  var unlocatedCnt=JOBS.filter(function(j){return !j.location||j.location.trim()==='';}).length;
+  var unlocatedJobs=JOBS.filter(function(j){return !j.location||j.location.trim()==='';});
+  var unlocatedCnt=unlocatedJobs.length;
   if(unlocatedCnt>0)locCounts['미지정']=unlocatedCnt;
   var allLocs=LOCATIONS.slice();
   if(unlocatedCnt>0)allLocs.push('미지정');
@@ -2921,10 +2922,23 @@ var PROV_DATA={
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
         +'<div style="background:#EFF6FF;border:1px solid #BFDBFE;padding:4px 11px;border-radius:8px;font-size:10px;font-weight:700;color:#1D4ED8;white-space:nowrap">TOP: '+(locCounts[topRegion]>0?topRegion+' '+locCounts[topRegion]+'건':'-')+'</div>'
-        +(unlocatedCnt>0?'<div style="background:#F9FAFB;border:1px solid #E5E7EB;padding:4px 11px;border-radius:8px;font-size:10px;font-weight:600;color:#6B7280;white-space:nowrap">미지정 '+unlocatedCnt+'건</div>':'')
+        +(unlocatedCnt>0?'<button onclick="(function(){var b=document.getElementById(\'_mijung_banner\');if(b)b.style.display=b.style.display===\'none\'?\'flex\':\'none\';})()" style="background:#FEF3C7;border:1px solid #FCD34D;padding:4px 11px;border-radius:8px;font-size:10px;font-weight:700;color:#92400E;white-space:nowrap;cursor:pointer;font-family:inherit">⚠️ 미지정 '+unlocatedCnt+'건 ▾</button>':'')
         +(_nationalSelectedLoc?'<button onclick="setNationalLoc(\''+_nationalSelectedLoc+'\',event)" style="background:#FFF5F5;color:#EF4444;border:1.5px solid #FEE2E2;padding:4px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">✕ '+esc(_nationalSelectedLoc)+'</button>':'')
       +'</div>'
     +'</div>'
+    /* ── 미지정 공고 배너 (토글) ── */
+    +(unlocatedCnt>0?'<div id="_mijung_banner" style="display:none;flex-shrink:0;background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:10px 14px;margin-bottom:7px;gap:10px;align-items:flex-start;flex-wrap:wrap">'
+      +'<div style="flex-shrink:0;font-size:11px;font-weight:700;color:#92400E;margin-top:1px">📋 지역 미입력 공고</div>'
+      +'<div style="flex:1;display:flex;flex-direction:column;gap:4px">'
+        +unlocatedJobs.map(function(j){
+          return'<div style="display:flex;align-items:center;gap:8px;font-size:11px">'
+            +'<span style="color:#B45309;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+esc(j.name)+'</span>'
+            +(j.category?'<span style="background:#FEF3C7;color:#92400E;padding:1px 7px;border-radius:5px;font-size:9px;font-weight:700;flex-shrink:0">'+esc(j.category)+'</span>':'')
+            +'<button onclick="openJobModal('+j.id+')" style="background:#F59E0B;color:#fff;border:none;padding:2px 9px;border-radius:5px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">수정</button>'
+          +'</div>';
+        }).join('')
+      +'</div>'
+    +'</div>':'')
     /* ── 지도 카드 (flex:1로 남은 높이 채움) ── */
     +'<div style="flex:1;min-height:0;background:#FFFFFF;border-radius:14px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.05);display:flex;flex-direction:column;margin-bottom:10px">'
       +'<div style="flex-shrink:0;padding:7px 16px;border-bottom:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
