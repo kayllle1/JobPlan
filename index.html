@@ -2899,41 +2899,6 @@ var PROV_DATA={
   }).join('');
 
   /* ── 상세 패널 ── */
-  var detailPanel='';
-  if(_nationalSelectedLoc){
-    var sc2=locCounts[_nationalSelectedLoc]||0;
-    var spct=totalCount>0?(sc2/totalCount*100).toFixed(1):'0.0';
-    var isMijungSel=_nationalSelectedLoc==='미지정';
-    var selJobs=isMijungSel
-      ?JOBS.filter(function(j){return(!j.location||j.location.trim()==='')&&!j.isClosed;})
-      :JOBS.filter(function(j){return j.location===_nationalSelectedLoc&&!j.isClosed;});
-    var jobRows=selJobs.length===0
-      ?'<p style="margin:0;color:#CBD5E1;font-size:12px;text-align:center;padding:28px 0">진행 중인 공고 없음</p>'
-      :selJobs.slice(0,10).map(function(j){
-        return'<div class="nat-job-row"><span style="width:7px;height:7px;border-radius:50%;background:'+(isMijungSel?'#94A3B8':'#4F46E5')+';flex-shrink:0;display:inline-block"></span>'
-          +'<span style="font-size:13px;color:#1A1A1A;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name.length>34?j.name.slice(0,34)+'…':j.name)+'</span>'
-          +(j.category?'<span style="font-size:9px;font-weight:700;color:#222;background:#E8E8EC;padding:2px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0">'+esc(j.category)+'</span>':'')
-          +(j.finalDate?dDayBadge(j.finalDate,false):'')+'</div>';
-      }).join('')+(selJobs.length>10?'<p style="margin:12px 0 0;font-size:11px;color:#9CA3AF;text-align:center">+'+(selJobs.length-10)+' more</p>':'');
-    detailPanel='<div class="nat-detail-panel" style="margin-top:20px">'
-      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px">'
-        +'<div><p style="margin:0;font-size:9px;font-weight:700;color:#AAAAAA;text-transform:uppercase;letter-spacing:.2em">'+(isMijungSel?'Unassigned':'Selected Region')+'</p>'
-          +'<p style="margin:5px 0 0;font-size:34px;font-weight:700;color:'+(isMijungSel?'#6B7280':'#0A0A0A')+';letter-spacing:-.04em;line-height:1">'+esc(_nationalSelectedLoc)+'</p></div>'
-        +'<div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">'
-          +'<div style="background:#EEF2FF;border-radius:14px;padding:11px 20px;text-align:center;border:1.5px solid #C7D2FE;min-width:80px">'
-            +'<p style="margin:0;font-size:9px;color:#4338CA;font-weight:700;letter-spacing:.12em;text-transform:uppercase">JOBS</p>'
-            +'<p style="margin:5px 0 0;font-size:32px;font-weight:200;color:#4338CA;line-height:1;font-variant-numeric:tabular-nums">'+sc2+'<span style="font-size:12px;font-weight:400;color:#9CA3AF;margin-left:2px">건</span></p></div>'
-          +'<div style="background:#EEF2FF;border-radius:14px;padding:11px 20px;text-align:center;border:1.5px solid #C7D2FE;min-width:80px">'
-            +'<p style="margin:0;font-size:9px;color:#4338CA;font-weight:700;letter-spacing:.12em;text-transform:uppercase">SHARE</p>'
-            +'<p style="margin:5px 0 0;font-size:32px;font-weight:200;color:#4338CA;line-height:1;font-variant-numeric:tabular-nums">'+spct+'<span style="font-size:12px;font-weight:400;color:#9CA3AF;margin-left:2px">%</span></p></div>'
-          +'<button onclick="setNationalLoc(\''+_nationalSelectedLoc+'\',event)" style="border:1.5px solid #FEE2E2;background:#FFF5F5;color:#EF4444;padding:10px 16px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;align-self:flex-start">✕ 해제</button>'
-        +'</div></div>'
-      +'<div style="border-top:1px solid #F5F5F7;padding-top:18px">'
-        +'<p style="margin:0 0 14px;font-size:9px;font-weight:700;color:#AAAAAA;text-transform:uppercase;letter-spacing:.2em">Active Jobs · '+selJobs.length+'건</p>'
-        +jobRows
-      +'</div></div>';
-  }
-
   /* ── 범례 SVG ── */
   var legendSvg='<svg viewBox="0 0 200 18" style="width:190px;height:18px" xmlns="http://www.w3.org/2000/svg">'
     +'<defs><linearGradient id="lgGrad" x1="0%" y1="0%" x2="100%" y2="0%">'
@@ -2985,7 +2950,6 @@ var PROV_DATA={
           +' font-family=\"Apple SD Gothic Neo,Malgun Gothic,sans-serif\">REGION DATA</text>'
       +'</svg>'
     +'</div>'
-    +detailPanel
   +'</div>';
 }
 
