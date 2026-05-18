@@ -2754,37 +2754,21 @@ var PROV_DATA={
   var DRAW_ORDER=['경기','강원','충북','충남','전북','전남','경북','경남',
                   '서울','인천','세종','대전','광주','대구','울산','부산','제주'];
 
-  /* choropleth fill — 5단계 색상 스케일 */
+  /* choropleth fill — 블루 스케일 */
   function provFill(loc){
-    if(_nationalSelectedLoc&&loc===_nationalSelectedLoc)return'#F59E0B'; /* 선택: 앰버 골드 */
+    if(_nationalSelectedLoc&&loc===_nationalSelectedLoc)return'#F59E0B';
     var cnt=locCounts[loc]||0;
-    if(cnt===0)return'#DDE6F2'; /* 0건: 연한 회청 */
+    if(cnt===0)return'#D9EAF7';
     var t=Math.min(cnt/maxCnt,1);
-    /* 스케일: 연보라(#C7D2FE) → 인디고(#4338CA) → 딥네이비(#1E1B4B) */
     var r,g,b;
-    if(t<0.33){
-      var u=t/0.33;
-      r=Math.round(199+(67-199)*u)|0;
-      g=Math.round(210+(56-210)*u)|0;
-      b=Math.round(254+(202-254)*u)|0;
-    } else if(t<0.66){
-      var u=(t-0.33)/0.33;
-      r=Math.round(67+(49-67)*u)|0;
-      g=Math.round(56+(27-56)*u)|0;
-      b=Math.round(202+(75-202)*u)|0;  /* #4338CA → #312E4B */
-    } else {
-      var u=(t-0.66)/0.34;
-      r=Math.round(49+(30-49)*u)|0;
-      g=Math.round(27+(27-27)*u)|0;
-      b=Math.round(75+(75-75)*u)|0;
-    }
+    if(t<0.4){var u=t/0.4;r=Math.round(147+(37-147)*u)|0;g=Math.round(197+(99-197)*u)|0;b=Math.round(253+(235-253)*u)|0;}
+    else{var u=(t-0.4)/0.6;r=Math.round(37+(30-37)*u)|0;g=Math.round(99+(58-99)*u)|0;b=Math.round(235+(138-235)*u)|0;}
     return'rgb('+r+','+g+','+b+')';
   }
-  /* 텍스트 색상 (배경에 따라) */
   function lblColor(loc){
-    if(_nationalSelectedLoc===loc)return'#7C2D12'; /* 선택: 어두운 앰버 */
+    if(_nationalSelectedLoc===loc)return'#7C2D12';
     var cnt=locCounts[loc]||0,t=cnt>0?Math.min(cnt/maxCnt,1):0;
-    return t>0.22?'#FFFFFF':'#3B4A6B';
+    return t>0.18?'#FFFFFF':'#1E3A5A';
   }
 
   /* ── 지도 경로 + 레이블 ── */
@@ -2953,52 +2937,52 @@ var PROV_DATA={
   /* ── 범례 SVG ── */
   var legendSvg='<svg viewBox="0 0 200 18" style="width:190px;height:18px" xmlns="http://www.w3.org/2000/svg">'
     +'<defs><linearGradient id="lgGrad" x1="0%" y1="0%" x2="100%" y2="0%">'
-    +'<stop offset="0%" stop-color="#DDE6F2"/><stop offset="33%" stop-color="#C7D2FE"/><stop offset="66%" stop-color="#4338CA"/><stop offset="100%" stop-color="#1E1B4B"/></linearGradient></defs>'
+    +'<stop offset="0%" stop-color="#D9EAF7"/><stop offset="40%" stop-color="#93C5FD"/><stop offset="70%" stop-color="#2563EB"/><stop offset="100%" stop-color="#1E3A8A"/></linearGradient></defs>'
     +'<rect x="0" y="3" width="180" height="8" rx="4" fill="url(#lgGrad)"/>'
     +'<text x="0" y="18" font-size="8" fill="#94A3B8" font-family="\'Apple SD Gothic Neo\',sans-serif">0</text>'
     +'<text x="180" y="18" text-anchor="end" font-size="8" fill="#1E40AF" font-family="\'Apple SD Gothic Neo\',sans-serif">'+maxCnt+'건</text>'
     +'</svg>';
 
-  /* ════ 최종 HTML ════ */
-  return'<div id="_view_scroll" style="height:100%;overflow-y:auto;background:#F7F8FA;padding:28px 30px 44px">'
-    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px">'
-      +'<div>'
-        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">'
-          +'<div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366F1,#4338CA);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(99,102,241,.3)"><span style="font-size:14px">🗺️</span></div>'
-          +'<span style="font-size:9px;font-weight:700;color:#6366F1;letter-spacing:.22em;text-transform:uppercase">NATIONAL STATUS</span>'
+  /* ════ 최종 HTML — flex 레이아웃, 한 화면 fit ════ */
+  return'<div id="_view_scroll" style="height:100%;display:flex;flex-direction:column;overflow-y:auto;background:#F7F8FA;padding:10px 16px 0">'
+    /* ── 컴팩트 헤더 ── */
+    +'<div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;flex-wrap:wrap">'
+      +'<div style="display:flex;align-items:center;gap:9px">'
+        +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#2563EB,#1E3A8A);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:13px">🗺️</span></div>'
+        +'<div>'
+          +'<div style="font-size:15px;font-weight:800;color:#0A0A0A;letter-spacing:-.03em;line-height:1.1">전국 채용현황</div>'
+          +'<div style="font-size:10px;color:#9CA3AF;margin-top:1px">17개 시도 · 총 <strong style="color:#2563EB">'+totalJobCount+'</strong>건</div>'
         +'</div>'
-        +'<h2 style="margin:0 0 4px;font-size:24px;font-weight:800;color:#0A0A0A;letter-spacing:-.04em">전국 채용현황</h2>'
-        +'<p style="margin:0;font-size:11px;color:#AAAAAA">Supabase 실시간 · 17개 시도 · 총 <strong style="color:#4F46E5">'+totalJobCount+'</strong>건</p>'
       +'</div>'
-      +(_nationalSelectedLoc?'<button onclick="setNationalLoc(\''+_nationalSelectedLoc+'\',event)" style="background:#FFF5F5;color:#EF4444;border:1.5px solid #FEE2E2;padding:9px 20px;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;align-self:flex-start">✕ '+esc(_nationalSelectedLoc)+' 해제</button>':'')
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+        +'<div style="background:#EFF6FF;border:1px solid #BFDBFE;padding:4px 11px;border-radius:8px;font-size:10px;font-weight:700;color:#1D4ED8;white-space:nowrap">TOP: '+(locCounts[topRegion]>0?topRegion+' '+locCounts[topRegion]+'건':'-')+'</div>'
+        +(unlocatedCnt>0?'<div style="background:#F9FAFB;border:1px solid #E5E7EB;padding:4px 11px;border-radius:8px;font-size:10px;font-weight:600;color:#6B7280;white-space:nowrap">미지정 '+unlocatedCnt+'건</div>':'')
+        +(_nationalSelectedLoc?'<button onclick="setNationalLoc(\''+_nationalSelectedLoc+'\',event)" style="background:#FFF5F5;color:#EF4444;border:1.5px solid #FEE2E2;padding:4px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">✕ '+esc(_nationalSelectedLoc)+'</button>':'')
+      +'</div>'
     +'</div>'
-    +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">'+statCards+'</div>'
-    +'<div style="background:#FFFFFF;border-radius:20px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.06)">'
-      +'<div style="padding:13px 22px 10px;border-bottom:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
-        +'<div><span style="font-size:11px;font-weight:800;color:#0F172A">대한민국 지역별 채용 분포</span>'
-          +'<span style="font-size:10px;color:#94A3B8;margin-left:8px">지도 또는 배지 클릭 → 지역 선택</span></div>'
-        +'<div style="display:flex;align-items:center;gap:8px">'
-          +'<span style="font-size:9px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.08em">채용 밀도</span>'
+    /* ── 지도 카드 (flex:1로 남은 높이 채움) ── */
+    +'<div style="flex:1;min-height:0;background:#FFFFFF;border-radius:14px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.05);display:flex;flex-direction:column;margin-bottom:10px">'
+      +'<div style="flex-shrink:0;padding:7px 16px;border-bottom:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
+        +'<span style="font-size:10.5px;font-weight:700;color:#374151">대한민국 지역별 채용 분포 · 클릭으로 지역 선택</span>'
+        +'<div style="display:flex;align-items:center;gap:7px">'
+          +'<span style="font-size:8.5px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em">밀도</span>'
           +legendSvg
         +'</div>'
       +'</div>'
-      /* 메인 SVG */
-      +'<svg viewBox="0 0 820 644" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">'
+      +'<svg viewBox="0 0 820 644" style="flex:1;min-height:0;width:100%;display:block" xmlns="http://www.w3.org/2000/svg">'
         +'<rect width="820" height="644" fill="#FAFBFF"/>'
         +'<rect x="1" y="1" width="415" height="642" rx="8" fill="#B8D5EE"/>'
-        /* 지도 — 중첩 SVG로 viewBox 변환, preserveAspectRatio=none으로 꽉 채움 */
         +'<svg x="5" y="6" width="406" height="630" viewBox="-5 -5 710 730" preserveAspectRatio="none">'
           +mapPaths
         +'</svg>'
-        /* 레이블 — 외부 좌표계에서 */
         +mapLabels
         +'<text x="207" y="638" text-anchor="middle" font-size="7.5" font-weight="600" fill="#B0BAC9" letter-spacing="2"'
-          +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">REPUBLIC OF KOREA</text>'
-        +'<line x1="418" y1="14" x2="418" y2="630" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4,4"/>'
+          +' font-family=\"Apple SD Gothic Neo,Malgun Gothic,sans-serif\">REPUBLIC OF KOREA</text>'
+        +'<line x1="418" y1="14" x2="418" y2="630" stroke="#E8EAED" stroke-width="1" stroke-dasharray="4,4"/>'
         +leaderLines
         +badges
-        +'<text x="614" y="14" text-anchor="middle" font-size="7.5" font-weight="700" fill="#94A3B8" letter-spacing="1.5"'
-          +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">REGION DATA</text>'
+        +'<text x="614" y="14" text-anchor="middle" font-size="7.5" font-weight="700" fill="#9CA3AF" letter-spacing="1.5"'
+          +' font-family=\"Apple SD Gothic Neo,Malgun Gothic,sans-serif\">REGION DATA</text>'
       +'</svg>'
     +'</div>'
     +detailPanel
