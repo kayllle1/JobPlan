@@ -3150,7 +3150,7 @@ function _renderNatPanel(){
 }
 
 function renderNationalStatus(){
-  /* ── 데이터 집계 ── */
+  /* ════ 데이터 집계 ════ */
   var locCounts={};
   LOCATIONS.forEach(function(l){locCounts[l]=JOBS.filter(function(j){return j.location===l;}).length;});
   var unlocatedJobs=JOBS.filter(function(j){return !j.location||j.location.trim()==='';});
@@ -3162,18 +3162,18 @@ function renderNationalStatus(){
   var maxCnt=Math.max.apply(null,allLocs.map(function(l){return locCounts[l]||0;}).concat([1]));
   var sorted=allLocs.slice().sort(function(a,b){return(locCounts[b]||0)-(locCounts[a]||0);});
   var totalJobCount=JOBS.length;
+  var topRegion=sorted[0];
 
-  /* ── 지도 색상 ── */
+  /* ════ choropleth fill ════ */
   function provFill(loc){
     if(_nationalSelectedLoc&&loc===_nationalSelectedLoc)return'#FF6B35';
     var cnt=locCounts[loc]||0;
     if(cnt===0)return'#EBF4FB';
     var t=Math.min(cnt/maxCnt,1);
     var stops=[[189,215,238],[107,174,214],[49,130,189],[21,97,169],[8,48,107]];
-    var seg=Math.min(Math.floor(t*4),3);
-    var u=(t*4)-seg;
+    var seg=Math.min(Math.floor(t*4),3),u=(t*4)-seg;
     var s0=stops[seg],s1=stops[seg+1];
-    return'rgb('+Math.round(s0[0]+(s1[0]-s0[0])*u)+',' +Math.round(s0[1]+(s1[1]-s0[1])*u)+','+Math.round(s0[2]+(s1[2]-s0[2])*u)+')';
+    return'rgb('+Math.round(s0[0]+(s1[0]-s0[0])*u)+','+Math.round(s0[1]+(s1[1]-s0[1])*u)+','+Math.round(s0[2]+(s1[2]-s0[2])*u)+')';
   }
   function lblColor(loc){
     if(_nationalSelectedLoc===loc)return'#FFFFFF';
@@ -3181,14 +3181,15 @@ function renderNationalStatus(){
     return t>0.25?'#FFFFFF':'#1A3A5A';
   }
 
-  /* ── 레이블 위치 오버라이드 (Highcharts 좌표계) ── */
-  var lblOverride={'경기':{x:261,y:201},'대전':{x:278,y:295},'세종':{x:264,y:281}};
-  var largeProv=['경기','강원','경북','경남','전남','충남','전북'];
+  /* ════ 레이블·경로 렌더 ════ */
   var DRAW_ORDER=['경기','강원','충북','충남','전북','전남','경북','경남',
                   '서울','인천','세종','대전','광주','대구','울산','부산','제주'];
   var rankMap={};sorted.forEach(function(loc,i){rankMap[loc]=i+1;});
+  /* 레이블 위치 오버라이드 (외부 SVG 820×644 좌표계) */
+  var lblOverride={'경기':{x:155,y:182},'대전':{x:165,y:259},'세종':{x:157,y:248}};
+  var largeProv=['경기','강원','경북','경남','전남','충남','전북'];
+  var skipLbl={대전:1,세종:1};
 
-  /* ── SVG 지도 경로 + 레이블 ── */
   var mapPaths='',mapLabels='';
   DRAW_ORDER.forEach(function(loc){
     var pd=PROV_DATA[loc];if(!pd||!pd.d)return;
@@ -3197,87 +3198,118 @@ function renderNationalStatus(){
     var cnt=locCounts[loc]||0;
     var rank=rankMap[loc]||99;
     var strokeC=isSel?'#FF6B35':rank===1?'rgba(251,191,36,.8)':'rgba(255,255,255,.9)';
-    var strokeW=isSel?2.5:rank===1?2:1.2;
+    var strokeW=isSel?2.8:rank===1?2:1.2;
     var filterS=isSel?'drop-shadow(0 0 5px rgba(255,107,53,.65))':rank===1?'drop-shadow(0 0 3px rgba(251,191,36,.45))':'none';
     mapPaths+='<path d="'+pd.d+'" fill="'+fill+'"'
-      +' stroke="'+strokeC+'" stroke-width="'+strokeW+'"'
-      +' stroke-linejoin="round"'
+      +' stroke="'+strokeC+'" stroke-width="'+strokeW+'" stroke-linejoin="round"'
       +' onclick="setNationalLoc(\''+loc+'\',event)"'
-      +' style="cursor:pointer;transition:filter .2s;filter:'+filterS+';"'
-      +' onmouseover="this.style.filter=\''+(isSel?filterS:'brightness(.88)')+'\';" onmouseout="this.style.filter=\''+filterS+'\';">'
+      +' style="cursor:pointer;filter:'+filterS+';"'
+      +' onmouseover="this.style.opacity=\'0.8\'" onmouseout="this.style.opacity=\'1\'">'
       +'<title>'+loc+' : '+cnt+'건'+(rank<=3?' ('+rank+'위)':'')+'</title></path>';
 
-    /* 레이블 */
-    var tc=lblColor(loc);
-    var abbr=loc.length>2?loc.slice(0,2):loc;
-    /* Highcharts 공간 centroid 계산 */
-    var nums=(pd.d||'').match(/-?\d+\.?\d*/g)||[];
-    var xs=[],ys=[];
-    for(var ni=0;ni<nums.length-1;ni+=2){xs.push(parseFloat(nums[ni]));ys.push(parseFloat(nums[ni+1]));}
-    var hcx=xs.length?xs.reduce(function(a,b){return a+b;})/xs.length:350;
-    var hcy=ys.length?ys.reduce(function(a,b){return a+b;})/ys.length:350;
-    var ov=lblOverride[loc];
-    var lx=ov?ov.x:hcx,ly=ov?ov.y:hcy;
-    var fsize=(largeProv.indexOf(loc)>=0)?13:10;
-    var shadowC=tc==='#FFFFFF'?'rgba(0,0,0,.55)':'rgba(255,255,255,.85)';
-    var skipLbl={대전:1,세종:1};
     if(!skipLbl[loc]){
-      mapLabels+='<text x="'+lx.toFixed(1)+'" y="'+(ly+(cnt>0?0:4)).toFixed(1)+'"'
+      var tc=lblColor(loc);
+      var ov=lblOverride[loc];
+      var lx=ov?ov.x:pd.cx, ly=ov?ov.y:pd.cy;
+      var fsize=(largeProv.indexOf(loc)>=0)?9:7.5;
+      var shadowC=tc==='#FFFFFF'?'rgba(0,0,0,.55)':'rgba(255,255,255,.9)';
+      var abbr=loc.length>2?loc.slice(0,2):loc;
+      mapLabels+='<text x="'+lx.toFixed(1)+'" y="'+(ly+(cnt>0?0:3)).toFixed(1)+'"'
         +' text-anchor="middle" dominant-baseline="middle"'
         +' font-size="'+fsize+'" font-weight="700"'
         +' stroke="'+shadowC+'" stroke-width="2.5" paint-order="stroke"'
         +' fill="'+tc+'" pointer-events="none"'
-        +' font-family="Apple SD Gothic Neo,Malgun Gothic,sans-serif">'+abbr+'</text>';
+        +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">'+abbr+'</text>';
       if(cnt>0){
-        mapLabels+='<text x="'+lx.toFixed(1)+'" y="'+(ly+fsize+2).toFixed(1)+'"'
+        mapLabels+='<text x="'+lx.toFixed(1)+'" y="'+(ly+fsize+2.5).toFixed(1)+'"'
           +' text-anchor="middle" dominant-baseline="middle"'
-          +' font-size="'+(fsize-3)+'" font-weight="500"'
+          +' font-size="6.5" font-weight="500"'
           +' stroke="'+shadowC+'" stroke-width="2" paint-order="stroke"'
           +' fill="'+tc+'" opacity=".85" pointer-events="none"'
-          +' font-family="Apple SD Gothic Neo,Malgun Gothic,sans-serif">'+cnt+'건</text>';
+          +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">'+cnt+'건</text>';
       }
     }
   });
 
-  /* ── 오른쪽 카드 패널 ── */
-  var rankColors=['#F59E0B','#94A3B8','#B45309'];
-  var rankBg=['#FFFBEB','#F8FAFC','#FFFBEB'];
-  var cards=sorted.map(function(loc,idx){
-    var cnt=locCounts[loc]||0;
-    var pct=totalCount>0?(cnt/totalCount*100):0;
-    var isSel=_nationalSelectedLoc===loc;
-    var isMijung=loc==='미지정';
-    var rank=idx+1;
-    var barColor=isMijung?'#94A3B8':isSel?'#FF6B35':'#2563EB';
-    var rankBadge='';
-    if(rank<=3&&!isMijung){
-      var rc=rankColors[rank-1];
-      rankBadge='<div style="position:absolute;top:-1px;left:-1px;width:20px;height:20px;border-radius:50%;background:'+rc+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;box-shadow:0 1px 4px '+rc+'88">'+rank+'</div>';
-    }
-    return'<div onclick="setNationalLoc(\''+loc+'\',event)" style="position:relative;background:'+(isSel?'#FFF4F0':'#FFFFFF')+';border:1.5px solid '+(isSel?'#FF6B35':'#E5E7EB')+';border-radius:12px;padding:11px 13px;cursor:pointer;transition:border-color .15s,box-shadow .15s;box-shadow:'+(isSel?'0 0 0 3px rgba(255,107,53,.15)':'0 1px 3px rgba(0,0,0,.04)')+'" onmouseover="this.style.boxShadow=\''+(isSel?'0 0 0 3px rgba(255,107,53,.15)':'0 2px 8px rgba(0,0,0,.1)')+'\'" onmouseout="this.style.boxShadow=\''+(isSel?'0 0 0 3px rgba(255,107,53,.15)':'0 1px 3px rgba(0,0,0,.04)')+'\';">'
-      +rankBadge
-      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px">'
-        +'<div style="padding-left:'+(rank<=3&&!isMijung?'12px':'0')+'">'
-          +'<div style="font-size:13px;font-weight:800;color:'+(isMijung?'#9CA3AF':isSel?'#CC4A1E':'#0F172A')+'">'+loc+'</div>'
-          +'<div style="font-size:10px;color:#94A3B8;margin-top:1px">'+pct.toFixed(1)+'%</div>'
-        +'</div>'
-        +'<div style="text-align:right;flex-shrink:0">'
-          +'<span style="font-size:22px;font-weight:900;color:'+(isMijung?'#9CA3AF':isSel?'#FF6B35':'#0F172A');'">'+cnt+'</span>'
-          +'<span style="font-size:10px;font-weight:500;color:#94A3B8;margin-left:2px">건</span>'
-        +'</div>'
-      +'</div>'
-      +'<div style="height:4px;background:#F1F5F9;border-radius:99px;overflow:hidden">'
-        +'<div style="height:100%;width:'+Math.min(pct,100).toFixed(1)+'%;background:'+barColor+';border-radius:99px;transition:width .4s"></div>'
-      +'</div>'
-    +'</div>';
-  }).join('');
+  /* ════ 배지 레이아웃 ════ */
+  var nHalf=Math.ceil(sorted.length/2);
+  var BW=172,BH=54,BROW=62,BCX=[428,614],BY0=24;
+  function getBR(idx){
+    var col=idx<nHalf?0:1,row=idx<nHalf?idx:idx-nHalf;
+    return{x:BCX[col],y:BY0+row*BROW,w:BW,h:BH};
+  }
 
-  /* ── 미지정 배너 ── */
+  /* ════ 지시선 ════ */
+  var leaderLines='';
+  var noDot={대전:1,세종:1,광주:1,울산:1,부산:1,대구:1,인천:1,서울:1,경기:1};
+  sorted.forEach(function(loc,idx){
+    var pd=PROV_DATA[loc];var br=getBR(idx);
+    if(!pd||!br)return;
+    var cx=pd.cx,cy=pd.cy,bx=br.x,by=br.y+br.h/2;
+    var isSel=_nationalSelectedLoc===loc;
+    var gap=Math.min((bx-cx)*0.38,50);
+    leaderLines+='<path d="M'+cx.toFixed(1)+','+cy.toFixed(1)
+      +' C'+(cx+gap).toFixed(1)+','+cy.toFixed(1)+' '+(bx-gap).toFixed(1)+','+by.toFixed(1)+' '+bx+','+by.toFixed(1)+'"'
+      +' fill="none" stroke="'+(isSel?'#FF6B35':'#CBD5E1')+'"'
+      +' stroke-width="'+(isSel?1.8:0.6)+'" stroke-dasharray="'+(isSel?'none':'4,4')+'" opacity="'+(isSel?0.9:0.38)+'"/>';
+    if(!noDot[loc]){
+      leaderLines+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(isSel?3.5:2)+'"'
+        +' fill="'+(isSel?'#FF6B35':'#A5B4FC')+'" opacity="'+(isSel?0.9:0.45)+'"/>';
+    }
+  });
+
+  /* ════ 배지 SVG ════ */
+  var badges='';
+  var accentClr=['#F59E0B','#94A3B8','#B45309'];
+  sorted.forEach(function(loc,idx){
+    var cnt=locCounts[loc]||0;
+    var pct=totalCount>0?cnt/totalCount*100:0;
+    var isSel=_nationalSelectedLoc===loc,isMijung=loc==='미지정';
+    var br=getBR(idx);if(!br)return;
+    var rank=idx+1,R=18,SW=3.5,circ=2*Math.PI*R;
+    var dashOff=(circ*(1-Math.min(pct/100,1))).toFixed(2);
+    var uid='rb'+Math.floor(Math.random()*9999999);
+    var rc1=isMijung?'#94A3B8':isSel?'#CC4A1E':'#1D4ED8';
+    var rc2=isMijung?'#CBD5E1':isSel?'#FF6B35':'#38BDF8';
+    var ringCx=br.x+br.w-28,ringCy=br.y+br.h/2;
+    var numColor=isMijung?'#9CA3AF':isSel?'#CC4A1E':'#111111';
+    badges+='<g onclick="setNationalLoc(\''+loc+'\',event)" style="cursor:pointer">'
+      +'<rect x="'+br.x+'" y="'+(br.y+2)+'" width="'+br.w+'" height="'+br.h+'" rx="10" fill="rgba(0,0,0,0.04)"/>'
+      +'<rect x="'+br.x+'" y="'+br.y+'" width="'+br.w+'" height="'+br.h+'" rx="10"'
+        +' fill="'+(isSel?'#FFF4F0':'#FFFFFF')+'" stroke="'+(isSel?'#FF6B35':'#E5E7EB')+'" stroke-width="'+(isSel?1.5:1)+'"/>'
+      +(rank<=3&&!isMijung?'<rect x="'+br.x+'" y="'+(br.y+5)+'" width="3.5" height="'+(br.h-10)+'" rx="1.75" fill="'+accentClr[rank-1]+'"/>':'')
+      +'<text x="'+(br.x+11)+'" y="'+(br.y+16)+'" font-size="9.5" font-weight="700" fill="'+(isMijung?'#9CA3AF':'#1A1A1A')+'"'
+        +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">'+loc+'</text>'
+      +'<text x="'+(br.x+11)+'" y="'+(br.y+40)+'" font-size="20" font-weight="200" fill="'+numColor+'"'
+        +' font-variant-numeric="tabular-nums" font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">'+cnt
+        +'<tspan font-size="9" font-weight="500" fill="#888" dx="1">건</tspan></text>'
+      +(rank<=3&&!isMijung?(function(){
+        var bx2=br.x+62,by2=br.y+5,bw2=44,bh2=15;
+        var bf=rank===2?'#F8FAFC':'#FFFBEB',bs=rank===2?'#CBD5E1':'#FDE68A',bt=rank===2?'#475569':'#92400E';
+        return'<rect x="'+bx2+'" y="'+by2+'" width="'+bw2+'" height="'+bh2+'" rx="7.5" fill="'+bf+'" stroke="'+bs+'" stroke-width="0.9"/>'
+          +'<text x="'+(bx2+bw2/2)+'" y="'+(by2+10.5)+'" text-anchor="middle" font-size="8" font-weight="700" fill="'+bt+'"'
+          +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">'+['1위','2위','3위'][rank-1]+'</text>';
+      })():'')
+      +'<defs><linearGradient id="'+uid+'" x1="0%" y1="0%" x2="100%" y2="100%">'
+        +'<stop offset="0%" stop-color="'+rc1+'"/><stop offset="100%" stop-color="'+rc2+'"/>'
+      +'</linearGradient></defs>'
+      +'<circle cx="'+ringCx+'" cy="'+ringCy+'" r="'+R+'" fill="none" stroke="#E8EAEF" stroke-width="'+SW+'"/>'
+      +(pct>0?'<circle cx="'+ringCx+'" cy="'+ringCy+'" r="'+R+'" fill="none"'
+        +' stroke="url(#'+uid+')" stroke-width="'+SW+'"'
+        +' stroke-dasharray="'+circ.toFixed(2)+'" stroke-dashoffset="'+dashOff+'"'
+        +' stroke-linecap="round" transform="rotate(-90 '+ringCx+' '+ringCy+')"/>':'')
+      +'<text x="'+ringCx+'" y="'+(ringCy+3)+'" text-anchor="middle" font-size="7" font-weight="900"'
+        +' fill="'+(isMijung?'#94A3B8':isSel?'#CC4A1E':'#000')+'"'
+        +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">'+pct.toFixed(0)+'%</text>'
+      +'</g>';
+  });
+
+  /* ════ 미지정 배너 ════ */
   window._toggleMijung=function(){var b=document.getElementById('_mj_banner');if(b)b.style.display=b.style.display==='none'?'block':'none';};
   var mijungBanner='';
   if(unlocatedCnt>0){
     var mjJobs=unlocatedJobs.map(function(j){
-      return'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #FEF3C7">'
+      return'<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #FEF3C7">'
         +'<span style="font-size:11px;font-weight:600;color:#92400E;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name)+'</span>'
         +(j.category?'<span style="background:#FDE68A;color:#92400E;padding:1px 8px;border-radius:5px;font-size:9px;font-weight:700">'+esc(j.category)+'</span>':'')
         +'<button onclick="openJobModal('+j.id+')" style="background:#F59E0B;color:#fff;border:none;padding:2px 9px;border-radius:5px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit">수정</button>'
@@ -3285,30 +3317,27 @@ function renderNationalStatus(){
     }).join('');
     mijungBanner='<div style="flex-shrink:0;margin-bottom:6px">'
       +'<button onclick="_toggleMijung()" style="display:flex;align-items:center;gap:7px;width:100%;text-align:left;background:#FEF3C7;border:1px solid #FCD34D;border-radius:9px;padding:8px 12px;cursor:pointer;font-family:inherit">'
-        +'<span style="font-size:13px">⚠️</span>'
-        +'<span style="font-size:11px;font-weight:700;color:#92400E;flex:1">지역 미입력 공고 '+unlocatedCnt+'건</span>'
-        +'<span style="font-size:11px;color:#B45309">▾</span>'
+        +'<span>⚠️</span><span style="font-size:11px;font-weight:700;color:#92400E;flex:1">지역 미입력 공고 '+unlocatedCnt+'건</span><span style="color:#B45309">▾</span>'
       +'</button>'
       +'<div id="_mj_banner" style="display:none;background:#FFFBEB;border:1px solid #FCD34D;border-top:none;border-radius:0 0 9px 9px;padding:8px 12px">'+mjJobs+'</div>'
     +'</div>';
   }
 
-  /* ── 범례 SVG ── */
-  var legendSvg='<svg viewBox="0 0 180 16" style="width:170px;height:16px" xmlns="http://www.w3.org/2000/svg">'
-    +'<defs><linearGradient id="lgG2" x1="0%" y1="0%" x2="100%" y2="0%">'
+  /* ════ 범례 ════ */
+  var legendSvg='<svg viewBox="0 0 200 18" style="width:190px;height:18px" xmlns="http://www.w3.org/2000/svg">'
+    +'<defs><linearGradient id="lgGrad" x1="0%" y1="0%" x2="100%" y2="0%">'
     +'<stop offset="0%" stop-color="#EBF4FB"/><stop offset="25%" stop-color="#BDD7EE"/>'
     +'<stop offset="55%" stop-color="#6BAED6"/><stop offset="80%" stop-color="#3182BD"/>'
     +'<stop offset="100%" stop-color="#08306B"/>'
     +'</linearGradient></defs>'
-    +'<rect x="0" y="2" width="165" height="7" rx="3.5" fill="url(#lgG2)"/>'
-    +'<text x="0" y="16" font-size="8" fill="#94A3B8" font-family="Apple SD Gothic Neo,sans-serif">0</text>'
-    +'<text x="165" y="16" text-anchor="end" font-size="8" fill="#08306B" font-family="Apple SD Gothic Neo,sans-serif">'+maxCnt+'건</text>'
+    +'<rect x="0" y="3" width="180" height="8" rx="4" fill="url(#lgGrad)"/>'
+    +'<text x="0" y="18" font-size="8" fill="#94A3B8" font-family="\'Apple SD Gothic Neo\',sans-serif">0</text>'
+    +'<text x="180" y="18" text-anchor="end" font-size="8" fill="#08306B" font-family="\'Apple SD Gothic Neo\',sans-serif">'+maxCnt+'건</text>'
     +'</svg>';
 
-  /* ── 최종 HTML ── */
-  return'<div id="_view_scroll" style="height:100%;display:flex;flex-direction:column;overflow:hidden;background:#F7F8FA;padding:10px 16px 0">'
-    /* 헤더 */
-    +'<div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:7px">'
+  /* ════ 최종 HTML ════ */
+  return'<div id="_view_scroll" style="height:100%;display:flex;flex-direction:column;overflow-y:auto;background:#F7F8FA;padding:10px 16px 0">'
+    +'<div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:7px">'
       +'<div style="display:flex;align-items:center;gap:9px">'
         +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#2563EB,#1E3A8A);display:flex;align-items:center;justify-content:center"><span style="font-size:13px">🗺️</span></div>'
         +'<div><div style="font-size:15px;font-weight:800;color:#0A0A0A">전국 채용현황</div>'
@@ -3316,38 +3345,38 @@ function renderNationalStatus(){
         +'</div>'
       +'</div>'
       +'<div style="display:flex;align-items:center;gap:7px">'
-        +'<div style="background:#EFF6FF;border:1px solid #BFDBFE;padding:4px 11px;border-radius:8px;font-size:10px;font-weight:700;color:#1D4ED8">TOP: '+(locCounts[sorted[0]]>0?sorted[0]+' '+locCounts[sorted[0]]+'건':'-')+'</div>'
+        +'<div style="background:#EFF6FF;border:1px solid #BFDBFE;padding:4px 11px;border-radius:8px;font-size:10px;font-weight:700;color:#1D4ED8">TOP: '+(locCounts[topRegion]>0?topRegion+' '+locCounts[topRegion]+'건':'-')+'</div>'
         +(_nationalSelectedLoc?'<button onclick="setNationalLoc(\''+_nationalSelectedLoc+'\',event)" style="background:#FFF5F5;color:#EF4444;border:1.5px solid #FEE2E2;padding:4px 12px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">✕ '+esc(_nationalSelectedLoc)+'</button>':'')
       +'</div>'
     +'</div>'
-    /* 미지정 배너 */
     +mijungBanner
-    /* 메인 카드 */
     +'<div style="flex:1;min-height:0;background:#FFFFFF;border-radius:14px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.05);display:flex;flex-direction:column;margin-bottom:10px">'
-      /* 타이틀바 */
       +'<div style="flex-shrink:0;padding:7px 16px;border-bottom:1px solid #F3F4F6;display:flex;align-items:center;justify-content:space-between">'
-        +'<span style="font-size:10.5px;font-weight:700;color:#374151">지역별 채용 분포 · 클릭으로 지역 선택</span>'
-        +'<div style="display:flex;align-items:center;gap:7px"><span style="font-size:9px;font-weight:600;color:#94A3B8">밀도</span>'+legendSvg+'</div>'
+        +'<span style="font-size:10.5px;font-weight:700;color:#374151">대한민국 지역별 채용 분포 · 클릭으로 지역 선택</span>'
+        +'<div style="display:flex;align-items:center;gap:7px"><span style="font-size:8.5px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:.06em">밀도</span>'+legendSvg+'</div>'
       +'</div>'
-      /* 콘텐츠: 지도 + 카드패널 */
-      +'<div style="flex:1;min-height:0;display:flex;overflow:hidden">'
-        /* 지도 SVG */
-        +'<div style="flex:0 0 44%;background:linear-gradient(145deg,#C8DFF0,#A8C8E0);position:relative;overflow:hidden">'
-          +'<svg viewBox="-5 -5 710 730" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block" xmlns="http://www.w3.org/2000/svg">'
-            +mapPaths
-            +mapLabels
-            +'<text x="355" y="718" text-anchor="middle" font-size="10" font-weight="600" fill="rgba(255,255,255,.5)" letter-spacing="3" font-family="Apple SD Gothic Neo,sans-serif">REPUBLIC OF KOREA</text>'
-          +'</svg>'
-        +'</div>'
-        /* 카드 패널 */
-        +'<div style="flex:1;overflow-y:auto;padding:12px 14px;background:#FAFBFF;border-left:1px solid #F1F5F9">'
-          +'<div style="font-size:9.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px">지역 순위 · '+sorted.length+'개</div>'
-          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+cards+'</div>'
-        +'</div>'
-      +'</div>'
+      +'<svg viewBox="0 0 820 644" style="flex:1;min-height:0;width:100%;display:block" xmlns="http://www.w3.org/2000/svg">'
+        +'<rect width="820" height="644" fill="#FAFBFF"/>'
+        +'<defs><linearGradient id="seaGrad" x1="0" y1="0" x2="1" y2="1">'
+          +'<stop offset="0%" stop-color="#C8DFF0"/><stop offset="100%" stop-color="#A8C8E0"/>'
+        +'</linearGradient></defs>'
+        +'<rect x="1" y="1" width="415" height="642" rx="8" fill="url(#seaGrad)"/>'
+        +'<svg x="5" y="6" width="406" height="630" viewBox="-5 -5 710 730" preserveAspectRatio="none">'
+          +mapPaths
+        +'</svg>'
+        +mapLabels
+        +'<text x="207" y="638" text-anchor="middle" font-size="7.5" font-weight="600" fill="rgba(255,255,255,.6)" letter-spacing="2"'
+          +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">REPUBLIC OF KOREA</text>'
+        +'<line x1="418" y1="14" x2="418" y2="630" stroke="#E8EAED" stroke-width="1" stroke-dasharray="4,4"/>'
+        +leaderLines
+        +badges
+        +'<text x="614" y="14" text-anchor="middle" font-size="7.5" font-weight="700" fill="#9CA3AF" letter-spacing="1.5"'
+          +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">REGION DATA</text>'
+      +'</svg>'
     +'</div>'
   +'</div>';
 }
+
 
 
 
