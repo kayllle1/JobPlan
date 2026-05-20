@@ -2826,6 +2826,15 @@ function renderCalendar(){
     mark(j.finalDate,'합격발표','#059669');
   });
 
+  /* 각 날짜 이벤트를 지정 순서로 정렬 */
+  var EV_ORDER={'서류접수':0,'지원마감':1,'서류합격':2,'면접':3,'합격발표':4};
+  Object.keys(evMap).forEach(function(d){
+    evMap[d].sort(function(a,b){
+      return (EV_ORDER[a.lbl]!==undefined?EV_ORDER[a.lbl]:99)
+           - (EV_ORDER[b.lbl]!==undefined?EV_ORDER[b.lbl]:99);
+    });
+  });
+
   /* ── 날짜 셀 생성 ── */
   var cells=[];
   for(var p=firstDay-1;p>=0;p--)cells.push({day:daysInPrev-p,cur:false});
