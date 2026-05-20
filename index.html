@@ -1782,21 +1782,80 @@ function renderBlacklist(){
     +'</tr></thead><tbody>'+confirmedRows+'</tbody></table></div></div></div>';
 }
 function renderSidebar(){
-  var nav=[{id:'dashboard',label:'대시보드',icon:'📊'},{id:'national',label:'전국 채용현황',icon:'🗺️'},{id:'jobs',label:'공고관리',icon:'📋'},{id:'students',label:'학생관리',icon:'👥'},{id:'employment',label:'취업 현황',icon:'🏆'},{id:'interview',label:'면접 자료실',icon:'📚'},{id:'blacklist',label:'블랙리스트',icon:'🚫'},{id:'training',label:'연수 관리',icon:'🎓'}];
   var totalEmp=getEmpData('전체').length;
   var ivCount=JOBS.reduce(function(acc,j){return acc+j.applicants.filter(function(a){return a.status==='면접대기';}).length;},0);
-  var vaultCount=VAULT.length;var _blCands=getBlacklistCandidates();var blTotal=_blCands.length+STUDENTS.filter(function(s){return s.restrictionLevel==='제한';}).length;
-  var navHtml=nav.map(function(n){
-    var a=currentView===n.id;var b2='';
-    if(n.id==='employment'&&totalEmp>0)b2='<span style="margin-left:auto;background:'+(a?'rgba(255,255,255,.25)':'#064E3B')+';color:'+(a?'#fff':'#6EE7B7')+';padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">'+totalEmp+'</span>';
-    if(n.id==='jobs'&&ivCount>0)b2='<span style="margin-left:auto;background:'+(a?'rgba(255,255,255,.25)':'#1E3A5F')+';color:'+(a?'#fff':'#93C5FD')+';padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">면접 '+ivCount+'</span>';
-    if(n.id==='interview'&&vaultCount>0)b2='<span style="margin-left:auto;background:'+(a?'rgba(255,255,255,.25)':'#082F49')+';color:'+(a?'#fff':'#7DD3FC')+';padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">'+vaultCount+'</span>';
-    var trTotalCnt=TR_PARTICIPANTS.length;
-    if(n.id==='training'&&trTotalCnt>0)b2='<span style="margin-left:auto;background:'+(a?'rgba(255,255,255,.25)':'#064E3B')+';color:'+(a?'#fff':'#6EE7B7')+';padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">'+trTotalCnt+'</span>';
-    if(n.id==='blacklist'&&blTotal>0)b2='<span style="margin-left:auto;background:'+(a?'rgba(255,255,255,.25)':'#7F1D1D')+';color:'+(a?'#fff':'#FCA5A5')+';padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700">'+(blTotal>9?'9+':blTotal)+'</span>';
-    return'<button onclick="setView(\''+n.id+'\')" style="width:100%;text-align:left;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:'+(a?700:400)+';background:'+(a?'rgba(14,165,233,.3)':'transparent')+';color:'+(a?'#7DD3FC':'#64748B')+';margin-bottom:3px;display:flex;align-items:center;gap:10px;font-family:inherit"><span style="font-size:16px">'+n.icon+'</span>'+n.label+b2+'</button>';
-  }).join('');
-  return'<aside id="_sidebar" style="width:215px;background:#0F172A;display:flex;flex-direction:column;flex-shrink:0;box-shadow:2px 0 20px rgba(0,0,0,.3)"><div style="padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06)"><p style="margin:0;font-size:9px;color:#475569;font-weight:700;letter-spacing:.2em;text-transform:uppercase">SORIZAVA ACADEMY</p><h1 style="margin:6px 0 2px;font-size:20px;letter-spacing:-.3px;line-height:1.2"><span style="font-weight:900;background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Sorizava</span><span style="font-weight:400;color:#94A3B8;margin-left:4px">Archive</span></h1><p style="margin:0;font-size:9px;color:#334155">v1.0 · Archive System</p></div><nav style="flex:1;padding:12px 8px;overflow-y:auto">'+navHtml+'</nav><div style="padding:12px 18px 16px;border-top:1px solid rgba(255,255,255,.06)"><div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span id="_conn_dot" style="width:7px;height:7px;border-radius:50%;background:'+(_dbConnected?'#10B981':'#F59E0B')+';display:inline-block;transition:background .3s"></span><span id="_conn_txt" style="font-size:10px;color:#475569;font-weight:500">'+(_dbConnected?'실시간 연동 활성':'연결 중...')+'</span></div><p style="margin:0;font-size:10px;color:#334155">'+TODAY+' (KST)</p></div></aside>';
+  var vaultCount=VAULT.length;
+  var _blCands=getBlacklistCandidates();
+  var blTotal=_blCands.length+STUDENTS.filter(function(s){return s.restrictionLevel==='제한';}).length;
+  var trTotalCnt=TR_PARTICIPANTS.length;
+
+  function pill(txt,active){
+    return'<span style="margin-left:auto;background:'+(active?'rgba(255,255,255,.2)':'rgba(255,255,255,.07)')+';color:'+(active?'#fff':'#94A3B8')+';padding:1px 8px;border-radius:99px;font-size:9px;font-weight:700;flex-shrink:0">'+txt+'</span>';
+  }
+  function badge2(id,active){
+    if(id==='employment'&&totalEmp>0)return pill(totalEmp,active);
+    if(id==='jobs'&&ivCount>0)return pill('면접 '+ivCount,active);
+    if(id==='interview'&&vaultCount>0)return pill(vaultCount,active);
+    if(id==='training'&&trTotalCnt>0)return pill(trTotalCnt,active);
+    if(id==='blacklist'&&blTotal>0)return pill(blTotal>9?'9+':blTotal,active);
+    return'';
+  }
+
+  function navBtn(id,icon,label){
+    var a=currentView===id;
+    return'<button onclick="setView(\''+id+'\')" style="width:100%;text-align:left;padding:8px 11px;border-radius:9px;border:none;cursor:pointer;font-size:12.5px;font-weight:'+(a?700:500)+';background:'+(a?'rgba(96,165,250,.18)':'transparent')+';color:'+(a?'#7DD3FC':'#8194AA')+';margin-bottom:1px;display:flex;align-items:center;gap:9px;font-family:inherit;transition:background .12s,color .12s" onmouseover="this.style.background=\''+(a?'rgba(96,165,250,.18)':'rgba(255,255,255,.06)')+'\';this.style.color=\''+(a?'#7DD3FC':'#CBD5E1')+'\';" onmouseout="this.style.background=\''+(a?'rgba(96,165,250,.18)':'transparent')+'\';this.style.color=\''+(a?'#7DD3FC':'#8194AA')+'\';">'
+      +(a?'<div style="width:2.5px;height:14px;border-radius:99px;background:#38BDF8;flex-shrink:0"></div>':'<div style="width:2.5px;height:14px;flex-shrink:0"></div>')
+      +'<span style="font-size:14px;flex-shrink:0">'+icon+'</span>'
+      +'<span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</span>'
+      +badge2(id,a)
+    +'</button>';
+  }
+
+  /* 섹션 헤더: 컬러 액센트 바 + 밝은 레이블 */
+  function section(accentColor,label){
+    return'<div style="display:flex;align-items:center;gap:7px;padding:16px 11px 6px;margin-top:2px">'
+      +'<div style="width:14px;height:1.5px;border-radius:99px;background:'+accentColor+';flex-shrink:0"></div>'
+      +'<span style="font-size:9.5px;font-weight:700;color:'+accentColor+';letter-spacing:.14em;text-transform:uppercase;opacity:.85">'+label+'</span>'
+      +'<div style="flex:1;height:1px;background:rgba(255,255,255,.06)"></div>'
+    +'</div>';
+  }
+
+  var navHtml=''
+    +navBtn('dashboard','📊','대시보드')
+    +section('#38BDF8','인사이트')
+    +navBtn('insights','✨','AI 브리핑')
+    +navBtn('calendar','📅','일정 캘린더')
+    +navBtn('national','🗺️','전국 채용현황')
+    +section('#34D399','채용 관리')
+    +navBtn('jobs','📋','공고관리')
+    +navBtn('students','👥','학생관리')
+    +navBtn('employment','🏆','취업 현황')
+    +section('#A78BFA','도구')
+    +navBtn('interview','📚','면접 자료실')
+    +navBtn('training','🎓','연수 관리')
+    +navBtn('blacklist','🚫','블랙리스트');
+
+  return'<aside id="_sidebar" style="width:210px;background:#0C1524;display:flex;flex-direction:column;flex-shrink:0;box-shadow:2px 0 24px rgba(0,0,0,.35);border-right:1px solid rgba(255,255,255,.05)">'
+    /* 로고 */
+    +'<div style="padding:17px 15px 13px;border-bottom:1px solid rgba(255,255,255,.06)">'
+      +'<p style="margin:0 0 4px;font-size:8.5px;color:#3B5068;font-weight:700;letter-spacing:.22em;text-transform:uppercase">SORIZAVA ACADEMY</p>'
+      +'<div style="display:flex;align-items:baseline;gap:5px">'
+        +'<span style="font-size:19px;font-weight:900;background:linear-gradient(135deg,#60A5FA,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2">Sorizava</span>'
+        +'<span style="font-size:14px;font-weight:400;color:#3B5068">Archive</span>'
+      +'</div>'
+      +'<p style="margin:4px 0 0;font-size:9px;color:#2A3F52">v1.0 · Archive System</p>'
+    +'</div>'
+    /* 네비 */
+    +'<nav style="flex:1;padding:8px 7px 6px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1E3347 transparent">'+navHtml+'</nav>'
+    /* 하단 */
+    +'<div style="padding:10px 14px 13px;border-top:1px solid rgba(255,255,255,.05)">'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">'
+        +'<span style="width:6px;height:6px;border-radius:50%;background:'+(_dbConnected?'#10B981':'#F59E0B')+';display:inline-block;box-shadow:0 0 6px '+(_dbConnected?'rgba(16,185,129,.5)':'rgba(245,158,11,.5)')+'"></span>'
+        +'<span id="_conn_txt" style="font-size:10px;color:#3B5068;font-weight:600">'+(_dbConnected?'실시간 연동 활성':'연결 중...')+'</span>'
+      +'</div>'
+      +'<p style="margin:0;font-size:9.5px;color:#2A3F52">'+TODAY+' (KST)</p>'
+    +'</div>'
+  +'</aside>';
 }
 
 /* ─ 취업 현황 ─ */
@@ -1982,7 +2041,7 @@ function renderDashboard(){
     var isSel=_dashPeriodMode===m;
     return'<button onclick="setDashPeriod(\''+m+'\')" class="dk-chip'+(isSel?' sel':'')+'" style="font-family:inherit">'+lb+'</button>';
   }).join('');
-  var _refreshHtml=_dashLastRefresh?'<span style="font-size:10px;color:#9CA3AF;white-space:nowrap">마지막 갱신: '+_dashLastRefresh+'</span>':'';
+  var _refreshHtml=_dashLastRefresh?'<span style="font-size:10px;color:#9CA3AF;white-space:nowrap">조회: '+_dashLastRefresh+'</span>':'';
   var _kpi1='<div style="flex:1;min-width:150px;background:linear-gradient(135deg,#F59E0B,#D97706);border-radius:12px;padding:16px 18px;box-shadow:0 2px 10px rgba(245,158,11,.3)"><p style="margin:0;font-size:36px;font-weight:900;color:#fff;line-height:1">'+_activeJobs.length+'</p><p style="margin:6px 0 2px;font-size:12px;font-weight:700;color:rgba(255,255,255,.95)">진행 중 공고</p><p style="margin:0;font-size:10px;color:rgba(255,255,255,.75)">채용인원 '+_totalRecruit+'명</p></div>';
   var _kpi2='<div style="flex:1;min-width:150px;background:#FEF3C7;border-radius:12px;padding:16px 18px;border:1px solid #FDE68A"><p style="margin:0;font-size:36px;font-weight:900;color:#D97706;line-height:1">'+_pAps.length+'</p><p style="margin:6px 0 2px;font-size:12px;font-weight:700;color:#92400E">전체 지원자</p><p style="margin:0;font-size:10px;color:#B45309">기간 내 지원자</p></div>';
   var _kpi3='<div style="flex:1;min-width:150px;background:linear-gradient(135deg,#059669,#047857);border-radius:12px;padding:16px 18px;box-shadow:0 2px 10px rgba(5,150,105,.3)"><p style="margin:0;font-size:36px;font-weight:900;color:#fff;line-height:1">'+_fPass.length+'</p><p style="margin:6px 0 2px;font-size:12px;font-weight:700;color:rgba(255,255,255,.95)">최종 합격</p><p style="margin:0;font-size:10px;color:rgba(255,255,255,.75)">불합격 '+_fFail.length+'명</p></div>';
@@ -2019,7 +2078,7 @@ function renderDashboard(){
           +'<span style="font-size:10px;color:#CBD5E1;font-weight:700">—</span>'
           +'<input id="_dp_to" type="date" value="'+_pTo+'" onchange="setDashPeriod(\'custom\',document.getElementById(\'_dp_from\').value,this.value)" style="border:none;background:transparent;font-size:11px;color:#374151;font-family:inherit;outline:none;cursor:pointer;width:105px">'
         +'</div>'
-        +'<button onclick="setDashPeriod(\''+_dashPeriodMode+'\')" style="background:#1D4ED8;color:#fff;border:none;padding:5px 13px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px">↻ 갱신</button>'
+        +'<button onclick="setDashPeriod(\''+_dashPeriodMode+'\')" style="background:#1D4ED8;color:#fff;border:none;padding:5px 13px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px">🔍 조회</button>'
         +(_dashLastRefresh?'<span style="font-size:10px;color:#94A3B8">'+_dashLastRefresh+'</span>':'')
       +'</div>'
     +'</div>'
@@ -2716,6 +2775,301 @@ window._reRenderHistory=function(studentId){var s=STUDENTS.find(function(st){ret
 function exportJobs(){csvExport(getSorted(getFiltered()).map(function(j,i){return{'No':i+1,'카테고리':j.category,'채용형태':j.type,'공고명':j.name,'서류접수일':j.docDate||'','서류마감일':j.applyDeadline||'','서류합격발표일':j.documentPassDate||'','면접일':j.interviewDate||'','최종합격발표일':j.finalDate||'','공고URL':j.jobUrl||'','지원자수':j.applicants.length,'상태':j.isClosed?'마감':'진행'}; }),'공고목록_v75');}
 function exportStudents(){var filtered=filterStudents();csvExport(filtered.map(function(s,i){var apps=getApps(s.id),st=getStudentStatus(s.id);return{'No':i+1,'이름':s.name,'상태':st.label,'등급제한':s.restrictionLevel||'없음','나이':s.age||'미등록','연락처':s.phone,'이메일':s.email,'지원횟수':apps.length,'최종합격':apps.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length,'상담메모':s.counselingMemo||''};}),'학생DB_v75');}
 function exportHistory(studentId){var s=STUDENTS.find(function(st){return st.id===studentId;});if(!s)return;csvExport(getApps(studentId).map(function(a){return{'기관명':a.jobName,'카테고리':a.category,'서류접수일':a.docDate||'','최종합격발표일':a.finalDate||'','상태':a.status,'급수':a.grade,'발표방식':a.announceType,'메모':a.memo||''};}),s.name+'_지원이력');}
+
+/* ══ 일정 캘린더 ══ */
+var _calMonth=MONTH;
+function renderCalendar(){
+  var parts=_calMonth.split('-');
+  var cy=parseInt(parts[0]),cm=parseInt(parts[1]);
+  var firstDay=new Date(cy,cm-1,1).getDay();
+  var daysInMonth=new Date(cy,cm,0).getDate();
+  var daysInPrev=new Date(cy,cm-1,0).getDate();
+
+  var evMap={};
+  JOBS.forEach(function(j){
+    function mark(ds,lbl,c){
+      if(!ds)return;
+      var d=String(ds).slice(0,10);
+      if(d.slice(0,7)!==_calMonth)return;
+      if(!evMap[d])evMap[d]=[];
+      evMap[d].push({lbl:lbl,c:c,jn:j.name,cat:j.category||'기타'});
+    }
+    mark(j.docDate,'서류접수','#3B82F6');
+    mark(j.applyDeadline,'지원마감','#EF4444');
+    mark(j.documentPassDate,'서류합격','#7C3AED');
+    mark(j.interviewDate,'면접','#F59E0B');
+    mark(j.finalDate,'합격발표','#059669');
+  });
+
+  var DOW=['일','월','화','수','목','금','토'];
+  var dowHtml=DOW.map(function(d,i){
+    return'<div style="text-align:center;font-size:11px;font-weight:700;padding:6px 0;color:'+(i===0?'#EF4444':i===6?'#3B82F6':'#6B7280')+'">'+d+'</div>';
+  }).join('');
+
+  var cells=[];
+  for(var p=firstDay-1;p>=0;p--)cells.push({day:daysInPrev-p,cur:false});
+  for(var d=1;d<=daysInMonth;d++)cells.push({day:d,cur:true});
+  var rem=(7-cells.length%7)%7;
+  for(var n=1;n<=rem;n++)cells.push({day:n,cur:false});
+
+  var gridCells=cells.map(function(cell){
+    if(!cell.cur)return'<div style="padding:5px;min-height:68px;opacity:.3"><span style="font-size:11px;color:#9CA3AF">'+cell.day+'</span></div>';
+    var dStr=cy+'-'+(cm<10?'0':'')+cm+'-'+(cell.day<10?'0':'')+cell.day;
+    var isT=dStr===TODAY;
+    var evs=evMap[dStr]||[];
+    var eHtml=evs.slice(0,3).map(function(ev){
+      return'<div title="'+esc(ev.jn)+'" style="margin-top:2px;background:'+ev.c+'1A;color:'+ev.c+';border-left:2px solid '+ev.c+';padding:1px 5px;border-radius:0 4px 4px 0;font-size:9px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ev.lbl+'</div>';
+    }).join('')+(evs.length>3?'<div style="font-size:9px;color:#94A3B8;padding-left:4px">+'+( evs.length-3)+'건</div>':'');
+    return'<div style="padding:5px 6px;min-height:68px;border:1px solid '+(isT?'#3B82F6':'#F1F5F9')+';border-radius:8px;background:'+(isT?'#EFF6FF':'#FFFFFF')+'">'
+      +'<span style="font-size:12px;font-weight:'+(isT?'900':'600')+';'+(isT?'background:#2563EB;color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;':'color:#374151;')+'">'+cell.day+'</span>'
+      +eHtml
+    +'</div>';
+  }).join('');
+
+  var allEvs=[];
+  Object.keys(evMap).sort().forEach(function(d){evMap[d].forEach(function(ev){allEvs.push(Object.assign({},ev,{date:d}));});});
+
+  var evList=allEvs.length===0
+    ?'<div style="text-align:center;padding:20px;color:#CBD5E1;font-size:12px">이번 달 일정 없음</div>'
+    :allEvs.map(function(ev){
+      return'<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #F3F4F6">'
+        +'<div style="width:3px;min-height:36px;border-radius:99px;background:'+ev.c+';flex-shrink:0"></div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">'
+            +'<span style="font-size:10px;font-weight:700;color:'+ev.c+'">'+ev.lbl+'</span>'
+            +'<span style="font-size:10px;color:#94A3B8">'+fmt(ev.date)+'</span>'
+          +'</div>'
+          +'<div style="font-size:11px;color:#374151;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(ev.jn.length>26?ev.jn.slice(0,26)+'…':ev.jn)+'</div>'
+          +'<div style="margin-top:3px">'+badge(ev.cat)+'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+
+  function adj(delta){var d=new Date(cy,cm-1+delta,1);return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1);}
+
+  return'<div style="display:flex;flex-direction:column;height:100%;background:#F7F8FA;overflow:hidden">'
+    +'<div style="flex-shrink:0;padding:14px 22px 10px;background:#fff;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0EA5E9,#0284C7);display:flex;align-items:center;justify-content:center"><span style="font-size:14px">📅</span></div>'
+        +'<div><div style="font-size:15px;font-weight:800;color:#0A0A0A">일정 캘린더</div><div style="font-size:10px;color:#9CA3AF">'+cy+'년 '+cm+'월 · '+allEvs.length+'건 일정</div></div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:7px">'
+        +'<button onclick="_calMonth=\''+adj(-1)+'\';renderView()" style="border:1px solid #E2E8F0;background:#fff;color:#374151;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;font-family:inherit">‹</button>'
+        +'<span style="font-size:14px;font-weight:800;color:#0F172A;min-width:76px;text-align:center">'+cy+'년 '+cm+'월</span>'
+        +'<button onclick="_calMonth=\''+adj(1)+'\';renderView()" style="border:1px solid #E2E8F0;background:#fff;color:#374151;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;font-family:inherit">›</button>'
+        +'<button onclick="_calMonth=MONTH;renderView()" style="border:1px solid #BFDBFE;background:#EFF6FF;color:#1D4ED8;padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">오늘</button>'
+      +'</div>'
+    +'</div>'
+    +'<div style="flex:1;min-height:0;display:flex;overflow:hidden">'
+      +'<div style="flex:1;padding:14px 16px;overflow-y:auto">'
+        +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:6px">'+dowHtml+'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">'+gridCells+'</div>'
+        +'<div style="display:flex;gap:14px;margin-top:14px;flex-wrap:wrap">'
+          +[['서류접수','#3B82F6'],['지원마감','#EF4444'],['서류합격','#7C3AED'],['면접','#F59E0B'],['합격발표','#059669']].map(function(x){
+            return'<div style="display:flex;align-items:center;gap:5px"><div style="width:9px;height:9px;border-radius:2px;background:'+x[1]+'"></div><span style="font-size:10.5px;color:#6B7280;font-weight:600">'+x[0]+'</span></div>';
+          }).join('')
+        +'</div>'
+      +'</div>'
+      +'<div style="width:230px;border-left:1px solid #F1F5F9;background:#FAFAFA;overflow-y:auto;padding:14px 15px;flex-shrink:0">'
+        +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">이번 달 일정 목록</div>'
+        +evList
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+/* ══ AI 채용 브리핑 ══ */
+var _insightCache=null;
+function renderInsights(){
+  var allAps=JOBS.reduce(function(a,j){return a.concat(j.applicants);},[]);
+  var active=JOBS.filter(function(j){return !j.isClosed;});
+  var byS={'서류접수':0,'서류합격':0,'면접대기':0,'최종합격':0,'취업성공':0,'불합격':0};
+  allAps.forEach(function(a){if(byS[a.status]!==undefined)byS[a.status]++;});
+  var pass=byS['최종합격']+byS['취업성공'];
+  var passRate=allAps.length>0?Math.round(pass/allAps.length*100):0;
+  var now=new Date();
+  var in7=active.filter(function(j){
+    if(!j.finalDate)return false;
+    var diff=Math.ceil((new Date(j.finalDate)-now)/86400000);
+    return diff>=0&&diff<=7;
+  });
+  var todayEvs=[];
+  JOBS.forEach(function(j){
+    if((j.docDate||'').slice(0,10)===TODAY)todayEvs.push(j.name.slice(0,12)+'(서류)');
+    if((j.interviewDate||'').slice(0,10)===TODAY)todayEvs.push(j.name.slice(0,12)+'(면접)');
+    if((j.finalDate||'').slice(0,10)===TODAY)todayEvs.push(j.name.slice(0,12)+'(합격발표)');
+  });
+  var catMap={};JOBS.forEach(function(j){var c=j.category||'기타';catMap[c]=(catMap[c]||0)+1;});
+  var catSum=Object.entries(catMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5).map(function(e){return e[0]+' '+e[1]+'건';}).join(', ');
+  var locMap={};JOBS.forEach(function(j){if(j.location)locMap[j.location]=(locMap[j.location]||0)+1;});
+  var locSum=Object.entries(locMap).sort(function(a,b){return b[1]-a[1];}).slice(0,5).map(function(e){return e[0]+' '+e[1]+'건';}).join(', ')||'미지정';
+  var monthNew=JOBS.filter(function(j){return (j.createdAt||'').slice(0,7)===MONTH;}).length;
+  var urgentStr=in7.length?in7.map(function(j){return j.name.slice(0,15);}).join(','):'없음';
+  var todayStr=todayEvs.length?todayEvs.join(','):'없음';
+
+  window._runInsight=async function(){
+    var btn=document.getElementById('_ins_btn');
+    var out=document.getElementById('_ins_out');
+    if(!btn||!out)return;
+    btn.disabled=true;
+    btn.textContent='분석 중…';
+    out.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:60px 0;color:#94A3B8"><div style="font-size:36px">✨</div><div style="font-size:14px;font-weight:600">AI가 데이터를 분석하고 있습니다…</div></div>';
+
+    var lines=[
+      'You are an AI analyst for a Korean vocational employment management system.',
+      'Analyze the recruitment data below and return ONLY a valid JSON object. No markdown, no extra text.',
+      'JSON schema:',
+      '{"summary":"3-sentence Korean summary with specific numbers","headline":"one-line Korean headline","alerts":[{"title":"title","desc":"description","type":"danger|warning|info"}],"actions":[{"title":"action title","desc":"description","priority":"high|medium|low"}],"trend":"상승|유지|하락","trendReason":"one sentence reason in Korean","positives":["good point 1","good point 2"],"concerns":["concern 1","concern 2"]}',
+      '',
+      'Data as of '+TODAY+':',
+      'Jobs: total='+JOBS.length+', active='+active.length+', closed='+(JOBS.length-active.length),
+      'Applicants: total='+allAps.length+', 서류접수='+byS['서류접수']+', 서류합격='+byS['서류합격']+', 면접대기='+byS['면접대기']+', finalPass='+pass+', 불합격='+byS['불합격'],
+      'PassRate='+passRate+'%, MonthNewJobs='+monthNew+', Students='+STUDENTS.length,
+      'Urgent7days: '+urgentStr,
+      'TodayEvents: '+todayStr,
+      'Categories: '+catSum,
+      'Regions: '+locSum
+    ];
+    var prompt=lines.join('\n');
+
+    try{
+      var res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      });
+      var data=await res.json();
+      var raw=(data.content||[]).map(function(c){return c.text||'';}).join('').replace(/```json|```/g,'').trim();
+      var d=JSON.parse(raw);
+      var tC=d.trend==='상승'?'#059669':d.trend==='하락'?'#DC2626':'#D97706';
+      var tE=d.trend==='상승'?'📈':d.trend==='하락'?'📉':'➡️';
+      var ts=new Date().toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+      function mkAlert(a){
+        var c=a.type==='danger'?'#EF4444':a.type==='warning'?'#F59E0B':'#3B82F6';
+        var bg=a.type==='danger'?'#FFF1F2':a.type==='warning'?'#FFFBEB':'#EFF6FF';
+        var em=a.type==='danger'?'🚨':a.type==='warning'?'⚠️':'ℹ️';
+        return'<div style="background:'+bg+';border-left:3px solid '+c+';border-radius:0 10px 10px 0;padding:10px 13px;margin-bottom:8px"><div style="font-size:12px;font-weight:800;color:'+c+';margin-bottom:3px">'+em+' '+esc(a.title||'')+'</div><div style="font-size:11px;color:#374151;line-height:1.5">'+esc(a.desc||'')+'</div></div>';
+      }
+      function mkAction(a){
+        var c=a.priority==='high'?'#DC2626':a.priority==='medium'?'#D97706':'#6B7280';
+        var lbl=a.priority==='high'?'긴급':a.priority==='medium'?'권장':'참고';
+        return'<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #F3F4F6"><span style="background:'+c+'18;color:'+c+';font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;margin-top:2px">'+lbl+'</span><div><div style="font-size:12px;font-weight:700;color:#0F172A;margin-bottom:2px">'+esc(a.title||'')+'</div><div style="font-size:11px;color:#6B7280;line-height:1.5">'+esc(a.desc||'')+'</div></div></div>';
+      }
+
+      var aHtml=(d.alerts||[]).map(mkAlert).join('');
+      var acHtml=(d.actions||[]).map(mkAction).join('');
+      var posH=(d.positives||[]).map(function(p){return'<li style="font-size:11px;color:#059669;padding:3px 0;list-style:none">✓ '+esc(p)+'</li>';}).join('');
+      var conH=(d.concerns||[]).map(function(p){return'<li style="font-size:11px;color:#DC2626;padding:3px 0;list-style:none">△ '+esc(p)+'</li>';}).join('');
+
+      var html=''
+        +'<div style="background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:14px;padding:20px 24px;margin-bottom:14px;position:relative;overflow:hidden">'
+          +'<div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:72px;opacity:.05;pointer-events:none">✨</div>'
+          +'<div style="font-size:9.5px;font-weight:700;color:#7DD3FC;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px">AI BRIEFING · '+ts+'</div>'
+          +'<div style="font-size:17px;font-weight:900;color:#fff;line-height:1.3;margin-bottom:10px">'+esc(d.headline||'')+'</div>'
+          +'<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border-radius:99px;padding:4px 13px">'
+            +'<span>'+tE+'</span>'
+            +'<span style="font-size:11px;font-weight:800;color:'+tC+'">'+esc(d.trend||'')+'</span>'
+            +'<span style="font-size:11px;color:#94A3B8"> · '+esc(d.trendReason||'')+'</span>'
+          +'</div>'
+        +'</div>'
+        +'<div style="background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:18px 20px;margin-bottom:14px">'
+          +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">📋 종합 분석</div>'
+          +'<div style="font-size:13px;color:#1E293B;line-height:1.85;font-weight:500">'+esc(d.summary||'')+'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+          +'<div style="flex:1.4;min-width:200px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:15px 17px">'
+            +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">🔔 주요 알림</div>'
+            +aHtml
+          +'</div>'
+          +'<div style="flex:1.4;min-width:200px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:15px 17px">'
+            +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">💡 추천 액션</div>'
+            +acHtml
+          +'</div>'
+          +'<div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:10px">'
+            +'<div style="background:#F0FDF4;border-radius:14px;border:1px solid #BBF7D0;padding:13px 15px;flex:1">'
+              +'<div style="font-size:10px;font-weight:800;color:#059669;margin-bottom:8px">강점</div>'
+              +'<ul style="margin:0;padding:0">'+posH+'</ul>'
+            +'</div>'
+            +'<div style="background:#FFF1F2;border-radius:14px;border:1px solid #FECDD3;padding:13px 15px;flex:1">'
+              +'<div style="font-size:10px;font-weight:800;color:#DC2626;margin-bottom:8px">개선 필요</div>'
+              +'<ul style="margin:0;padding:0">'+conH+'</ul>'
+            +'</div>'
+          +'</div>'
+        +'</div>';
+
+      _insightCache={html:html,ts:ts};
+      out.innerHTML=html;
+    }catch(e){
+      out.innerHTML='<div style="text-align:center;padding:40px;color:#EF4444"><div style="font-size:32px;margin-bottom:10px">⚠️</div><div style="font-size:13px;font-weight:600">분석 생성 실패</div><div style="font-size:11px;color:#94A3B8;margin-top:6px">'+e.message+'</div></div>';
+    }
+    btn.disabled=false;
+    btn.textContent='✨ 새 브리핑 생성';
+  };
+
+  var cached=_insightCache?_insightCache.html:'';
+  var emptyState='<div style="display:flex;flex-direction:column;align-items:center;padding:24px 22px 40px;gap:0">'
+    /* 타이틀 */
+    +'<div style="font-size:32px;margin-bottom:10px">✨</div>'
+    +'<div style="font-size:17px;font-weight:900;color:#0F172A;margin-bottom:6px">AI 채용 브리핑이란?</div>'
+    +'<div style="font-size:12px;color:#6B7280;text-align:center;line-height:1.7;max-width:420px;margin-bottom:28px">버튼 하나로 현재 채용 데이터를 AI가 즉시 분석해<br>핵심 인사이트를 자동 정리해 드리는 기능입니다.</div>'
+    /* 예시 미리보기 카드들 */
+    +'<div style="width:100%;max-width:780px;display:flex;flex-direction:column;gap:12px;margin-bottom:28px">'
+      /* 헤드라인 배너 예시 */
+      +'<div style="background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:14px;padding:18px 22px;position:relative;overflow:hidden">'
+        +'<div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:60px;opacity:.06">✨</div>'
+        +'<div style="font-size:9px;font-weight:700;color:#7DD3FC;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px">AI BRIEFING PREVIEW</div>'
+        +'<div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:8px">이번 달 법원 카테고리 합격률 전월 대비 15% 상승 — 순항 중</div>'
+        +'<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border-radius:99px;padding:4px 12px">'
+          +'<span>📈</span><span style="font-size:11px;font-weight:800;color:#059669">상승</span>'
+          +'<span style="font-size:11px;color:#94A3B8"> · 서류합격 인원이 전분기 대비 증가하는 추세</span>'
+        +'</div>'
+      +'</div>'
+      /* 3단 예시 */
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+        /* 알림 예시 */
+        +'<div style="flex:1.4;min-width:200px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:15px 17px">'
+          +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">🔔 주요 알림 (예시)</div>'
+          +'<div style="background:#FFF1F2;border-left:3px solid #EF4444;border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:7px"><div style="font-size:11px;font-weight:800;color:#EF4444;margin-bottom:2px">🚨 마감 임박 공고 3건</div><div style="font-size:10.5px;color:#374151">○○법원 외 2건이 7일 내 합격발표 예정입니다.</div></div>'
+          +'<div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;padding:9px 12px"><div style="font-size:11px;font-weight:800;color:#D97706;margin-bottom:2px">⚠️ 지원자 없는 공고</div><div style="font-size:10.5px;color:#374151">진행 중 공고 중 2건에 아직 지원자가 없습니다.</div></div>'
+        +'</div>'
+        /* 액션 예시 */
+        +'<div style="flex:1.4;min-width:200px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:15px 17px">'
+          +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">💡 추천 액션 (예시)</div>'
+          +'<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #F3F4F6"><span style="background:#DC262618;color:#DC2626;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;margin-top:2px">긴급</span><div><div style="font-size:11px;font-weight:700;color:#0F172A;margin-bottom:2px">면접 대기자 현황 점검</div><div style="font-size:10.5px;color:#6B7280">면접 대기 중인 학생 5명의 일정을 확인하세요.</div></div></div>'
+          +'<div style="display:flex;gap:8px;padding:8px 0"><span style="background:#D9770618;color:#D97706;font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;margin-top:2px">권장</span><div><div style="font-size:11px;font-weight:700;color:#0F172A;margin-bottom:2px">미지정 지역 공고 정리</div><div style="font-size:10.5px;color:#6B7280">지역이 입력되지 않은 공고 1건을 수정해주세요.</div></div></div>'
+        +'</div>'
+        /* 강점/우려 예시 */
+        +'<div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:10px">'
+          +'<div style="background:#F0FDF4;border-radius:14px;border:1px solid #BBF7D0;padding:12px 14px;flex:1"><div style="font-size:10px;font-weight:800;color:#059669;margin-bottom:6px">강점 (예시)</div><div style="font-size:11px;color:#059669;padding:3px 0">✓ 최종 합격률 전월 대비 상승</div><div style="font-size:11px;color:#059669;padding:3px 0">✓ 법원 카테고리 성과 우수</div></div>'
+          +'<div style="background:#FFF1F2;border-radius:14px;border:1px solid #FECDD3;padding:12px 14px;flex:1"><div style="font-size:10px;font-weight:800;color:#DC2626;margin-bottom:6px">개선 필요 (예시)</div><div style="font-size:11px;color:#DC2626;padding:3px 0">△ 서류합격 → 면접 전환율 낮음</div><div style="font-size:11px;color:#DC2626;padding:3px 0">△ 지역 미입력 공고 존재</div></div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    /* CTA */
+    +'<div style="text-align:center">'
+      +'<div style="font-size:12px;color:#94A3B8;margin-bottom:14px">위 내용은 예시입니다 — 실제 버튼을 누르면 현재 데이터 기반으로 AI가 실시간 생성합니다</div>'
+      +'<button onclick="_runInsight()" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;border:none;padding:12px 32px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(124,58,237,.4)">✨ 지금 브리핑 생성하기</button>'
+    +'</div>'
+  +'</div>';
+
+  return'<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;background:#F7F8FA">'
+    +'<div style="flex-shrink:0;padding:14px 22px 12px;background:#fff;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#7C3AED,#4F46E5);display:flex;align-items:center;justify-content:center"><span style="font-size:14px">✨</span></div>'
+        +'<div>'
+          +'<div style="font-size:15px;font-weight:800;color:#0A0A0A">AI 채용 브리핑</div>'
+          +'<div style="font-size:10px;color:#9CA3AF">현재 채용 데이터를 AI가 실시간으로 분석합니다</div>'
+        +'</div>'
+      +'</div>'
+      +'<button id="_ins_btn" onclick="_runInsight()" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;border:none;padding:8px 18px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(124,58,237,.35)">✨ 새 브리핑 생성</button>'
+    +'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:16px 22px 28px" id="_ins_out">'+(cached?cached:emptyState)+'</div>'
+  +'</div>';
+}
+
+
+
 /* ─ renderView / setView / init ─ */
 
 /* ══════════════════════════════════════════════════════════════
@@ -2854,21 +3208,26 @@ var PROV_DATA={
   var DRAW_ORDER=['경기','강원','충북','충남','전북','전남','경북','경남',
                   '서울','인천','세종','대전','광주','대구','울산','부산','제주'];
 
-  /* choropleth fill — 블루 스케일 */
+  /* choropleth fill — ColorBrewer Blues 5-step (전문 지도 색상) */
   function provFill(loc){
-    if(_nationalSelectedLoc&&loc===_nationalSelectedLoc)return'#F59E0B';
+    if(_nationalSelectedLoc&&loc===_nationalSelectedLoc)return'#FF6B35'; /* 선택: 선명한 오렌지 */
     var cnt=locCounts[loc]||0;
-    if(cnt===0)return'#D9EAF7';
+    if(cnt===0)return'#EBF4FB'; /* 0건: 아이스 화이트 */
     var t=Math.min(cnt/maxCnt,1);
-    var r,g,b;
-    if(t<0.4){var u=t/0.4;r=Math.round(147+(37-147)*u)|0;g=Math.round(197+(99-197)*u)|0;b=Math.round(253+(235-253)*u)|0;}
-    else{var u=(t-0.4)/0.6;r=Math.round(37+(30-37)*u)|0;g=Math.round(99+(58-99)*u)|0;b=Math.round(235+(138-235)*u)|0;}
+    /* 5-stop Blues: #BDD7EE → #6BAED6 → #3182BD → #1561A9 → #08306B */
+    var stops=[[189,215,238],[107,174,214],[49,130,189],[21,97,169],[8,48,107]];
+    var seg=Math.min(Math.floor(t*4),3);
+    var u=(t*4)-seg;
+    var s0=stops[seg],s1=stops[seg+1];
+    var r=Math.round(s0[0]+(s1[0]-s0[0])*u)|0;
+    var g=Math.round(s0[1]+(s1[1]-s0[1])*u)|0;
+    var b=Math.round(s0[2]+(s1[2]-s0[2])*u)|0;
     return'rgb('+r+','+g+','+b+')';
   }
   function lblColor(loc){
-    if(_nationalSelectedLoc===loc)return'#7C2D12';
+    if(_nationalSelectedLoc===loc)return'#FFFFFF';
     var cnt=locCounts[loc]||0,t=cnt>0?Math.min(cnt/maxCnt,1):0;
-    return t>0.18?'#FFFFFF':'#1E3A5A';
+    return t>0.25?'#FFFFFF':'#1A3A5A';
   }
 
   /* ── 지도 경로 + 레이블 ── */
@@ -2881,34 +3240,49 @@ var PROV_DATA={
   };
   var largeProv=['경기','강원','경북','경남','전남','충남','전북'];
 
+  /* TOP 순위 맵 */
+  var rankMap={};sorted.forEach(function(loc,i){rankMap[loc]=i+1;});
+
   DRAW_ORDER.forEach(function(loc){
     var pd=PROV_DATA[loc];if(!pd||!pd.d)return;
     var isSel=_nationalSelectedLoc===loc;
     var fill=provFill(loc);
     var cnt=locCounts[loc]||0;
-    var strokeC=isSel?'#D97706':'rgba(255,255,255,0.92)';
-    var strokeW=isSel?2.8:1.4;
+    var rank=rankMap[loc]||99;
+    var strokeC=isSel?'#FF6B35':rank===1?'rgba(251,191,36,.85)':'rgba(255,255,255,.9)';
+    var strokeW=isSel?2.8:rank===1?2:1.2;
+    var filterStyle=isSel?'drop-shadow(0 0 5px rgba(255,107,53,.7))':rank===1?'drop-shadow(0 0 3px rgba(251,191,36,.5))':'none';
     mapPaths+='<path d="'+pd.d+'" fill="'+fill+'"'
       +' stroke="'+strokeC+'" stroke-width="'+strokeW+'"'
       +' stroke-linejoin="round"'
-      +' onclick="setNationalLoc(\''+loc+'\',event)" style="cursor:pointer;transition:opacity .1s"'
-      +' onmouseover="this.style.opacity=\'0.82\'" onmouseout="this.style.opacity=\'1\'">'
-      +'<title>'+loc+' : '+(locCounts[loc]||0)+'건</title></path>';
+      +' onclick="setNationalLoc(\''+loc+'\',event)"'
+      +' style="cursor:pointer;transition:fill .2s,opacity .15s;filter:'+filterStyle+';"'
+      +' onmouseover="this.style.opacity=\'0.78\'" onmouseout="this.style.opacity=\'1\'">'
+      +'<title>'+loc+' : '+cnt+'건'+(rank<=3?' ('+rank+'위)':'')+'</title></path>';
     var tc=lblColor(loc);
     var abbr=loc.length>2?loc.slice(0,2):loc;
     var ov=lblOverride[loc];
     var lx=ov?ov.x:pd.cx;
     var ly=ov?ov.y:pd.cy;
-    var fsize=(largeProv.indexOf(loc)>=0)?9.5:8;
-    var shadowC=tc==='#FFFFFF'?'rgba(0,0,0,0.5)':'rgba(255,255,255,0.85)';
+    var fsize=(largeProv.indexOf(loc)>=0)?9:7.5;
+    var shadowC=tc==='#FFFFFF'?'rgba(0,0,0,.55)':'rgba(255,255,255,.9)';
     mapLabels+=
-      '<text x="'+lx.toFixed(1)+'" y="'+(ly+3).toFixed(1)+'"'
+      '<text x="'+lx.toFixed(1)+'" y="'+(ly+(cnt>0?0:3)).toFixed(1)+'"'
       +' text-anchor="middle" dominant-baseline="middle"'
       +' font-size="'+fsize+'" font-weight="700"'
       +' stroke="'+shadowC+'" stroke-width="2.5" paint-order="stroke"'
-      +' fill="'+tc+'"'
-      +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif"'
+      +' fill="'+tc+'" font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif"'
       +' pointer-events="none">'+abbr+'</text>';
+    if(cnt>0){
+      mapLabels+=
+        '<text x="'+lx.toFixed(1)+'" y="'+(ly+fsize+2.5).toFixed(1)+'"'
+        +' text-anchor="middle" dominant-baseline="middle"'
+        +' font-size="6.5" font-weight="500"'
+        +' stroke="'+shadowC+'" stroke-width="2" paint-order="stroke"'
+        +' fill="'+tc+'" opacity="0.85"'
+        +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif"'
+        +' pointer-events="none">'+cnt+'건</text>';
+    }
   });
 
   /* ── 배지 레이아웃 ── */
@@ -2929,13 +3303,13 @@ var PROV_DATA={
     var gap=Math.min((bx-cx)*0.38,50);
     leaderLines+='<path d="M'+cx.toFixed(1)+','+cy.toFixed(1)
       +' C'+(cx+gap).toFixed(1)+','+cy.toFixed(1)+' '+(bx-gap).toFixed(1)+','+by.toFixed(1)+' '+bx+','+by.toFixed(1)+'"'
-      +' fill="none" stroke="'+(isSel?'#818CF8':'#CBD5E1')+'"'
+      +' fill="none" stroke="'+(isSel?'#FF6B35':'#CBD5E1')+'"'
       +' stroke-width="'+(isSel?1.2:0.6)+'" stroke-dasharray="'+(isSel?'none':'4,4')+'" opacity="'+(isSel?0.7:0.38)+'"/>';
     /* 레이블 위치가 별도 오버라이드된 지역 + 작은 시는 점 생략 */
     var noDot={대전:1,세종:1,광주:1,울산:1,부산:1,대구:1,인천:1,서울:1,경기:1};
     if(!noDot[loc]){
       leaderLines+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(isSel?3.5:2)+'"'
-        +' fill="'+(isSel?'#F59E0B':'#A5B4FC')+'" opacity="'+(isSel?0.9:0.45)+'"/>';
+        +' fill="'+(isSel?'#FF6B35':'#A5B4FC')+'" opacity="'+(isSel?0.9:0.45)+'"/>';
     }
   });
 
@@ -2957,7 +3331,7 @@ var PROV_DATA={
     badges+='<g onclick="setNationalLoc(\''+loc+'\',event)" style="cursor:pointer">'
       +'<rect x="'+br.x+'" y="'+(br.y+2)+'" width="'+br.w+'" height="'+br.h+'" rx="10" fill="rgba(0,0,0,0.04)"/>'
       +'<rect x="'+br.x+'" y="'+br.y+'" width="'+br.w+'" height="'+br.h+'" rx="10"'
-        +' fill="'+(isSel?'#EEF2FF':'#FFFFFF')+'" stroke="'+(isSel?'#6366F1':'#E5E7EB')+'" stroke-width="'+(isSel?1.5:1)+'"/>'
+        +' fill="'+(isSel?'#FFF4F0':'#FFFFFF')+'" stroke="'+(isSel?'#6366F1':'#E5E7EB')+'" stroke-width="'+(isSel?1.5:1)+'"/>'
       +(rank<=3&&!isMijung?'<rect x="'+br.x+'" y="'+(br.y+5)+'" width="3.5" height="'+(br.h-10)+'" rx="1.75" fill="'+accentClr[rank-1]+'"/>':'')
       +'<text x="'+(br.x+11)+'" y="'+(br.y+16)+'" font-size="9.5" font-weight="700" fill="'+(isMijung?'#9CA3AF':'#1A1A1A')+'"'
         +' font-family="\'Apple SD Gothic Neo\',\'Malgun Gothic\',sans-serif">'+loc+'</text>'
@@ -3002,7 +3376,7 @@ var PROV_DATA={
   /* ── 범례 SVG ── */
   var legendSvg='<svg viewBox="0 0 200 18" style="width:190px;height:18px" xmlns="http://www.w3.org/2000/svg">'
     +'<defs><linearGradient id="lgGrad" x1="0%" y1="0%" x2="100%" y2="0%">'
-    +'<stop offset="0%" stop-color="#D9EAF7"/><stop offset="40%" stop-color="#93C5FD"/><stop offset="70%" stop-color="#2563EB"/><stop offset="100%" stop-color="#1E3A8A"/></linearGradient></defs>'
+    +'<stop offset="0%" stop-color="#EBF4FB"/><stop offset="25%" stop-color="#BDD7EE"/><stop offset="55%" stop-color="#6BAED6"/><stop offset="80%" stop-color="#3182BD"/><stop offset="100%" stop-color="#08306B"/></linearGradient></defs>'
     +'<rect x="0" y="3" width="180" height="8" rx="4" fill="url(#lgGrad)"/>'
     +'<text x="0" y="18" font-size="8" fill="#94A3B8" font-family="\'Apple SD Gothic Neo\',sans-serif">0</text>'
     +'<text x="180" y="18" text-anchor="end" font-size="8" fill="#1E40AF" font-family="\'Apple SD Gothic Neo\',sans-serif">'+maxCnt+'건</text>'
@@ -3049,7 +3423,7 @@ var PROV_DATA={
       +'</div>'
       +'<svg viewBox="0 0 820 644" style="flex:1;min-height:0;width:100%;display:block" xmlns="http://www.w3.org/2000/svg">'
         +'<rect width="820" height="644" fill="#FAFBFF"/>'
-        +'<rect x="1" y="1" width="415" height="642" rx="8" fill="#B8D5EE"/>'
+        +'<defs><linearGradient id="seaGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#C8DFF0"/><stop offset="100%" stop-color="#A8C8E0"/></linearGradient></defs>'+'<rect x="1" y="1" width="415" height="642" rx="8" fill="url(#seaGrad)"/>'
         +'<svg x="5" y="6" width="406" height="630" viewBox="-5 -5 710 730" preserveAspectRatio="none">'
           +mapPaths
         +'</svg>'
@@ -3078,6 +3452,8 @@ function renderView(){
   var main=$('_main');if(!main)return;
   try{
     if(currentView==='dashboard'){main.innerHTML=renderDashboard();setTimeout(initDashAnimations,60);}
+    else if(currentView==='calendar')main.innerHTML=renderCalendar();
+    else if(currentView==='insights')main.innerHTML=renderInsights();
     else if(currentView==='national'){main.innerHTML=renderNationalStatus();setTimeout(initNationalSVGMap,60);}
     else if(currentView==='jobs')main.innerHTML=renderJobs();
     else if(currentView==='students')main.innerHTML=renderStudents();
