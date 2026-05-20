@@ -2893,6 +2893,7 @@ function renderCalendar(){
         +'<button onclick="_calMonth=\''+adj(-1)+'\';renderView()" style="border:1px solid #E2E8F0;background:#fff;color:#374151;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;font-family:inherit">‹</button>'
         +'<span style="font-size:14px;font-weight:800;color:#0F172A;min-width:72px;text-align:center">'+cy+'. '+cm+'</span>'
         +'<button onclick="_calMonth=\''+adj(1)+'\';renderView()" style="border:1px solid #E2E8F0;background:#fff;color:#374151;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;font-family:inherit">›</button>'
+        +'<input type="month" value="'+_calMonth+'" onchange="_calMonth=this.value;renderView()" style="border:1px solid #E2E8F0;border-radius:8px;padding:5px 10px;font-size:11.5px;font-family:inherit;outline:none;color:#374151;background:#F8FAFC;cursor:pointer">'
         +'<button onclick="_calMonth=MONTH;renderView()" style="border:1px solid #BFDBFE;background:#EFF6FF;color:#1D4ED8;padding:5px 13px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">오늘</button>'
       +'</div>'
     +'</div>'
@@ -2907,10 +2908,26 @@ function renderCalendar(){
 /* ══ AI 채용 브리핑 ══ */
 var _insightCache=null;
 var _anthropicKey='';
+var _insightFrom='';
+var _insightTo='';
 function renderInsights(){
-  /* ── 데이터 스냅샷 ── */
-  var allAps=JOBS.reduce(function(a,j){return a.concat(j.applicants);},[]);
-  var active=JOBS.filter(function(j){return !j.isClosed;});
+  /* ── 날짜 범위 설정 ── */
+  var fFrom=_insightFrom,fTo=_insightTo;
+  function inRange(ds){
+    var d=(ds||'').slice(0,10);if(!d)return false;
+    if(fFrom&&d<fFrom)return false;
+    if(fTo&&d>fTo)return false;
+    return true;
+  }
+  var hasFilter=!!(fFrom||fTo);
+
+  /* ── 데이터 집계 ── */
+  var allJobs=JOBS;
+  var filtJobs=hasFilter?allJobs.filter(function(j){
+    return inRange(j.docDate)||inRange(j.interviewDate)||inRange(j.finalDate)||inRange(j.applyDeadline);
+  }):allJobs;
+  var allAps=filtJobs.reduce(function(a,j){return a.concat(j.applicants);},[]);
+  var active=filtJobs.filter(function(j){return !j.isClosed;});
   var byS={'서류접수':0,'서류합격':0,'면접대기':0,'최종합격':0,'취업성공':0,'불합격':0};
   allAps.forEach(function(a){if(byS[a.status]!==undefined)byS[a.status]++;});
   var pass=byS['최종합격']+byS['취업성공'];
@@ -2921,102 +2938,87 @@ function renderInsights(){
   var noAp=active.filter(function(j){return j.applicants.length===0;});
   var ivWait=allAps.filter(function(a){return a.status==='면접대기';});
   var todayEvs=[];
-  JOBS.forEach(function(j){
+  filtJobs.forEach(function(j){
     if((j.docDate||'').slice(0,10)===TODAY)todayEvs.push({name:j.name,type:'서류접수'});
     if((j.interviewDate||'').slice(0,10)===TODAY)todayEvs.push({name:j.name,type:'면접'});
     if((j.finalDate||'').slice(0,10)===TODAY)todayEvs.push({name:j.name,type:'합격발표'});
   });
-  var unlocated=JOBS.filter(function(j){return !j.location||j.location.trim()==='';});
-  var catMap={};JOBS.forEach(function(j){var c=j.category||'기타';catMap[c]=(catMap[c]||0)+1;});
+  var unlocated=filtJobs.filter(function(j){return !j.location||j.location.trim()==='';});
+  var catMap={};filtJobs.forEach(function(j){var c=j.category||'기타';catMap[c]=(catMap[c]||0)+1;});
   var topCat=Object.entries(catMap).sort(function(a,b){return b[1]-a[1];})[0];
-  var monthNew=JOBS.filter(function(j){return (j.createdAt||'').slice(0,7)===MONTH;}).length;
-  var docRate=allAps.length>0?Math.round((byS['서류합격']+byS['면접대기']+pass+byS['불합격'])/allAps.length*100):0;
-  var ivRate=(byS['서류합격']+byS['면접대기'])>0?Math.round((pass+byS['불합격'])/(byS['서류합격']+byS['면접대기'])*100):0;
+  var monthNew=filtJobs.filter(function(j){return (j.createdAt||'').slice(0,7)===MONTH;}).length;
 
-  /* ── 규칙 기반 분석 생성 ── */
+  /* ── 분석 생성 ── */
   var ts=new Date().toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  var periodLabel=hasFilter?(fFrom&&fTo?fFrom+'~'+fTo:fFrom?fFrom+' 이후':fTo+' 이전'):'전체 기간';
 
-  /* 트렌드 판단 */
   var trend=passRate>=20?'상승':passRate>=10?'유지':'하락';
   var trendC=trend==='상승'?'#059669':trend==='하락'?'#DC2626':'#D97706';
   var trendE=trend==='상승'?'📈':trend==='하락'?'📉':'➡️';
-  var trendR=passRate>=20?'합격률이 양호한 수준을 유지하고 있습니다':passRate>=10?'합격률이 평균 수준입니다':'합격률 개선이 필요한 상황입니다';
+  var trendR=passRate>=20?'합격률이 양호한 수준입니다':passRate>=10?'합격률이 평균 수준입니다':'합격률 개선이 필요합니다';
 
-  /* 헤드라인 */
   var headline='';
-  if(todayEvs.length>0)headline='오늘 '+todayEvs[0].name.slice(0,15)+' 등 '+todayEvs.length+'건 일정 — 확인 필요';
+  if(todayEvs.length>0)headline='오늘 '+todayEvs[0].name.slice(0,15)+' 등 '+todayEvs.length+'건 일정';
   else if(in3.length>0)headline='3일 내 마감 '+in3.length+'건 · 즉시 점검 필요';
-  else if(pass>0)headline='최종 합격자 '+pass+'명 · 합격률 '+passRate+'% 달성 중';
-  else headline='현재 '+active.length+'건 공고 진행 중 · 지원자 '+allAps.length+'명 관리 중';
+  else if(pass>0)headline='최종 합격자 '+pass+'명 · 합격률 '+passRate+'% 달성';
+  else headline=''+active.length+'건 공고 진행 중 · 지원자 '+allAps.length+'명 관리 중';
 
-  /* 요약 */
   var summaryParts=[];
-  summaryParts.push('현재 총 '+JOBS.length+'건 중 '+active.length+'건이 진행 중이며, 전체 지원자 '+allAps.length+'명이 채용 파이프라인에 있습니다.');
-  if(pass>0)summaryParts.push('최종 합격자는 '+pass+'명으로 합격률 '+passRate+'%를 기록하고 있습니다.');
-  if(monthNew>0)summaryParts.push('이번 달 신규 공고 '+monthNew+'건이 등록되었으며'+(topCat?' '+topCat[0]+' 분야가 가장 많습니다.':'.'));
+  summaryParts.push((hasFilter?'['+periodLabel+'] ':'')+filtJobs.length+'건 중 '+active.length+'건 진행 중, 전체 지원자 '+allAps.length+'명.');
+  if(pass>0)summaryParts.push('최종 합격자 '+pass+'명, 합격률 '+passRate+'%.');
+  if(monthNew>0&&!hasFilter)summaryParts.push('이번 달 신규 공고 '+monthNew+'건'+(topCat?', '+topCat[0]+' 분야 최다':'')+'.');
 
-  /* 알림 */
   var alerts=[];
-  if(in3.length>0)alerts.push({title:'3일 내 합격발표 공고 '+in3.length+'건',desc:in3.map(function(j){return j.name.slice(0,20);}).join(', ')+' — 즉시 확인이 필요합니다.',type:'danger'});
-  if(noAp.length>0)alerts.push({title:'지원자 없는 공고 '+noAp.length+'건',desc:noAp.slice(0,3).map(function(j){return j.name.slice(0,18);}).join(', ')+(noAp.length>3?' 외 '+(noAp.length-3)+'건':'')+' — 홍보 또는 재검토가 필요합니다.',type:'warning'});
-  if(ivWait.length>0)alerts.push({title:'면접 대기 중 '+ivWait.length+'명',desc:'면접 결과 입력이 지연되고 있는 지원자가 있습니다. 결과를 업데이트해주세요.',type:'warning'});
-  if(unlocated.length>0)alerts.push({title:'지역 미입력 공고 '+unlocated.length+'건',desc:'지역이 설정되지 않은 공고가 있어 전국 현황 통계에서 제외됩니다.',type:'info'});
+  if(in3.length>0)alerts.push({title:'3일 내 합격발표 '+in3.length+'건',desc:in3.map(function(j){return j.name.slice(0,20);}).join(', ')+'.',type:'danger'});
+  if(noAp.length>0)alerts.push({title:'지원자 없는 공고 '+noAp.length+'건',desc:noAp.slice(0,3).map(function(j){return j.name.slice(0,18);}).join(', ')+(noAp.length>3?' 외 '+(noAp.length-3)+'건':'')+' — 재검토 필요.',type:'warning'});
+  if(ivWait.length>0)alerts.push({title:'면접 대기 '+ivWait.length+'명',desc:'면접 결과 입력이 필요한 지원자가 있습니다.',type:'warning'});
+  if(unlocated.length>0)alerts.push({title:'지역 미입력 '+unlocated.length+'건',desc:'지역이 없는 공고는 전국 현황 통계에서 제외됩니다.',type:'info'});
   if(todayEvs.length>0)alerts.push({title:'오늘 일정 '+todayEvs.length+'건',desc:todayEvs.map(function(e){return e.name.slice(0,15)+'('+e.type+')';}).join(', '),type:'info'});
-  if(alerts.length===0)alerts.push({title:'현재 긴급 알림 없음',desc:'모든 진행 중인 공고가 정상 진행 중입니다.',type:'info'});
+  if(alerts.length===0)alerts.push({title:'긴급 알림 없음',desc:'현재 긴급하게 처리할 사항이 없습니다.',type:'info'});
 
-  /* 추천 액션 */
   var actions=[];
-  if(in7.length>0)actions.push({title:'마감 임박 공고 최종 점검',desc:in7.length+'건의 공고가 7일 내 합격발표 예정입니다. 지원자 현황을 확인하세요.',priority:'high'});
-  if(byS['면접대기']>0)actions.push({title:'면접 일정 확인 및 결과 입력',desc:'면접 대기 중인 지원자 '+byS['면접대기']+'명의 진행 현황을 업데이트해주세요.',priority:'high'});
-  if(noAp.length>0)actions.push({title:'지원자 없는 공고 점검',desc:''+noAp.length+'건의 공고에 지원자가 없습니다. 채용 조건 또는 홍보 방법을 재검토하세요.',priority:'medium'});
-  if(unlocated.length>0)actions.push({title:'지역 정보 입력 완료',desc:'미입력 공고 '+unlocated.length+'건의 지역을 입력하면 전국 현황 분석이 정확해집니다.',priority:'medium'});
-  if(passRate<10&&allAps.length>5)actions.push({title:'합격률 개선 전략 검토',desc:'현재 합격률이 '+passRate+'%로 낮습니다. 지원자 매칭 또는 서류 기준을 재검토하세요.',priority:'medium'});
-  if(actions.length===0)actions.push({title:'정기 데이터 백업',desc:'현재 채용 데이터를 정기적으로 CSV로 내보내기하여 백업해두세요.',priority:'low'});
+  if(in7.length>0)actions.push({title:'마감 임박 공고 최종 점검',desc:in7.length+'건 7일 내 합격발표 예정. 지원자 현황 확인.',priority:'high'});
+  if(byS['면접대기']>0)actions.push({title:'면접 결과 입력',desc:'면접 대기 중인 지원자 '+byS['면접대기']+'명의 결과를 업데이트하세요.',priority:'high'});
+  if(noAp.length>0)actions.push({title:'지원자 없는 공고 점검',desc:noAp.length+'건 공고에 지원자가 없습니다. 홍보 방법을 검토하세요.',priority:'medium'});
+  if(unlocated.length>0)actions.push({title:'지역 정보 입력',desc:'미입력 공고 '+unlocated.length+'건 수정 시 전국 통계가 정확해집니다.',priority:'medium'});
+  if(passRate<10&&allAps.length>3)actions.push({title:'합격률 개선 검토',desc:'합격률 '+passRate+'% — 지원자 매칭 기준을 재검토하세요.',priority:'medium'});
+  if(actions.length===0)actions.push({title:'데이터 정기 백업',desc:'CSV 내보내기로 현재 데이터를 백업해두세요.',priority:'low'});
 
-  /* 강점/우려 */
-  var positives=[];
-  var concerns=[];
-  if(active.length>0)positives.push('진행 중인 공고 '+active.length+'건으로 채용이 활발합니다');
-  if(pass>0)positives.push('최종 합격자 '+pass+'명 배출 성과');
-  if(topCat)positives.push(topCat[0]+' 분야 공고 집중으로 전문성 확보');
-  if(monthNew>0)positives.push('이번 달 신규 공고 '+monthNew+'건 등록');
-  if(positives.length===0)positives.push('시스템에 데이터가 정상 등록되어 있습니다');
-  if(passRate<15&&allAps.length>3)concerns.push('합격률 '+passRate+'% — 평균 대비 낮은 수준');
-  if(noAp.length>0)concerns.push('지원자 없는 공고 '+noAp.length+'건 존재');
-  if(unlocated.length>0)concerns.push('지역 미입력 공고로 통계 정확도 저하');
-  if(byS['면접대기']>3)concerns.push('면접 대기 인원 누적('+byS['면접대기']+'명)');
+  var positives=[],concerns=[];
+  if(active.length>0)positives.push('진행 중 공고 '+active.length+'건 활발');
+  if(pass>0)positives.push('최종 합격자 '+pass+'명 배출');
+  if(topCat)positives.push(topCat[0]+' 분야 공고 집중');
+  if(positives.length===0)positives.push('시스템 데이터 정상 등록');
+  if(passRate<15&&allAps.length>3)concerns.push('합격률 '+passRate+'% — 개선 여지');
+  if(noAp.length>0)concerns.push('지원자 없는 공고 '+noAp.length+'건');
+  if(unlocated.length>0)concerns.push('지역 미입력 통계 누락');
+  if(byS['면접대기']>3)concerns.push('면접 대기 누적 '+byS['면접대기']+'명');
   if(concerns.length===0)concerns.push('현재 특이사항 없음');
 
-  /* ── HTML 렌더 ── */
+  /* ── HTML 조각 생성 ── */
   function mkAlert(a){
     var c=a.type==='danger'?'#EF4444':a.type==='warning'?'#F59E0B':'#3B82F6';
     var bg=a.type==='danger'?'#FFF1F2':a.type==='warning'?'#FFFBEB':'#EFF6FF';
     var em=a.type==='danger'?'🚨':a.type==='warning'?'⚠️':'ℹ️';
     return'<div style="background:'+bg+';border-left:3.5px solid '+c+';border-radius:0 10px 10px 0;padding:11px 14px;margin-bottom:8px">'
       +'<div style="font-size:13px;font-weight:800;color:'+c+';margin-bottom:4px">'+em+' '+esc(a.title)+'</div>'
-      +'<div style="font-size:12px;color:#374151;line-height:1.6">'+esc(a.desc)+'</div>'
-    +'</div>';
+      +'<div style="font-size:12px;color:#374151;line-height:1.6">'+esc(a.desc)+'</div></div>';
   }
   function mkAction(a){
     var c=a.priority==='high'?'#DC2626':a.priority==='medium'?'#D97706':'#6B7280';
     var lbl=a.priority==='high'?'긴급':a.priority==='medium'?'권장':'참고';
     return'<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F3F4F6">'
       +'<span style="background:'+c+'15;color:'+c+';font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0;margin-top:2px">'+lbl+'</span>'
-      +'<div>'
-        +'<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:3px">'+esc(a.title)+'</div>'
-        +'<div style="font-size:12px;color:#4B5563;line-height:1.6">'+esc(a.desc)+'</div>'
-      +'</div>'
-    +'</div>';
+      +'<div><div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:3px">'+esc(a.title)+'</div>'
+      +'<div style="font-size:12px;color:#4B5563;line-height:1.6">'+esc(a.desc)+'</div></div></div>';
   }
-
   var posH=positives.map(function(p){return'<li style="font-size:12px;color:#065F46;padding:4px 0;list-style:none;line-height:1.5">✓ '+esc(p)+'</li>';}).join('');
   var conH=concerns.map(function(p){return'<li style="font-size:12px;color:#991B1B;padding:4px 0;list-style:none;line-height:1.5">△ '+esc(p)+'</li>';}).join('');
 
   var _insightHtml=''
-    /* 헤드라인 배너 */
     +'<div style="background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:16px;padding:22px 26px;margin-bottom:16px;position:relative;overflow:hidden">'
       +'<div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:80px;opacity:.05;pointer-events:none">✨</div>'
-      +'<div style="font-size:10px;font-weight:700;color:#7DD3FC;letter-spacing:.2em;text-transform:uppercase;margin-bottom:9px">SMART BRIEFING · '+ts+'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:#7DD3FC;letter-spacing:.2em;text-transform:uppercase;margin-bottom:9px">SMART BRIEFING · '+ts+' · '+esc(periodLabel)+'</div>'
       +'<div style="font-size:19px;font-weight:900;color:#fff;line-height:1.4;margin-bottom:13px">'+esc(headline)+'</div>'
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
         +'<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border-radius:99px;padding:5px 14px">'
@@ -3028,18 +3030,15 @@ function renderInsights(){
           +[['진행중',active.length,'#60A5FA'],['합격',pass,'#34D399'],['대기',byS['면접대기'],'#FBBF24'],['합격률',passRate+'%','#C4B5FD']].map(function(x){
             return'<div style="background:rgba(255,255,255,.08);border-radius:9px;padding:6px 12px;text-align:center">'
               +'<div style="font-size:10px;color:#94A3B8;margin-bottom:2px">'+x[0]+'</div>'
-              +'<div style="font-size:16px;font-weight:900;color:'+x[2]+'">'+x[1]+'</div>'
-            +'</div>';
+              +'<div style="font-size:16px;font-weight:900;color:'+x[2]+'">'+x[1]+'</div></div>';
           }).join('')
         +'</div>'
       +'</div>'
     +'</div>'
-    /* 종합 분석 */
     +'<div style="background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:18px 20px;margin-bottom:14px">'
       +'<div style="font-size:10.5px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">📋 종합 분석</div>'
       +'<div style="font-size:14px;color:#1E293B;line-height:1.9;font-weight:500">'+summaryParts.join(' ')+'</div>'
     +'</div>'
-    /* 3단 */
     +'<div style="display:flex;gap:13px;flex-wrap:wrap">'
       +'<div style="flex:1.4;min-width:210px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:16px 18px">'
         +'<div style="font-size:10.5px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">🔔 주요 알림</div>'
@@ -3052,47 +3051,103 @@ function renderInsights(){
       +'<div style="flex:1;min-width:170px;display:flex;flex-direction:column;gap:11px">'
         +'<div style="background:#F0FDF4;border-radius:14px;border:1px solid #BBF7D0;padding:15px 16px;flex:1">'
           +'<div style="font-size:11px;font-weight:800;color:#059669;margin-bottom:10px">강점</div>'
-          +'<ul style="margin:0;padding:0">'+posH+'</ul>'
-        +'</div>'
+          +'<ul style="margin:0;padding:0">'+posH+'</ul></div>'
         +'<div style="background:#FFF1F2;border-radius:14px;border:1px solid #FECDD3;padding:15px 16px;flex:1">'
           +'<div style="font-size:11px;font-weight:800;color:#DC2626;margin-bottom:10px">개선 필요</div>'
-          +'<ul style="margin:0;padding:0">'+conH+'</ul>'
-        +'</div>'
+          +'<ul style="margin:0;padding:0">'+conH+'</ul></div>'
       +'</div>'
     +'</div>';
 
-  /* ── 새로고침 전용 함수 ── */
+  /* ── 새로고침 / 인쇄 함수 ── */
   window._refreshInsight=function(){
     var btn=document.getElementById('_ins_refresh_btn');
     var out=document.getElementById('_ins_out');
     if(!btn||!out)return;
     btn.disabled=true;
     btn.innerHTML='<span style="display:inline-block;animation:spin 0.8s linear infinite">↻</span> 분석 중…';
-    out.style.opacity='0.4';
-    out.style.transition='opacity .2s';
+    out.style.opacity='0.4';out.style.transition='opacity .2s';
     setTimeout(function(){
-      out.innerHTML=_insightHtml;
-      out.style.opacity='1';
-      out.scrollTop=0;
-      btn.disabled=false;
-      btn.innerHTML='↻ 새로고침';
+      /* 날짜 범위 input값 읽기 */
+      var f=document.getElementById('_ins_from_inp');
+      var t=document.getElementById('_ins_to_inp');
+      if(f)_insightFrom=f.value;if(t)_insightTo=t.value;
+      /* 전체 뷰 재렌더 (날짜 필터 반영) */
+      renderView();
     },400);
   };
 
+  window._printInsight=function(){
+    var out=document.getElementById('_ins_out');
+    if(!out)return;
+    var printWin=window.open('','_blank','width=1100,height=800');
+    var org=new Date().toLocaleString('ko-KR');
+    printWin.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>AI 채용 브리핑</title>'
+      +'<style>'
+      +'*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+      +'body{font-family:"Apple SD Gothic Neo","Malgun Gothic","맑은 고딕",sans-serif;margin:0;padding:24px 32px;background:#fff;color:#0F172A;font-size:13px}'
+      +'h1{font-size:22px;font-weight:900;margin:0 0 4px;color:#0F172A}'
+      +'.sub{font-size:11px;color:#94A3B8;margin-bottom:20px}'
+      +'.card{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px;margin-bottom:14px}'
+      +'.banner{background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:14px;padding:18px 22px;color:#fff;margin-bottom:16px}'
+      +'.banner-title{font-size:17px;font-weight:900;margin-bottom:8px}'
+      +'.banner-sub{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#7DD3FC;margin-bottom:8px}'
+      +'.row{display:flex;gap:12px;flex-wrap:wrap}'
+      +'.col{flex:1;min-width:200px}'
+      +'.section-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#6B7280;margin-bottom:10px}'
+      +'.alert{padding:9px 12px;border-radius:0 8px 8px 0;margin-bottom:7px}'
+      +'.alert-title{font-size:12px;font-weight:800;margin-bottom:3px}'
+      +'.alert-desc{font-size:11px;color:#374151;line-height:1.5}'
+      +'.action{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #F3F4F6}'
+      +'.action-lbl{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;margin-top:2px}'
+      +'.action-title{font-size:12px;font-weight:700;margin-bottom:2px}'
+      +'.action-desc{font-size:11px;color:#4B5563;line-height:1.5}'
+      +'.green-card{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 14px}'
+      +'.red-card{background:#FFF1F2;border:1px solid #FECDD3;border-radius:12px;padding:12px 14px}'
+      +'.mini-stat{background:rgba(255,255,255,.1);border-radius:8px;padding:5px 10px;text-align:center;display:inline-block;margin-right:6px}'
+      +'@media print{body{padding:12px 18px}.no-print{display:none}}'
+      +'</style></head><body>'
+      +'<div class="no-print" style="text-align:right;margin-bottom:16px">'
+        +'<button onclick="window.print()" style="background:#7C3AED;color:#fff;border:none;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px">🖨️ 인쇄 / PDF 저장</button>'
+        +'<button onclick="window.close()" style="background:#F1F5F9;color:#374151;border:1px solid #E2E8F0;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer">닫기</button>'
+      +'</div>'
+      +'<h1>AI 채용 브리핑</h1>'
+      +'<div class="sub">'+org+' 기준 · '+esc(periodLabel)+'</div>'
+      +out.innerHTML
+      +'</body></html>');
+    printWin.document.close();
+  };
+
+  /* ── 최종 HTML 반환 ── */
   return'<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;background:#F7F8FA">'
-    +'<div style="flex-shrink:0;padding:13px 20px 11px;background:#fff;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between">'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#7C3AED,#4F46E5);display:flex;align-items:center;justify-content:center"><span style="font-size:14px">✨</span></div>'
-        +'<div>'
-          +'<div style="font-size:15px;font-weight:800;color:#0A0A0A">AI 채용 브리핑</div>'
-          +'<div style="font-size:10px;color:#9CA3AF">현재 데이터 기반 스마트 자동 분석 · <strong style="color:#7C3AED">'+ts+'</strong> 기준</div>'
+    /* 헤더 */
+    +'<div style="flex-shrink:0;padding:12px 18px 10px;background:#fff;border-bottom:1px solid #F1F5F9">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:9px">'
+        +'<div style="display:flex;align-items:center;gap:10px">'
+          +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#7C3AED,#4F46E5);display:flex;align-items:center;justify-content:center"><span style="font-size:14px">✨</span></div>'
+          +'<div>'
+            +'<div style="font-size:15px;font-weight:800;color:#0A0A0A">AI 채용 브리핑</div>'
+            +'<div style="font-size:10px;color:#9CA3AF">현재 데이터 기반 스마트 자동 분석 · <strong style="color:#7C3AED">'+ts+'</strong></div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:7px;align-items:center">'
+          +'<button id="_ins_refresh_btn" onclick="_refreshInsight()" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;border:none;padding:7px 14px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(124,58,237,.3);min-width:90px">↻ 새로고침</button>'
+          +'<button onclick="_printInsight()" style="background:#F8FAFC;color:#374151;border:1px solid #E2E8F0;padding:7px 13px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">🖨️ 출력</button>'
         +'</div>'
       +'</div>'
-      +'<button id="_ins_refresh_btn" onclick="_refreshInsight()" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;border:none;padding:7px 16px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(124,58,237,.3);min-width:90px">↻ 새로고침</button>'
+      /* 날짜 범위 선택 */
+      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:#F8FAFC;border-radius:10px;border:1px solid #E5E7EB">'
+        +'<span style="font-size:11px;font-weight:700;color:#6B7280;white-space:nowrap">📅 분석 기간</span>'
+        +'<input id="_ins_from_inp" type="date" value="'+fFrom+'" style="border:1px solid #E2E8F0;border-radius:7px;padding:5px 9px;font-size:11.5px;font-family:inherit;outline:none;color:#374151;background:#fff">'
+        +'<span style="color:#CBD5E1;font-weight:700">—</span>'
+        +'<input id="_ins_to_inp" type="date" value="'+fTo+'" style="border:1px solid #E2E8F0;border-radius:7px;padding:5px 9px;font-size:11.5px;font-family:inherit;outline:none;color:#374151;background:#fff">'
+        +(hasFilter?'<button onclick="_insightFrom=\'\';_insightTo=\'\';renderView()" style="background:#FFF5F5;color:#EF4444;border:1px solid #FEE2E2;padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">초기화</button>':'')
+        +(hasFilter?'<span style="background:#EDE9FE;color:#7C3AED;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700">필터 적용 중 · '+filtJobs.length+'건</span>':'<span style="font-size:10px;color:#9CA3AF">날짜 입력 후 새로고침 버튼을 눌러주세요</span>')
+      +'</div>'
     +'</div>'
     +'<div style="flex:1;overflow-y:auto;padding:16px 20px 28px" id="_ins_out">'+_insightHtml+'</div>'
   +'</div>';
 }
+
 
 
 
