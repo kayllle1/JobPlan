@@ -2992,63 +2992,105 @@ function renderInsights(){
     var c=a.type==='danger'?'#EF4444':a.type==='warning'?'#F59E0B':'#3B82F6';
     var bg=a.type==='danger'?'#FFF1F2':a.type==='warning'?'#FFFBEB':'#EFF6FF';
     var em=a.type==='danger'?'🚨':a.type==='warning'?'⚠️':'ℹ️';
-    return'<div style="background:'+bg+';border-left:3px solid '+c+';border-radius:0 9px 9px 0;padding:10px 12px;margin-bottom:7px"><div style="font-size:11.5px;font-weight:800;color:'+c+';margin-bottom:3px">'+em+' '+esc(a.title)+'</div><div style="font-size:10.5px;color:#374151;line-height:1.5">'+esc(a.desc)+'</div></div>';
+    return'<div style="background:'+bg+';border-left:3.5px solid '+c+';border-radius:0 10px 10px 0;padding:11px 14px;margin-bottom:8px">'
+      +'<div style="font-size:13px;font-weight:800;color:'+c+';margin-bottom:4px">'+em+' '+esc(a.title)+'</div>'
+      +'<div style="font-size:12px;color:#374151;line-height:1.6">'+esc(a.desc)+'</div>'
+    +'</div>';
   }
   function mkAction(a){
     var c=a.priority==='high'?'#DC2626':a.priority==='medium'?'#D97706':'#6B7280';
     var lbl=a.priority==='high'?'긴급':a.priority==='medium'?'권장':'참고';
-    return'<div style="display:flex;gap:9px;padding:9px 0;border-bottom:1px solid #F3F4F6"><span style="background:'+c+'18;color:'+c+';font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;margin-top:2px">'+lbl+'</span><div><div style="font-size:11.5px;font-weight:700;color:#0F172A;margin-bottom:2px">'+esc(a.title)+'</div><div style="font-size:10.5px;color:#6B7280;line-height:1.5">'+esc(a.desc)+'</div></div></div>';
+    return'<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #F3F4F6">'
+      +'<span style="background:'+c+'15;color:'+c+';font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0;margin-top:2px">'+lbl+'</span>'
+      +'<div>'
+        +'<div style="font-size:13px;font-weight:700;color:#0F172A;margin-bottom:3px">'+esc(a.title)+'</div>'
+        +'<div style="font-size:12px;color:#4B5563;line-height:1.6">'+esc(a.desc)+'</div>'
+      +'</div>'
+    +'</div>';
   }
 
-  var posH=positives.map(function(p){return'<li style="font-size:10.5px;color:#059669;padding:3px 0;list-style:none">✓ '+esc(p)+'</li>';}).join('');
-  var conH=concerns.map(function(p){return'<li style="font-size:10.5px;color:#DC2626;padding:3px 0;list-style:none">△ '+esc(p)+'</li>';}).join('');
+  var posH=positives.map(function(p){return'<li style="font-size:12px;color:#065F46;padding:4px 0;list-style:none;line-height:1.5">✓ '+esc(p)+'</li>';}).join('');
+  var conH=concerns.map(function(p){return'<li style="font-size:12px;color:#991B1B;padding:4px 0;list-style:none;line-height:1.5">△ '+esc(p)+'</li>';}).join('');
 
-  var html=''
-    +'<div style="background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:14px;padding:19px 22px;margin-bottom:14px;position:relative;overflow:hidden">'
-      +'<div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:72px;opacity:.05;pointer-events:none">✨</div>'
-      +'<div style="font-size:9.5px;font-weight:700;color:#7DD3FC;letter-spacing:.2em;text-transform:uppercase;margin-bottom:7px">AI SMART BRIEFING · '+ts+'</div>'
-      +'<div style="font-size:16px;font-weight:900;color:#fff;line-height:1.35;margin-bottom:10px">'+esc(headline)+'</div>'
+  var _insightHtml=''
+    /* 헤드라인 배너 */
+    +'<div style="background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:16px;padding:22px 26px;margin-bottom:16px;position:relative;overflow:hidden">'
+      +'<div style="position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:80px;opacity:.05;pointer-events:none">✨</div>'
+      +'<div style="font-size:10px;font-weight:700;color:#7DD3FC;letter-spacing:.2em;text-transform:uppercase;margin-bottom:9px">SMART BRIEFING · '+ts+'</div>'
+      +'<div style="font-size:19px;font-weight:900;color:#fff;line-height:1.4;margin-bottom:13px">'+esc(headline)+'</div>'
       +'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
-        +'<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border-radius:99px;padding:4px 13px">'
-          +'<span>'+trendE+'</span>'
-          +'<span style="font-size:11px;font-weight:800;color:'+trendC+'">'+trend+'</span>'
-          +'<span style="font-size:11px;color:#94A3B8"> · '+trendR+'</span>'
+        +'<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border-radius:99px;padding:5px 14px">'
+          +'<span style="font-size:15px">'+trendE+'</span>'
+          +'<span style="font-size:12px;font-weight:800;color:'+trendC+'">'+trend+'</span>'
+          +'<span style="font-size:12px;color:#94A3B8"> · '+trendR+'</span>'
         +'</div>'
         +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-          +[['진행중',active.length,'#60A5FA'],['합격',pass,'#34D399'],['대기',byS['면접대기'],'#FBBF24'],['합격률',passRate+'%','#A78BFA']].map(function(x){
-            return'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:4px 10px;text-align:center"><div style="font-size:9px;color:#94A3B8">'+x[0]+'</div><div style="font-size:14px;font-weight:900;color:'+x[2]+'">'+x[1]+'</div></div>';
+          +[['진행중',active.length,'#60A5FA'],['합격',pass,'#34D399'],['대기',byS['면접대기'],'#FBBF24'],['합격률',passRate+'%','#C4B5FD']].map(function(x){
+            return'<div style="background:rgba(255,255,255,.08);border-radius:9px;padding:6px 12px;text-align:center">'
+              +'<div style="font-size:10px;color:#94A3B8;margin-bottom:2px">'+x[0]+'</div>'
+              +'<div style="font-size:16px;font-weight:900;color:'+x[2]+'">'+x[1]+'</div>'
+            +'</div>';
           }).join('')
         +'</div>'
       +'</div>'
     +'</div>'
-    +'<div style="background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:16px 18px;margin-bottom:14px">'
-      +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">📋 종합 분석</div>'
-      +'<div style="font-size:13px;color:#1E293B;line-height:1.85;font-weight:500">'+summaryParts.join(' ')+'</div>'
+    /* 종합 분석 */
+    +'<div style="background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:18px 20px;margin-bottom:14px">'
+      +'<div style="font-size:10.5px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">📋 종합 분석</div>'
+      +'<div style="font-size:14px;color:#1E293B;line-height:1.9;font-weight:500">'+summaryParts.join(' ')+'</div>'
     +'</div>'
-    +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
-      +'<div style="flex:1.4;min-width:200px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:15px 17px">'
-        +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">🔔 주요 알림</div>'
+    /* 3단 */
+    +'<div style="display:flex;gap:13px;flex-wrap:wrap">'
+      +'<div style="flex:1.4;min-width:210px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:16px 18px">'
+        +'<div style="font-size:10.5px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px">🔔 주요 알림</div>'
         +alerts.map(mkAlert).join('')
       +'</div>'
-      +'<div style="flex:1.4;min-width:200px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:15px 17px">'
-        +'<div style="font-size:10px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">💡 추천 액션</div>'
+      +'<div style="flex:1.4;min-width:210px;background:#fff;border-radius:14px;border:1px solid #E5E7EB;padding:16px 18px">'
+        +'<div style="font-size:10.5px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">💡 추천 액션</div>'
         +actions.map(mkAction).join('')
       +'</div>'
-      +'<div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:10px">'
-        +'<div style="background:#F0FDF4;border-radius:14px;border:1px solid #BBF7D0;padding:13px 15px;flex:1"><div style="font-size:10px;font-weight:800;color:#059669;margin-bottom:8px">강점</div><ul style="margin:0;padding:0">'+posH+'</ul></div>'
-        +'<div style="background:#FFF1F2;border-radius:14px;border:1px solid #FECDD3;padding:13px 15px;flex:1"><div style="font-size:10px;font-weight:800;color:#DC2626;margin-bottom:8px">개선 필요</div><ul style="margin:0;padding:0">'+conH+'</ul></div>'
+      +'<div style="flex:1;min-width:170px;display:flex;flex-direction:column;gap:11px">'
+        +'<div style="background:#F0FDF4;border-radius:14px;border:1px solid #BBF7D0;padding:15px 16px;flex:1">'
+          +'<div style="font-size:11px;font-weight:800;color:#059669;margin-bottom:10px">강점</div>'
+          +'<ul style="margin:0;padding:0">'+posH+'</ul>'
+        +'</div>'
+        +'<div style="background:#FFF1F2;border-radius:14px;border:1px solid #FECDD3;padding:15px 16px;flex:1">'
+          +'<div style="font-size:11px;font-weight:800;color:#DC2626;margin-bottom:10px">개선 필요</div>'
+          +'<ul style="margin:0;padding:0">'+conH+'</ul>'
+        +'</div>'
       +'</div>'
     +'</div>';
+
+  /* ── 새로고침 전용 함수 ── */
+  window._refreshInsight=function(){
+    var btn=document.getElementById('_ins_refresh_btn');
+    var out=document.getElementById('_ins_out');
+    if(!btn||!out)return;
+    btn.disabled=true;
+    btn.innerHTML='<span style="display:inline-block;animation:spin 0.8s linear infinite">↻</span> 분석 중…';
+    out.style.opacity='0.4';
+    out.style.transition='opacity .2s';
+    setTimeout(function(){
+      out.innerHTML=_insightHtml;
+      out.style.opacity='1';
+      out.scrollTop=0;
+      btn.disabled=false;
+      btn.innerHTML='↻ 새로고침';
+    },400);
+  };
 
   return'<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;background:#F7F8FA">'
     +'<div style="flex-shrink:0;padding:13px 20px 11px;background:#fff;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;justify-content:space-between">'
       +'<div style="display:flex;align-items:center;gap:10px">'
         +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#7C3AED,#4F46E5);display:flex;align-items:center;justify-content:center"><span style="font-size:14px">✨</span></div>'
-        +'<div><div style="font-size:15px;font-weight:800;color:#0A0A0A">AI 채용 브리핑</div><div style="font-size:10px;color:#9CA3AF">현재 데이터 기반 스마트 자동 분석</div></div>'
+        +'<div>'
+          +'<div style="font-size:15px;font-weight:800;color:#0A0A0A">AI 채용 브리핑</div>'
+          +'<div style="font-size:10px;color:#9CA3AF">현재 데이터 기반 스마트 자동 분석 · <strong style="color:#7C3AED">'+ts+'</strong> 기준</div>'
+        +'</div>'
       +'</div>'
-      +'<button onclick="renderView()" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;border:none;padding:7px 16px;border-radius:9px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(124,58,237,.3)">↻ 새로고침</button>'
+      +'<button id="_ins_refresh_btn" onclick="_refreshInsight()" style="background:linear-gradient(135deg,#7C3AED,#4F46E5);color:#fff;border:none;padding:7px 16px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(124,58,237,.3);min-width:90px">↻ 새로고침</button>'
     +'</div>'
-    +'<div style="flex:1;overflow-y:auto;padding:16px 20px 28px">'+html+'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:16px 20px 28px" id="_ins_out">'+_insightHtml+'</div>'
   +'</div>';
 }
 
