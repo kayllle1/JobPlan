@@ -1847,11 +1847,11 @@ function renderSidebar(){
     +section('#38BDF8','인사이트')
     +navBtn('insights','✨','AI 브리핑')
     +navBtn('calendar','📅','일정 캘린더')
-    +navBtn('national','🗺️','전국 채용현황')
     +section('#34D399','채용 관리')
     +navBtn('jobs','📋','공고관리')
     +navBtn('students','👥','학생관리')
     +navBtn('employment','🏆','취업 현황')
+    +navBtn('national','📊','지역 현황')
     +section('#A78BFA','도구')
     +navBtn('interview','📚','면접 자료실')
     +navBtn('training','🎓','연수 관리')
@@ -3049,6 +3049,8 @@ var _insightCache=null;
 var _anthropicKey='';
 var _insightFrom='';
 var _insightTo='';
+var _natFrom='';
+var _natTo='';
 function renderInsights(){
   var fFrom=_insightFrom, fTo=_insightTo;
   var hasFilter=!!(fFrom||fTo);
@@ -3416,93 +3418,73 @@ function _renderNatPanel(){
 }
 
 function renderNationalStatus(){
+  /* ── 날짜 필터 ── */
+  var fFrom=_natFrom, fTo=_natTo;
+  var hasFilter=!!(fFrom||fTo);
+  function inRange(ds){
+    var d=(ds||'').slice(0,10); if(!d) return false;
+    if(fFrom&&d<fFrom) return false;
+    if(fTo&&d>fTo) return false;
+    return true;
+  }
+  var periodLabel=hasFilter
+    ?(fFrom&&fTo?fFrom+' ~ '+fTo:fFrom?fFrom+' 이후':fTo+' 이전')
+    :'전체 기간';
+
+  /* ── 데이터 집계 (기간 필터 적용) ── */
+  var baseJobs=hasFilter
+    ?JOBS.filter(function(j){return inRange(j.docDate);})
+    :JOBS;
   var locCounts={};
-  LOCATIONS.forEach(function(l){locCounts[l]=JOBS.filter(function(j){return j.location===l;}).length;});
-  var unlocatedCnt=JOBS.filter(function(j){return !j.location||j.location.trim()==='';}).length;
+  LOCATIONS.forEach(function(l){locCounts[l]=baseJobs.filter(function(j){return j.location===l;}).length;});
+  var unlocatedCnt=baseJobs.filter(function(j){return !j.location||j.location.trim()==='';}).length;
   if(unlocatedCnt>0)locCounts['미지정']=unlocatedCnt;
   var allLocs=LOCATIONS.slice();
   if(unlocatedCnt>0)allLocs.push('미지정');
-  var totalCount=allLocs.reduce(function(s,l){return s+(locCounts[l]||0);},0);
-  var maxCnt=Math.max.apply(null,allLocs.map(function(l){return locCounts[l]||0;}).concat([1]));
-  var sorted=allLocs.slice().sort(function(a,b){return(locCounts[b]||0)-(locCounts[a]||0);});
-  var totalJobCount=JOBS.length;
-  var activeCount=JOBS.filter(function(j){return !j.isClosed;}).length;
-  var coveredRegions=LOCATIONS.filter(function(l){return (locCounts[l]||0)>0;}).length;
+  var totalJobCount=baseJobs.length;
+  var activeCount=baseJobs.filter(function(j){return !j.isClosed;}).length;
 
-  /* ── 헥사곤 위치 (flat-top, R=52, H2=45)
-     col_step=85, row_step=90, odd-col offset=+45
-     수학적으로 인접 시도가 닿도록 배치                    */
-  var R=52,H2=45;
-  var HEXES=[
-    {loc:'인천',  cx:85,  cy:65},
-    {loc:'서울',  cx:170, cy:110},
-    {loc:'경기',  cx:255, cy:65},
-    {loc:'강원',  cx:340, cy:110},
-    {loc:'충남',  cx:85,  cy:155},
-    {loc:'세종',  cx:170, cy:200},
-    {loc:'충북',  cx:255, cy:155},
-    {loc:'경북',  cx:340, cy:200},
-    {loc:'대전',  cx:85,  cy:245},
-    {loc:'대구',  cx:255, cy:245},
-    {loc:'울산',  cx:340, cy:290},
-    {loc:'전북',  cx:85,  cy:335},
-    {loc:'경남',  cx:255, cy:335},
-    {loc:'부산',  cx:340, cy:380},
-    {loc:'광주',  cx:85,  cy:425},
-    {loc:'전남',  cx:170, cy:470},
-    {loc:'제주',  cx:170, cy:560},
-  ];
+  var regionStats=allLocs.map(function(loc){
+    var locJobs=loc==='미지정'
+      ?baseJobs.filter(function(j){return !j.location||j.location.trim()==='';})
+      :baseJobs.filter(function(j){return j.location===loc;});
+    var aps=locJobs.reduce(function(acc,j){return acc.concat(j.applicants);}, []);
+    var pass=aps.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length;
+    var active=locJobs.filter(function(j){return !j.isClosed;}).length;
+    return{loc:loc,cnt:locJobs.length,active:active,aps:aps.length,pass:pass,rate:aps.length>0?Math.round(pass/aps.length*100):0};
+  }).sort(function(a,b){return b.cnt-a.cnt;});
 
-  function provFill(loc){
-    if(_nationalSelectedLoc&&loc===_nationalSelectedLoc)return'#F59E0B';
-    var cnt=locCounts[loc]||0;
-    if(cnt===0)return'#D8EAF8';
-    var t=Math.min(cnt/maxCnt,1);
-    var stops=[[189,215,238],[107,174,214],[49,130,189],[21,97,169],[8,48,107]];
-    var seg=Math.min(Math.floor(t*4),3),u=(t*4)-seg;
-    var s0=stops[seg],s1=stops[seg+1];
-    return'rgb('+Math.round(s0[0]+(s1[0]-s0[0])*u)+','+Math.round(s0[1]+(s1[1]-s0[1])*u)+','+Math.round(s0[2]+(s1[2]-s0[2])*u)+')';
-  }
-  function txtColor(loc){
-    if(_nationalSelectedLoc===loc)return'#7C2D12';
-    var t=(locCounts[loc]||0)>0?Math.min((locCounts[loc]||0)/maxCnt,1):0;
-    return t>0.3?'#FFFFFF':'#1A3A5A';
-  }
-  function hexPts(cx,cy){
-    var r2=Math.round(R/2);
-    return(cx+R)+','+cy+' '+(cx+r2)+','+(cy+H2)+' '+(cx-r2)+','+(cy+H2)+' '+(cx-R)+','+cy+' '+(cx-r2)+','+(cy-H2)+' '+(cx+r2)+','+(cy-H2);
-  }
+  var totalCount=regionStats.reduce(function(s,r){return s+r.cnt;},0);
+  var coveredRegions=regionStats.filter(function(r){return r.cnt>0&&r.loc!=='미지정';}).length;
+  var topRegion=regionStats[0];
+  var totalAps=regionStats.reduce(function(s,r){return s+r.aps;},0);
+  var totalPass=regionStats.reduce(function(s,r){return s+r.pass;},0);
+  var overallRate=totalAps>0?Math.round(totalPass/totalAps*100):0;
 
-  var hexSvg=HEXES.map(function(h){
-    var cnt=locCounts[h.loc]||0;
-    var fill=provFill(h.loc);
-    var tc=txtColor(h.loc);
-    var isSel=_nationalSelectedLoc===h.loc;
-    var isTop=!_nationalSelectedLoc&&sorted[0]===h.loc&&cnt>0;
-    var sc=isSel?'#D97706':isTop?'#FBBF24':'rgba(255,255,255,.85)';
-    var sw=isSel?3.5:isTop?2.5:1.5;
-    var flt=isSel?'url(#hfSel)':isTop?'url(#hfTop)':'none';
-    var shadow=tc==='#FFFFFF'?'rgba(0,0,0,.2)':'rgba(255,255,255,.7)';
-    var abbr=h.loc.length>2?h.loc.slice(0,2):h.loc;
-    return'<g onclick="setNationalLoc(\''+h.loc+'\',event)" style="cursor:pointer">'
-      +'<polygon points="'+hexPts(h.cx,h.cy)+'" fill="'+fill+'" stroke="'+sc+'" stroke-width="'+sw+'" filter="'+flt+'" style="transition:filter .15s" onmouseover="this.style.filter=\'url(#hfHov)\'" onmouseout="this.style.filter=\''+flt+'\'">'
-        +'<title>'+h.loc+' : '+(cnt||0)+'건</title></polygon>'
-      +'<text x="'+h.cx+'" y="'+(h.cy+(cnt>0?-8:2))+'" text-anchor="middle" dominant-baseline="middle" font-size="16" font-weight="900" fill="'+tc+'" pointer-events="none" paint-order="stroke" stroke="'+shadow+'" stroke-width="2" font-family="Apple SD Gothic Neo,Malgun Gothic,sans-serif">'+abbr+'</text>'
-      +(cnt>0?'<text x="'+h.cx+'" y="'+(h.cy+12)+'" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="700" fill="'+tc+'" opacity=".9" pointer-events="none" paint-order="stroke" stroke="'+shadow+'" stroke-width="1.5" font-family="Apple SD Gothic Neo,Malgun Gothic,sans-serif">'+cnt+'건</text>':'')
-    +'</g>';
-  }).join('');
+  /* ── 조회 함수 ── */
+  window._natQuery=function(){
+    var f=document.getElementById('_nat_from');
+    var t=document.getElementById('_nat_to');
+    _natFrom=f?f.value:'';
+    _natTo=t?t.value:'';
+    var btn=document.getElementById('_nat_query_btn');
+    if(btn){btn.disabled=true;btn.textContent='조회 중…';}
+    setTimeout(function(){renderView();},150);
+  };
+  window._natReset=function(){
+    _natFrom='';_natTo='';
+    _nationalSelectedLoc=null;
+    renderView();
+  };
 
   /* ── 오른쪽 패널 ── */
   var panelHtml='';
-  window._toggleMijung=function(){var b=document.getElementById('_mj_banner');if(b)b.style.display=b.style.display==='none'?'block':'none';};
   if(_nationalSelectedLoc){
     var isMijung=_nationalSelectedLoc==='미지정';
     var selJobs=isMijung
-      ?JOBS.filter(function(j){return !j.location||j.location.trim()==='';})
-      :JOBS.filter(function(j){return j.location===_nationalSelectedLoc;});
-    var activeSel=selJobs.filter(function(j){return !j.isClosed;}).length;
-    var apsSel=selJobs.reduce(function(acc,j){return acc.concat(j.applicants);}, []).length;
-    var passSel=selJobs.reduce(function(acc,j){return acc+j.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length;},0);
+      ?baseJobs.filter(function(j){return !j.location||j.location.trim()==='';})
+      :baseJobs.filter(function(j){return j.location===_nationalSelectedLoc;});
+    var selSt=regionStats.find(function(r){return r.loc===_nationalSelectedLoc;})||{cnt:0,active:0,aps:0,pass:0,rate:0};
     var jobCards=selJobs.length===0
       ?'<div style="text-align:center;padding:40px 0;color:#CBD5E1"><div style="font-size:32px;margin-bottom:10px">📭</div><div style="font-size:13px;font-weight:600">공고 없음</div></div>'
       :selJobs.map(function(j){
@@ -3523,88 +3505,117 @@ function renderNationalStatus(){
         +'</div>';
       }).join('');
     panelHtml=''
-      +'<div style="padding:14px 15px 11px;border-bottom:1px solid #F1F5F9;flex-shrink:0">'
+      +'<div style="padding:15px 16px 12px;border-bottom:1px solid #F1F5F9;flex-shrink:0">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">'
-          +'<div><div style="font-size:18px;font-weight:900;color:#0F172A">'+esc(_nationalSelectedLoc)+'</div>'
-            +'<div style="font-size:10.5px;color:#94A3B8;margin-top:1px">타일 클릭으로 다른 지역 선택</div></div>'
+          +'<div>'
+            +'<div style="font-size:18px;font-weight:900;color:#0F172A">'+esc(_nationalSelectedLoc)+'</div>'
+            +'<div style="font-size:10.5px;color:#94A3B8;margin-top:1px">'+(hasFilter?'['+periodLabel+'] · ':'')+'행 클릭으로 다른 지역 선택</div>'
+          +'</div>'
           +'<button onclick="setNationalLoc(\''+_nationalSelectedLoc+'\',event)" style="width:30px;height:30px;border-radius:50%;background:#F1F5F9;border:none;font-size:15px;cursor:pointer;color:#64748B;display:flex;align-items:center;justify-content:center">✕</button>'
         +'</div>'
         +'<div style="display:flex;gap:6px">'
-          +[['전체',selJobs.length,'건','#374151','#F1F5F9'],['진행',activeSel,'건','#2563EB','#EFF6FF'],['지원자',apsSel,'명','#7C3AED','#F5F3FF'],['합격',passSel,'명','#059669','#F0FDF4']].map(function(x){
+          +[['전체',selSt.cnt,'건','#374151','#F1F5F9'],['진행',selSt.active,'건','#2563EB','#EFF6FF'],['지원자',selSt.aps,'명','#7C3AED','#F5F3FF'],['합격',selSt.pass,'명','#059669','#F0FDF4']].map(function(x){
             return'<div style="flex:1;background:'+x[4]+';border-radius:9px;padding:7px 4px;text-align:center">'
-              +'<div style="font-size:18px;font-weight:900;color:'+x[3]+';line-height:1">'+x[1]+'<span style="font-size:10px;margin-left:1px">'+x[2]+'</span></div>'
+              +'<div style="font-size:17px;font-weight:900;color:'+x[3]+';line-height:1">'+x[1]+'<span style="font-size:10px;margin-left:1px">'+x[2]+'</span></div>'
               +'<div style="font-size:9px;color:'+x[3]+';opacity:.7;font-weight:600;margin-top:1px">'+x[0]+'</div>'
             +'</div>';
           }).join('')
         +'</div>'
       +'</div>'
-      +'<div style="flex:1;overflow-y:auto;padding:12px 13px">'+jobCards+'</div>';
+      +'<div style="flex:1;overflow-y:auto;padding:12px 14px">'+jobCards+'</div>';
   } else {
-    var rankItems=sorted.filter(function(l){return l!=='미지정';}).map(function(loc,idx){
-      var cnt=locCounts[loc]||0;
-      var barW=maxCnt>0?Math.round(cnt/maxCnt*100):0;
-      var rc=['#F59E0B','#94A3B8','#B45309'][idx]||'#E2E8F0';
-      var tc2=['#fff','#fff','#fff'][idx]||'#6B7280';
-      return'<div onclick="setNationalLoc(\''+loc+'\',event)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s" onmouseover="this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\'transparent\'">'
-        +'<div style="width:22px;height:22px;border-radius:50%;background:'+rc+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:'+tc2+';flex-shrink:0">'+(idx+1)+'</div>'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
-            +'<span style="font-size:13px;font-weight:700;color:#0F172A">'+loc+'</span>'
-            +'<span style="font-size:14px;font-weight:900;color:'+(cnt>0?'#0F172A':'#CBD5E1')+'">'+(cnt||'—')+(cnt?'<span style="font-size:10px;color:#94A3B8;font-weight:500">건</span>':'')+'</span>'
-          +'</div>'
-          +'<div style="height:4px;background:#F1F5F9;border-radius:99px;overflow:hidden">'
-            +'<div style="height:100%;width:'+barW+'%;background:'+(idx===0?'linear-gradient(90deg,#FBBF24,#D97706)':idx===1?'linear-gradient(90deg,#9CA3AF,#6B7280)':idx===2?'linear-gradient(90deg,#D97706,#92400E)':'linear-gradient(90deg,#93C5FD,#2563EB)')+';border-radius:99px;transition:width .4s"></div>'
-          +'</div>'
-        +'</div>'
-      +'</div>';
-    }).join('');
-    panelHtml=''
-      +'<div style="padding:14px 15px 10px;border-bottom:1px solid #F1F5F9;flex-shrink:0">'
-        +'<div style="font-size:13px;font-weight:800;color:#0F172A;margin-bottom:2px">지역별 공고 순위</div>'
-        +'<div style="font-size:10.5px;color:#94A3B8">타일 또는 지역명 클릭 → 공고 목록</div>'
-      +'</div>'
-      +'<div style="flex:1;overflow-y:auto;padding:6px 6px">'+rankItems+'</div>'
-      +(unlocatedCnt>0?'<div style="flex-shrink:0;padding:8px 13px;border-top:1px solid #FEF3C7;background:#FFFBEB;font-size:11px;color:#92400E;font-weight:700">⚠️ 지역 미입력 '+unlocatedCnt+'건</div>':'');
+    panelHtml='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#94A3B8;padding:20px">'
+      +'<div style="font-size:40px">📍</div>'
+      +'<div style="font-size:14px;font-weight:700;color:#374151">지역을 선택하세요</div>'
+      +'<div style="font-size:12px;text-align:center;line-height:1.7">표에서 지역 행을 클릭하면<br>해당 지역 공고 목록이 표시됩니다</div>'
+    +'</div>';
   }
 
-  /* ── 범례 SVG ── */
-  var legendSvg='<svg viewBox="0 0 130 12" style="width:120px;height:12px;vertical-align:middle" xmlns="http://www.w3.org/2000/svg">'
-    +'<defs><linearGradient id="lgH" x1="0%" y1="0%" x2="100%" y2="0%">'
-    +'<stop offset="0%" stop-color="#D8EAF8"/><stop offset="50%" stop-color="#6BAED6"/><stop offset="100%" stop-color="#08306B"/>'
-    +'</linearGradient></defs>'
-    +'<rect x="0" y="1" width="118" height="6" rx="3" fill="url(#lgH)"/>'
-    +'<text x="0" y="12" font-size="7" fill="#94A3B8" font-family="Apple SD Gothic Neo,sans-serif">적음</text>'
-    +'<text x="118" y="12" text-anchor="end" font-size="7" fill="#08306B" font-family="Apple SD Gothic Neo,sans-serif">많음</text>'
-    +'</svg>';
+  /* ── 합격률 색상 ── */
+  function rateColor(r){return r>=20?'#059669':r>=10?'#D97706':'#DC2626';}
+  function rateBg(r){return r>=20?'#F0FDF4':r>=10?'#FFFBEB':'#FFF1F2';}
 
-  return'<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;background:#EEF2F7">'
-    +'<div style="flex-shrink:0;padding:10px 16px 8px;background:#fff;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px">'
-      +'<div style="display:flex;align-items:center;gap:9px">'
-        +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#2563EB,#1E3A8A);display:flex;align-items:center;justify-content:center"><span style="font-size:14px">🗺️</span></div>'
-        +'<div><div style="font-size:15px;font-weight:800;color:#0A0A0A">채용 지도</div>'
-          +'<div style="font-size:10px;color:#9CA3AF">헥사곤 타일맵 · 타일 클릭으로 지역 공고 확인</div></div>'
+  /* ── 테이블 행 ── */
+  var tableRows=regionStats.map(function(r,idx){
+    var isMijung=r.loc==='미지정';
+    var isSel=_nationalSelectedLoc===r.loc;
+    var rank=idx+1;
+    var rankBadge=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':('<span style="font-size:11px;color:#94A3B8;font-weight:700;min-width:20px;display:inline-block;text-align:center">'+rank+'</span>');
+    var barW=totalCount>0?Math.round(r.cnt/totalCount*100):0;
+    return'<tr onclick="setNationalLoc(\''+r.loc+'\',event)" style="cursor:pointer;background:'+(isSel?'#FFF7ED':'')+';" '
+      +'onmouseover="this.style.background=\''+(isSel?'#FFF7ED':'#F8FAFC')+'\'" onmouseout="this.style.background=\''+(isSel?'#FFF7ED':'')+'\';">'
+      +'<td style="padding:11px 14px;font-size:13px;font-weight:'+(isSel?'800':'600')+';color:'+(isMijung?'#94A3B8':isSel?'#D97706':'#0F172A')+';white-space:nowrap">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span>'+rankBadge+'</span>'
+          +'<span>'+esc(r.loc)+'</span>'
+          +(isSel?'<span style="font-size:9px;background:#FED7AA;color:#D97706;padding:1px 6px;border-radius:4px;font-weight:700">선택됨</span>':'')
+        +'</div>'
+      +'</td>'
+      +'<td style="padding:11px 14px">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<div style="flex:1;max-width:80px;height:5px;background:#F1F5F9;border-radius:99px;overflow:hidden"><div style="height:100%;width:'+barW+'%;background:#2563EB;border-radius:99px"></div></div>'
+          +'<span style="font-size:14px;font-weight:800;color:'+(isMijung?'#94A3B8':'#0F172A')+'">'+r.cnt+'</span>'
+          +'<span style="font-size:10px;color:#94A3B8">건</span>'
+        +'</div>'
+      +'</td>'
+      +'<td style="padding:11px 14px;text-align:center;font-size:13px;font-weight:600;color:#374151">'+r.aps+'<span style="font-size:10px;color:#94A3B8;margin-left:2px">명</span></td>'
+      +'<td style="padding:11px 14px;text-align:center;font-size:13px;font-weight:600;color:#059669">'+(r.pass>0?r.pass+'<span style="font-size:10px;color:#94A3B8;margin-left:2px">명</span>':'<span style="color:#CBD5E1">—</span>')+'</td>'
+      +'<td style="padding:11px 14px;text-align:center">'+(r.aps>0?'<span style="background:'+rateBg(r.rate)+';color:'+rateColor(r.rate)+';padding:3px 10px;border-radius:7px;font-size:12px;font-weight:800">'+r.rate+'%</span>':'<span style="color:#CBD5E1;font-size:12px">—</span>')+'</td>'
+    +'</tr>';
+  }).join('');
+
+  return'<div style="display:flex;flex-direction:column;height:100%;overflow:hidden;background:#F7F8FA">'
+    /* ── 헤더 ── */
+    +'<div style="flex-shrink:0;background:#fff;border-bottom:1px solid #E5E7EB">'
+      /* 타이틀 + KPI 칩 */
+      +'<div style="padding:10px 18px 9px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">'
+        +'<div style="display:flex;align-items:center;gap:9px">'
+          +'<div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#2563EB,#1E3A8A);display:flex;align-items:center;justify-content:center"><span style="font-size:14px">📊</span></div>'
+          +'<div>'
+            +'<div style="font-size:15px;font-weight:800;color:#0A0A0A">지역별 채용 현황</div>'
+            +'<div style="font-size:10px;color:#9CA3AF">'+(hasFilter?'<span style="color:#7C3AED;font-weight:700">'+periodLabel+'</span> 기간 필터 적용 중':'행 클릭 → 해당 지역 공고 목록')+'</div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          +'<div style="background:#EFF6FF;border:1px solid #BFDBFE;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#1D4ED8">공고 '+totalJobCount+'건</div>'
+          +'<div style="background:#F0FDF4;border:1px solid #BBF7D0;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#059669">지원자 '+totalAps+'명</div>'
+          +'<div style="background:#F5F3FF;border:1px solid #DDD6FE;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#7C3AED">합격 '+totalPass+'명</div>'
+          +'<div style="background:#FFFBEB;border:1px solid #FDE68A;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#D97706">합격률 '+overallRate+'%</div>'
+          +(topRegion&&topRegion.cnt>0?'<div style="background:#FFF7ED;border:1px solid #FED7AA;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#9A3412">🥇 '+esc(topRegion.loc)+' '+topRegion.cnt+'건</div>':'')
+        +'</div>'
       +'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-        +'<div style="background:#EFF6FF;border:1px solid #BFDBFE;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#1D4ED8">전체 '+totalJobCount+'건</div>'
-        +'<div style="background:#F0FDF4;border:1px solid #BBF7D0;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#059669">진행 '+activeCount+'건</div>'
-        +'<div style="background:#F5F3FF;border:1px solid #DDD6FE;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#7C3AED">'+coveredRegions+'개 지역</div>'
-        +(sorted[0]&&locCounts[sorted[0]]>0?'<div style="background:#FFFBEB;border:1px solid #FDE68A;padding:3px 10px;border-radius:7px;font-size:10px;font-weight:700;color:#D97706">🥇 '+sorted[0]+' '+locCounts[sorted[0]]+'건</div>':'')
-        +'<div style="display:flex;align-items:center;gap:5px">'+legendSvg+'</div>'
+      /* 날짜 조회 바 */
+      +'<div style="padding:0 18px 10px">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:'+(hasFilter?'#F5F3FF':'#F8FAFC')+';border:1.5px solid '+(hasFilter?'#C4B5FD':'#E5E7EB')+';border-radius:10px;padding:8px 13px">'
+          +'<span style="font-size:12px;font-weight:700;color:'+(hasFilter?'#7C3AED':'#6B7280')+';white-space:nowrap">📅 기간 조회</span>'
+          +'<input id="_nat_from" type="date" value="'+fFrom+'" onkeydown="if(event.key===\'Enter\')_natQuery()" style="border:1px solid '+(hasFilter?'#C4B5FD':'#E2E8F0')+';border-radius:7px;padding:5px 10px;font-size:12px;font-family:inherit;outline:none;color:#374151;background:#fff">'
+          +'<span style="color:#CBD5E1;font-weight:700">—</span>'
+          +'<input id="_nat_to" type="date" value="'+fTo+'" onkeydown="if(event.key===\'Enter\')_natQuery()" style="border:1px solid '+(hasFilter?'#C4B5FD':'#E2E8F0')+';border-radius:7px;padding:5px 10px;font-size:12px;font-family:inherit;outline:none;color:#374151;background:#fff">'
+          +'<button id="_nat_query_btn" onclick="_natQuery()" style="background:linear-gradient(135deg,#2563EB,#1E3A8A);color:#fff;border:none;padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔍 조회</button>'
+          +(hasFilter
+            ?'<button onclick="_natReset()" style="background:#FFF5F5;color:#EF4444;border:1px solid #FEE2E2;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✕ 초기화</button>'
+              +'<span style="background:#EDE9FE;color:#7C3AED;padding:3px 10px;border-radius:7px;font-size:11px;font-weight:700">'+totalJobCount+'건 해당</span>'
+            :'<span style="font-size:11px;color:#94A3B8">날짜 입력 후 조회하면 해당 기간 데이터로 분석합니다</span>'
+          )
+        +'</div>'
       +'</div>'
     +'</div>'
+    /* ── 본문: 테이블 + 패널 ── */
     +'<div style="flex:1;min-height:0;display:flex;overflow:hidden">'
-      +'<div style="flex:1;min-width:0;display:flex;align-items:center;justify-content:center;padding:12px 8px">'
-        +'<svg viewBox="0 0 430 625" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;max-height:100%;display:block" xmlns="http://www.w3.org/2000/svg">'
-          +'<defs>'
-            +'<filter id="hfSel" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="rgba(245,158,11,.75)"/></filter>'
-            +'<filter id="hfTop" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="rgba(251,191,36,.55)"/></filter>'
-            +'<filter id="hfHov" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="rgba(0,0,0,.28)"/></filter>'
-            +'<radialGradient id="bgGrad" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#E8EFF8"/><stop offset="100%" stop-color="#D0DCF0"/></radialGradient>'
-          +'</defs>'
-          +'<rect width="430" height="625" fill="url(#bgGrad)" rx="12"/>'
-          +'<text x="215" y="610" text-anchor="middle" font-size="10" font-weight="600" fill="rgba(100,130,180,.5)" letter-spacing="3" font-family="Apple SD Gothic Neo,sans-serif">REPUBLIC OF KOREA</text>'
-          +hexSvg
-        +'</svg>'
+      +'<div style="flex:1;min-width:0;overflow-y:auto">'
+        +(totalJobCount===0&&hasFilter
+          ?'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#94A3B8;padding:40px"><div style="font-size:40px">🔍</div><div style="font-size:14px;font-weight:700;color:#374151">해당 기간 공고 없음</div><div style="font-size:12px;text-align:center;line-height:1.7">['+esc(periodLabel)+'] 기간에<br>해당하는 공고가 없습니다.</div><button onclick="_natReset()" style="background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px">초기화하고 전체 보기</button></div>'
+          :'<table style="width:100%;border-collapse:collapse">'
+            +'<thead><tr style="background:#F8FAFC;border-bottom:2px solid #E5E7EB;position:sticky;top:0;z-index:1">'
+              +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap">지역</th>'
+              +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">공고 수</th>'
+              +'<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">지원자</th>'
+              +'<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">합격</th>'
+              +'<th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">합격률</th>'
+            +'</tr></thead>'
+            +'<tbody>'+tableRows+'</tbody>'
+          +'</table>'
+        )
       +'</div>'
       +'<div style="width:340px;flex-shrink:0;background:#fff;border-left:1px solid #E5E7EB;display:flex;flex-direction:column;overflow:hidden;box-shadow:-2px 0 10px rgba(0,0,0,.05)">'
         +panelHtml
@@ -3612,6 +3623,10 @@ function renderNationalStatus(){
     +'</div>'
   +'</div>';
 }
+
+
+
+
 
 
 
