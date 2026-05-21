@@ -1827,7 +1827,7 @@ function renderSidebar(){
     var a=currentView===id;
     return'<button onclick="setView(\''+id+'\')" style="width:100%;text-align:left;padding:8px 11px;border-radius:9px;border:none;cursor:pointer;font-size:12.5px;font-weight:'+(a?700:500)+';background:'+(a?'rgba(96,165,250,.18)':'transparent')+';color:'+(a?'#7DD3FC':'#8194AA')+';margin-bottom:1px;display:flex;align-items:center;gap:9px;font-family:inherit;transition:background .12s,color .12s" onmouseover="this.style.background=\''+(a?'rgba(96,165,250,.18)':'rgba(255,255,255,.06)')+'\';this.style.color=\''+(a?'#7DD3FC':'#CBD5E1')+'\';" onmouseout="this.style.background=\''+(a?'rgba(96,165,250,.18)':'transparent')+'\';this.style.color=\''+(a?'#7DD3FC':'#8194AA')+'\';">'
       +(a?'<div style="width:2.5px;height:14px;border-radius:99px;background:#38BDF8;flex-shrink:0"></div>':'<div style="width:2.5px;height:14px;flex-shrink:0"></div>')
-      +'<span style="font-size:14px;flex-shrink:0">'+icon+'</span>'
+      +'<span style="font-size:14px;width:20px;text-align:center;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center">'+icon+'</span>'
       +'<span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</span>'
       +badge2(id,a)
     +'</button>';
@@ -3610,7 +3610,7 @@ function renderNationalStatus(){
     /* ── 본문 ── */
     +'<div style="flex:1;min-height:0;display:flex;overflow:hidden">'
       /* 테이블 */
-      +'<div style="flex:1;min-width:0;overflow-y:auto;background:#fff">'
+      +'<div style="flex:1;min-width:0;overflow-y:auto;background:#fff;border-right:1px solid #E5E7EB">'
         +(totalJobCount===0&&hasFilter
           ?'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;padding:40px"><div style="font-size:40px">🔍</div><div style="font-size:15px;font-weight:700;color:#374151">해당 기간 공고 없음</div><div style="font-size:13px;color:#94A3B8;text-align:center;line-height:1.8">['+esc(periodLabel)+'] 기간<br>서류접수일 해당 공고가 없습니다</div><button onclick="_natReset()" style="background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE;padding:8px 20px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px">초기화 · 전체 보기</button></div>'
           :'<table style="width:100%;border-collapse:collapse">'
@@ -3626,7 +3626,7 @@ function renderNationalStatus(){
         )
       +'</div>'
       /* 오른쪽 패널 (너비 확대) */
-      +'<div style="width:420px;flex-shrink:0;border-left:1px solid #E5E7EB;display:flex;flex-direction:column;overflow:hidden;background:#F8FAFC">'
+      +'<div style="flex:1;min-width:0;border-left:1px solid #E5E7EB;display:flex;flex-direction:column;overflow:hidden;background:#F8FAFC">'
         +panelHtml
       +'</div>'
     +'</div>'
