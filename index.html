@@ -836,7 +836,7 @@ function renderAgeInfographic(finalSids){
 /* ─ UI 헬퍼 ─ */
 function btn(label,onclick,variant,sm){
   variant=variant||'primary';sm=sm||false;
-  var vs={primary:'background:#2563EB;color:#fff;border:none',success:'background:#059669;color:#fff;border:none',danger:'background:#DC2626;color:#fff;border:none',outline:'background:#fff;color:#374151;border:1px solid #D1D5DB',warn:'background:#D97706;color:#fff;border:none'};
+  var vs={primary:'background:#2563EB;color:#fff;border:none',success:'background:#059669;color:#fff;border:none',danger:'background:#DC2626;color:#fff;border:none',outline:'background:#fff;color:#374151;border:1px solid #D1D5DB',warn:'background:#D97706;color:#fff;border:none',info:'background:#7C3AED;color:#fff;border:none'};
   return'<button onclick="'+onclick+'" style="'+vs[variant]+';padding:'+(sm?'4px 9px':'7px 14px')+';border-radius:6px;font-size:'+(sm?'11px':'12px')+';font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit">'+label+'</button>';
 }
 function badge(t,c){var cc=c||CAT_COLORS[t]||'#6B7280';return'<span style="background:'+cc+'1A;color:'+cc+';padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;display:inline-block;border:1px solid '+cc+'33">'+esc(t)+'</span>';}
@@ -2563,7 +2563,7 @@ function renderStudents(){
     var apps=getApps(s.id),pass=apps.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length,ongoing=apps.filter(function(a){return['최종합격','취업성공','불합격'].indexOf(a.status)<0;}).length;
     var st=getStudentStatus(s.id);var stBadge='<span style="background:'+st.bg+';color:'+st.color+';border:1px solid '+st.border+';padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap">'+st.emoji+' '+st.label+'</span>';
     var resBadge=getRestrictionBadge(s);var isRestricted=s.restrictionLevel==='제한';
-    return'<tr class="tbl-tr'+(isRestricted?' row-restricted':'')+'" style="border-bottom:1px solid #F1F5F9"><td style="padding:10px 14px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700">'+(i+1)+'</td><td style="padding:10px 14px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><button onclick="openHistoryModal('+s.id+')" style="border:none;background:none;cursor:pointer;color:#2563EB;font-weight:700;text-decoration:underline;font-size:13px;padding:0;font-family:inherit">'+esc(s.name)+'</button>'+resBadge+'</div></td><td style="padding:10px 14px">'+stBadge+'</td><td style="padding:10px 14px;color:#374151">'+(s.age?s.age+'세':'<span style="color:#CBD5E1;font-size:11px">미등록</span>')+'</td><td style="padding:10px 14px;color:#6B7280;font-size:12px">'+esc(s.phone)+'</td><td style="padding:10px 14px;color:#9CA3AF;font-size:12px">'+esc(s.email)+'</td><td style="padding:10px 14px"><span style="font-size:12px;color:#374151;font-weight:600">지원 '+apps.length+'건</span>'+(pass>0?'<span style="margin-left:6px;font-size:10px;background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #A7F3D0">합격 '+pass+'</span>':'')+(ongoing>0?'<span style="margin-left:4px;font-size:10px;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #BFDBFE">진행 '+ongoing+'</span>':'')+(s.counselingMemo?'<span style="margin-left:4px;font-size:9px;background:#FFFBEB;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #FEF3C7">📝메모</span>':'')+'</td><td style="padding:10px 14px;display:flex;gap:4px">'+btn('수정','openEditStudentModal('+s.id+')','outline',true)+' '+btn('삭제','deleteStudent('+s.id+')','danger',true)+'</td></tr>';
+    return'<tr class="tbl-tr'+(isRestricted?' row-restricted':'')+'" style="border-bottom:1px solid #F1F5F9"><td style="padding:10px 14px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700">'+(i+1)+'</td><td style="padding:10px 14px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><button onclick="openHistoryModal('+s.id+')" style="border:none;background:none;cursor:pointer;color:#2563EB;font-weight:700;text-decoration:underline;font-size:13px;padding:0;font-family:inherit">'+esc(s.name)+'</button>'+resBadge+'</div></td><td style="padding:10px 14px">'+stBadge+'</td><td style="padding:10px 14px;color:#374151">'+(s.age?s.age+'세':'<span style="color:#CBD5E1;font-size:11px">미등록</span>')+'</td><td style="padding:10px 14px;color:#6B7280;font-size:12px">'+esc(s.phone)+'</td><td style="padding:10px 14px;color:#9CA3AF;font-size:12px">'+esc(s.email)+'</td><td style="padding:10px 14px"><span style="font-size:12px;color:#374151;font-weight:600">지원 '+apps.length+'건</span>'+(pass>0?'<span style="margin-left:6px;font-size:10px;background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #A7F3D0">합격 '+pass+'</span>':'')+(ongoing>0?'<span style="margin-left:4px;font-size:10px;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #BFDBFE">진행 '+ongoing+'</span>':'')+(s.counselingMemo?'<span style="margin-left:4px;font-size:9px;background:#FFFBEB;color:#92400E;padding:1px 6px;border-radius:99px;font-weight:700;border:1px solid #FEF3C7">📝메모</span>':'')+'</td><td style="padding:10px 14px;display:flex;gap:4px">'+btn('🗺️ 여정','showStudentJourney('+s.id+')','info',true)+' '+btn('수정','openEditStudentModal('+s.id+')','outline',true)+' '+btn('삭제','deleteStudent('+s.id+')','danger',true)+'</td></tr>';
   }).join('');
   var hasFilter=studentFilter.kw||studentFilter.grade!=='전체';
   return'<div id="_view_scroll" style="padding:20px 24px 24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:12px"><div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0"><div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">학생 DB</h2><p style="margin:3px 0 0;font-size:12px;color:#94A3B8">총 '+filtered.length+'명 / 전체 '+STUDENTS.length+'명</p></div><div style="display:flex;gap:8px;align-items:center">'+btn('📥 CSV 내보내기','exportStudents()','success')+' '+btn('+ 학생 추가','openAddStudentModal()','primary')+'</div></div><div class="cat-tab-wrap" style="flex-shrink:0">'+tabsHtml+'</div><div style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid #E5E7EB;display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0"><input id="studentSearchInput" value="'+esc(studentFilter.kw)+'" oncompositionstart="onStuCompositionStart()" oncompositionend="onStuCompositionEnd(this)" oninput="onStuInput(this)" placeholder="🔍 이름 · 연락처 · 이메일 통합 검색..." style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;width:260px;outline:none;font-family:inherit" autocomplete="off"><select id="gradeFilter" onchange="onStudentGradeChange(this.value)" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit">'+['전체'].concat(GRADES).map(function(g){return'<option value="'+g+'" '+(g===studentFilter.grade?'selected':'')+'>'+(g==='전체'?'전체 급수':g)+'</option>';}).join('')+'</select>'+(hasFilter?'<button onclick="studentFilter={kw:\'\',grade:\'전체\',statusTab:studentFilter.statusTab};renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:7px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">✕ 필터 초기화</button>':'')+'</div><div id="_tbl_scroll" style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">'+['No.','이름 / 등급','상태','나이','연락처','이메일','지원현황','관리'].map(function(h){return'<th style="padding:10px 14px;text-align:left;font-weight:700;color:#374151;font-size:11px;letter-spacing:.04em;background:#F8FAFC">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
@@ -2790,6 +2790,133 @@ function deleteStudent(id){customConfirm('학생을 삭제하면 관련 지원�
 /* ─ 이력 팝업 ─ */
 var _historyExpandedJobId=null;
 function buildJobInlineDetail(jobId){var job=JOBS.find(function(j){return j.id===jobId;});if(!job)return'';var items=[];if(job.type)items.push('<span style="color:#6B7280">채용형태</span> <strong>'+esc(job.type)+'</strong>');if(job.docDate)items.push('<span style="color:#6B7280">서류접수</span> <strong>'+fmt(job.docDate)+'</strong>');if(job.interviewDate)items.push('<span style="color:#6B7280">면접일</span> <strong style="color:#7C3AED">'+fmt(job.interviewDate)+'</strong>');if(job.finalDate)items.push('<span style="color:#6B7280">최종합격발표</span> <strong style="color:#059669">'+fmt(job.finalDate)+'</strong>');if(job.startDate)items.push('<span style="color:#6B7280">근무시작</span> <strong>'+fmt(job.startDate)+'</strong>');var extraHtml='';if(job.jobUrl)extraHtml+='<div style="flex:1;min-width:100%"><span style="color:#6B7280">공고URL</span> <a href="'+esc(job.jobUrl)+'" target="_blank" style="color:#2563EB;font-size:10px;word-break:break-all">'+esc(job.jobUrl.length>40?job.jobUrl.slice(0,40)+'…':job.jobUrl)+'</a></div>';return'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:10px 14px;margin-top:6px;font-size:11px"><div style="display:flex;flex-wrap:wrap;gap:10px 20px">'+items.map(function(i){return'<div>'+i+'</div>';}).join('')+extraHtml+'</div></div>';}
+function showStudentJourney(studentId){
+  var s=STUDENTS.find(function(st){return st.id===studentId;});
+  if(!s)return;
+
+  var allApps=getApps(studentId);
+  /* 각 공고별로 그룹화해서 가장 최근 상태만 */
+  var jobMap={};
+  allApps.forEach(function(ap){
+    if(!jobMap[ap.jobId]||ap.id>jobMap[ap.jobId].id)jobMap[ap.jobId]=ap;
+  });
+  var entries=Object.values(jobMap).sort(function(a,b){
+    return (b.docDate||'').localeCompare(a.docDate||'');
+  });
+
+  var totalPass=entries.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length;
+  var totalIv=entries.filter(function(a){return ['면접대기','최종합격','취업성공','불합격'].indexOf(a.status)>=0;}).length;
+  var totalOngoing=entries.filter(function(a){return ['최종합격','취업성공','불합격'].indexOf(a.status)<0;}).length;
+
+  /* 스테이지 정의 */
+  var STAGES=[
+    {key:'서류접수',label:'서류\n접수',c:'#3B82F6',bg:'#EFF6FF'},
+    {key:'서류합격',label:'서류\n합격',c:'#7C3AED',bg:'#F5F3FF'},
+    {key:'면접대기',label:'면접',c:'#F59E0B',bg:'#FFFBEB'},
+    {key:'최종합격',label:'최종\n합격',c:'#059669',bg:'#F0FDF4'},
+  ];
+  var STAGE_RANK={'서류접수':0,'서류합격':1,'면접대기':2,'최종합격':3,'취업성공':3,'불합격':99};
+
+  function stageRank(status){return STAGE_RANK[status]!==undefined?STAGE_RANK[status]:-1;}
+
+  function buildStages(ap){
+    var cur=stageRank(ap.status);
+    var isFail=ap.status==='불합격';
+    var dots=STAGES.map(function(st,idx){
+      var done=cur>=idx;
+      var isCur=cur===idx;
+      var c=done?st.c:'#D1D5DB';
+      var bg=done?st.bg:'#F9FAFB';
+      var icon=isFail&&isCur?'✕':(done?'✓':'');
+      return'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">'
+        +'<div style="width:28px;height:28px;border-radius:50%;background:'+(done?c:'#E5E7EB')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;border:2px solid '+(done?c:'#D1D5DB')+(isCur?';box-shadow:0 0 0 3px '+c+'40':'')+'">'+icon+'</div>'
+        +'<div style="font-size:9px;font-weight:700;color:'+(done?c:'#9CA3AF')+';text-align:center;line-height:1.3;white-space:pre-line">'+st.label+'</div>'
+      +'</div>'
+      +(idx<STAGES.length-1
+        ?'<div style="flex:1;height:2px;background:'+(cur>idx?c:'#E5E7EB')+';margin-top:-14px;transition:background .3s"></div>'
+        :'');
+    }).join('');
+    return'<div style="display:flex;align-items:flex-start;gap:0;margin:8px 0 4px;">'+dots+'</div>';
+  }
+
+  /* 공고별 카드 */
+  var cards=entries.length===0
+    ?'<div style="text-align:center;padding:40px 0;color:#CBD5E1"><div style="font-size:40px;margin-bottom:10px">📭</div><div style="font-size:14px;font-weight:600">지원 이력이 없습니다</div></div>'
+    :entries.map(function(ap,idx){
+      var isFinal=ap.status==='최종합격'||ap.status==='취업성공';
+      var isFail=ap.status==='불합격';
+      var borderC=isFinal?'#059669':isFail?'#EF4444':'#E5E7EB';
+      var topBg=isFinal?'linear-gradient(135deg,#064E3B,#059669)':isFail?'linear-gradient(135deg,#7F1D1D,#DC2626)':'#F8FAFC';
+      var topTxt=isFinal?'#fff':isFail?'#fff':'#374151';
+      var j=JOBS.find(function(jb){return jb.id===ap.jobId;});
+      return'<div style="border:1.5px solid '+borderC+';border-radius:14px;overflow:hidden;margin-bottom:12px;box-shadow:'+(isFinal?'0 4px 16px rgba(5,150,105,.2)':isFail?'0 2px 8px rgba(239,68,68,.1)':'0 1px 4px rgba(0,0,0,.06)')+';">'
+        /* 공고명 헤더 */
+        +'<div style="padding:11px 14px;background:'+topBg+';display:flex;align-items:center;justify-content:space-between;gap:8px">'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:13px;font-weight:800;color:'+topTxt+';line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(ap.jobName)+'</div>'
+            +'<div style="display:flex;align-items:center;gap:6px;margin-top:3px">'+badge(ap.category)
+              +(j&&j.finalDate?'<span style="font-size:10px;color:'+(isFinal?'rgba(255,255,255,.7)':isFail?'rgba(255,255,255,.7)':'#94A3B8')+'">발표 '+fmt(j.finalDate)+'</span>':'')
+            +'</div>'
+          +'</div>'
+          +(isFinal?'<span style="font-size:20px">🏆</span>':isFail?'<span style="font-size:20px">😔</span>':ap.status==='면접대기'?'<span style="font-size:20px">🎤</span>':'<span style="font-size:20px">📋</span>')
+        +'</div>'
+        /* 스테이지 진행 */
+        +'<div style="padding:10px 14px 4px">'
+          +buildStages(ap)
+          +(ap.memo?'<div style="margin-top:6px;padding:6px 10px;background:#F8FAFC;border-radius:7px;border-left:3px solid #93C5FD;font-size:11px;color:#374151">'+esc(ap.memo)+'</div>':'')
+          +(ap.interviewFeedback?'<div style="margin-top:5px;font-size:11px;color:#6B7280;padding-left:4px">💬 '+esc(ap.interviewFeedback)+'</div>':'')
+        +'</div>'
+        /* 날짜 정보 */
+        +(j?'<div style="padding:4px 14px 10px;display:flex;gap:12px;flex-wrap:wrap">'
+          +(j.docDate?'<span style="font-size:10px;color:#3B82F6">📥 서류 '+fmt(j.docDate)+'</span>':'')
+          +(j.interviewDate?'<span style="font-size:10px;color:#F59E0B">🎤 면접 '+fmt(j.interviewDate)+'</span>':'')
+          +(j.finalDate?'<span style="font-size:10px;color:#059669">🏁 발표 '+fmt(j.finalDate)+'</span>':'')
+        +'</div>':'')
+      +'</div>';
+    }).join('');
+
+  /* 요약 섹션 */
+  var stObj=getStudentStatus(studentId);
+  var summary=''
+    +'<div style="background:linear-gradient(135deg,#0F172A,#1E3A5F);border-radius:14px;padding:18px 20px;margin-bottom:16px;position:relative;overflow:hidden">'
+      +'<div style="position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:64px;opacity:.07;pointer-events:none">🌱</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#7DD3FC;letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px">JOURNEY OVERVIEW</div>'
+      +'<div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:12px">'+esc(s.name)+'님의 취업 여정</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+        +[['총 지원',entries.length,'건','#60A5FA'],['면접 진행',totalIv,'건','#FBBF24'],['최종 합격',totalPass,'건','#34D399'],['진행 중',totalOngoing,'건','#A78BFA']].map(function(x){
+          return'<div style="background:rgba(255,255,255,.08);border-radius:9px;padding:8px 12px;text-align:center;min-width:70px">'
+            +'<div style="font-size:22px;font-weight:900;color:'+x[3]+';line-height:1">'+x[1]+'<span style="font-size:11px;margin-left:2px">'+x[2]+'</span></div>'
+            +'<div style="font-size:9.5px;color:#94A3B8;margin-top:2px">'+x[0]+'</div>'
+          +'</div>';
+        }).join('')
+      +'</div>'
+    +'</div>';
+
+  /* 진행률 바 */
+  var passRate=entries.length>0?Math.round(totalPass/entries.length*100):0;
+  var progressBar=''
+    +'<div style="margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+        +'<span style="font-size:11px;font-weight:700;color:#374151">취업 성공률</span>'
+        +'<span style="font-size:13px;font-weight:900;color:#059669">'+passRate+'%</span>'
+      +'</div>'
+      +'<div style="height:8px;background:#F1F5F9;border-radius:99px;overflow:hidden">'
+        +'<div style="height:100%;width:'+passRate+'%;background:linear-gradient(90deg,#34D399,#059669);border-radius:99px;transition:width .5s"></div>'
+      +'</div>'
+      +'<div style="margin-top:5px;font-size:10px;color:#94A3B8">'+entries.length+'건 지원 중 '+totalPass+'건 합격</div>'
+    +'</div>';
+
+  showModal('🌱 '+s.name+' · 취업 여정 타임라인',
+    summary+progressBar
+    +'<div style="font-size:10.5px;font-weight:800;color:#6B7280;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">📋 공고별 진행 현황 · '+entries.length+'건</div>'
+    +cards
+    +'<div style="display:flex;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid #F3F4F6;gap:8px">'
+      +btn('📋 이력 상세보기','closeModal();openHistoryModal('+studentId+')','outline')
+      +' '+btn('✏ 학생 수정','closeModal();openEditStudentModal('+studentId+')','outline')
+    +'</div>',
+  '680px');
+}
+
 function openHistoryModal(studentId){var s=STUDENTS.find(function(st){return st.id===studentId;});if(!s)return;_historyExpandedJobId=null;_renderHistoryModal(studentId,s);}
 function _renderHistoryModal(studentId,s){var apps=getApps(studentId),sorted=apps.slice().sort(function(a,b){return (b.docDate||'').localeCompare(a.docDate||'');});var pass=apps.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length;var ongoing=apps.filter(function(a){return['최종합격','취업성공','불합격'].indexOf(a.status)<0;}).length;var tlRows=sorted.length===0?'<div style="text-align:center;padding:30px;color:#CBD5E1;font-size:13px">지원 이력 없음</div>':sorted.map(function(ap,i){var sc=STATUS_COLORS[ap.status]||'#6B7280',isLast=i===sorted.length-1,isExpanded=_historyExpandedJobId===ap.jobId;return'<div style="position:relative;padding-left:28px;padding-bottom:'+(isLast?'0':'16px')+'">'+(isLast?'':'<div style="position:absolute;left:7px;top:18px;bottom:0;width:2px;background:#E5E7EB"></div>')+'<div style="position:absolute;left:0;top:4px;width:16px;height:16px;border-radius:50%;background:'+sc+';border:3px solid #fff;box-shadow:0 0 0 2px '+sc+'44"></div><div style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:10px 14px"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:5px">'+(ap.docDate?'<span style="font-size:10px;color:#94A3B8;font-weight:600">'+fmt(ap.docDate)+'</span>':'')+badge(ap.category)+'<span style="background:'+sc+'22;color:'+sc+';padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid '+sc+'44">'+esc(ap.status)+'</span>'+(ap.grade?'<span style="font-size:10px;color:#94A3B8">'+esc(ap.grade)+'</span>':'')+((ap.status==='최종합격'||ap.status==='취업성공')?'<span style="font-size:11px">🎉</span>':'')+'</div><div style="display:flex;align-items:center;gap:6px"><button onclick="_historyExpandedJobId='+(isExpanded?'null':ap.jobId)+';_reRenderHistory('+studentId+')" style="border:none;background:none;cursor:pointer;color:#2563EB;font-weight:700;font-size:13px;text-decoration:underline;padding:0;font-family:inherit;text-align:left">'+esc(ap.jobName)+'</button><span style="font-size:10px;color:#94A3B8">'+(isExpanded?'▲ 닫기':'▼ 공고 상세')+'</span></div>'+(isExpanded?buildJobInlineDetail(ap.jobId):'')+( ap.memo?'<p style="margin:6px 0 0;font-size:11px;color:#6B7280">'+esc(ap.memo)+'</p>':'')+( ap.interviewDocSent?'<p style="margin:4px 0 0;font-size:10px;color:#94A3B8">자료발송: '+fmt(ap.interviewDocSent)+'</p>':'')+( ap.interviewFeedback?'<p style="margin:3px 0 0;font-size:11px;color:#475569">'+esc(ap.interviewFeedback)+'</p>':'')+'</div></div>';}).join('');var memoSection=s.counselingMemo?'<div style="background:#FFFBEB;border:1px solid #FEF3C7;border-radius:8px;padding:12px 14px;margin-bottom:14px"><p style="margin:0 0 6px;font-size:10px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.06em">📝 상담 메모</p><p style="margin:0;font-size:13px;color:#374151;line-height:1.7;white-space:pre-wrap">'+esc(s.counselingMemo)+'</p></div>':'';var resBadge=getRestrictionBadge(s),stObj=getStudentStatus(s.id);showModal(s.name+' — 지원이력 & 타임라인',memoSection+'<div style="display:flex;gap:10px;margin-bottom:16px;padding:10px 14px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;flex-wrap:wrap;align-items:center"><span style="background:'+stObj.bg+';color:'+stObj.color+';border:1px solid '+stObj.border+';padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700">'+stObj.emoji+' '+stObj.label+'</span>'+(resBadge?'<span style="color:#D1D5DB">|</span>'+resBadge:'')+'<span style="color:#D1D5DB">|</span><span style="font-size:13px;color:#374151"><strong>'+apps.length+'</strong>건 지원</span><span style="color:#D1D5DB">|</span><span style="font-size:13px;color:#059669"><strong>'+pass+'</strong>건 합격</span><span style="color:#D1D5DB">|</span><span style="font-size:13px;color:#2563EB"><strong>'+ongoing+'</strong>건 진행 중</span></div><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.06em">📅 지원 타임라인 · 기관명 클릭 시 공고 상세 토글</p><div style="padding-left:4px">'+tlRows+'</div><div style="display:flex;justify-content:space-between;margin-top:16px;padding-top:12px;border-top:1px solid #F3F4F6;gap:8px;flex-wrap:wrap">'+btn('📥 CSV 내보내기','exportHistory('+studentId+')','success')+' '+btn('✏ 학생 수정','closeModal();openEditStudentModal('+studentId+')','outline')+'</div>'+getTrHistoryHtml(s.phone||''),'660px');}
 window._reRenderHistory=function(studentId){var s=STUDENTS.find(function(st){return st.id===studentId;});if(!s)return;_renderHistoryModal(studentId,s);};
