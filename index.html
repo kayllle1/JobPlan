@@ -1564,30 +1564,44 @@ function deleteEmployer(empId){
 }
 function renderEmployerDB(){
   var list=getFilteredEmployers();
+  var allIds=list.map(function(e){return e.id;});
+  var allChecked=allIds.length>0&&allIds.every(function(id){return _empSelected.has(id);});
+
   var catTabs=['전체'].concat(CATS.filter(function(c){return c!=='전체';})).map(function(c){
     var cnt=c==='전체'?EMPLOYERS.length:EMPLOYERS.filter(function(e){return e.category===c;}).length;
     var on=c===_empCatF;
     return'<button onclick="_empCatF=\''+c+'\';renderView()" style="white-space:nowrap;padding:5px 13px;border-radius:99px;border:1.5px solid '+(on?'#7C3AED':'#E2E8F0')+';background:'+(on?'#7C3AED':'#fff')+';color:'+(on?'#fff':'#374151')+';font-size:12px;font-weight:'+(on?700:500)+';cursor:pointer;font-family:inherit;flex-shrink:0">'+c+(cnt>0?' <span style="font-size:10px;opacity:.75">'+cnt+'</span>':'')+'</button>';
   }).join('');
+
   var locOpts='<option value="">📍 전체 지역</option>'+LOCATIONS.map(function(l){return'<option value="'+l+'"'+(_empLocF===l?' selected':'')+'>'+l+'</option>';}).join('');
+
   var tableRows=list.length===0
-    ?'<tr><td colspan="9" style="padding:48px;text-align:center"><div style="display:flex;flex-direction:column;align-items:center;gap:10px"><span style="font-size:36px">🏢</span><span style="font-size:14px;color:#94A3B8;font-weight:600">'+(EMPLOYERS.length===0?'아직 등록된 취업처가 없습니다':'검색 결과가 없습니다.')+'</span>'+(isAdmin()&&EMPLOYERS.length===0?'<button onclick="openEmployerModal(null)" style="margin-top:6px;background:#7C3AED;color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 첫 취업처 등록</button>':'')+'</div></td></tr>'
+    ?'<tr><td colspan="10" style="padding:48px;text-align:center"><div style="display:flex;flex-direction:column;align-items:center;gap:10px"><span style="font-size:36px">🏢</span><span style="font-size:14px;color:#94A3B8;font-weight:600">'+(EMPLOYERS.length===0?'아직 등록된 취업처가 없습니다':'검색 결과가 없습니다.')+'</span>'+(isAdmin()&&EMPLOYERS.length===0?'<button onclick="openEmployerModal(null)" style="margin-top:6px;background:#7C3AED;color:#fff;border:none;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 첫 취업처 등록</button>':'')+'</div></td></tr>'
     :list.map(function(e,idx){
       var daysAgo=e.last_confirmed?Math.floor((new Date()-new Date(e.last_confirmed))/86400000):-1;
       var confBadge=daysAgo<0?'<span style="color:#CBD5E1;font-size:11px">-</span>'
         :daysAgo===0?'<span style="color:#059669;font-weight:700;font-size:11px">오늘</span>'
         :daysAgo<=30?'<span style="color:#D97706;font-size:11px;font-weight:600">'+daysAgo+'일 전</span>'
         :'<span style="color:#DC2626;font-size:11px">'+daysAgo+'일 전</span>';
-      return'<tr style="border-bottom:1px solid #F1F5F9;cursor:default" onmouseover="this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\'\'">'
-        +'<td style="padding:11px 12px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700">'+(idx+1)+'</td>'
-        +'<td style="padding:11px 12px;white-space:nowrap">'+badge(e.category||'기타')+'</td>'
-        +'<td style="padding:11px 12px;font-size:12px;color:#64748B;white-space:nowrap">'+(e.location||'-')+'</td>'
-        +'<td style="padding:11px 14px;min-width:160px"><div style="font-size:13px;font-weight:700;color:#0F172A">'+esc(e.name)+'</div>'+(e.dept?'<div style="font-size:10.5px;color:#94A3B8;margin-top:1px">'+esc(e.dept)+'</div>':'')+'</td>'
-        +'<td style="padding:11px 12px;font-size:12px;color:#374151;white-space:nowrap">'+(e.contact_person?esc(e.contact_person):'<span style="color:#CBD5E1">-</span>')+'</td>'
-        +'<td style="padding:11px 12px;font-size:12px;white-space:nowrap">'+(e.contact_phone?'<a href="tel:'+esc(e.contact_phone)+'" style="color:#2563EB;text-decoration:none;font-weight:600">'+esc(e.contact_phone)+'</a>':'<span style="color:#CBD5E1">-</span>')+'</td>'
-        +'<td style="padding:11px 12px;font-size:11px;color:#64748B;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.contact_email?'<a href="mailto:'+esc(e.contact_email)+'" style="color:#7C3AED;text-decoration:none">'+esc(e.contact_email)+'</a>':'<span style="color:#CBD5E1">-</span>')+'</td>'
-        +'<td style="padding:11px 12px;max-width:180px"><div style="font-size:11px;color:#64748B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.stenographer_info?esc(e.stenographer_info):'<span style="color:#CBD5E1">-</span>')+'</div></td>'
-        +'<td style="padding:11px 12px;white-space:nowrap">'
+      var isSel=_empSelected.has(e.id);
+      return'<tr style="border-bottom:1px solid #F1F5F9;background:'+(isSel?'#FFF7ED':'')+'" onmouseover="if(!'+isSel+')this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\''+(isSel?'#FFF7ED':'')+'\'">'
+        /* 체크박스 */
+        +'<td style="padding:10px 8px;text-align:center;width:36px"><input type="checkbox" '+(isSel?'checked':'')+' onchange="toggleEmpSelect('+e.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#7C3AED"></td>'
+        +'<td style="padding:10px 10px;text-align:center;color:#94A3B8;font-size:11px;font-weight:700">'+(idx+1)+'</td>'
+        +'<td style="padding:10px 10px;white-space:nowrap">'+badge(e.category||'기타')+'</td>'
+        +'<td style="padding:10px 10px;font-size:12px;color:#64748B;white-space:nowrap">'+(e.location||'-')+'</td>'
+        /* 기관명 / 부서 — 같은 줄에 배치 */
+        +'<td style="padding:10px 12px;min-width:200px">'
+          +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+            +'<span style="font-size:13px;font-weight:700;color:#0F172A">'+esc(e.name)+'</span>'
+            +(e.dept?'<span style="font-size:11px;background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:5px;font-weight:600;border:1px solid #E2E8F0;white-space:nowrap">'+esc(e.dept)+'</span>':'')
+          +'</div>'
+        +'</td>'
+        +'<td style="padding:10px 10px;font-size:12px;color:#374151;white-space:nowrap">'+(e.contact_person?esc(e.contact_person):'<span style="color:#CBD5E1">-</span>')+'</td>'
+        +'<td style="padding:10px 10px;font-size:12px;white-space:nowrap">'+(e.contact_phone?'<a href="tel:'+esc(e.contact_phone)+'" style="color:#2563EB;text-decoration:none;font-weight:600">'+esc(e.contact_phone)+'</a>':'<span style="color:#CBD5E1">-</span>')+'</td>'
+        +'<td style="padding:10px 10px;font-size:11px;color:#64748B;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.contact_email?'<a href="mailto:'+esc(e.contact_email)+'" style="color:#7C3AED;text-decoration:none">'+esc(e.contact_email)+'</a>':'<span style="color:#CBD5E1">-</span>')+'</td>'
+        +'<td style="padding:10px 10px;max-width:160px"><span style="font-size:11px;color:#64748B;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.stenographer_info?esc(e.stenographer_info):'<span style="color:#CBD5E1">-</span>')+'</span></td>'
+        +'<td style="padding:10px 10px;white-space:nowrap">'
           +'<div style="display:flex;align-items:center;gap:8px;justify-content:space-between">'
             +'<div style="font-size:11px">'+confBadge+'</div>'
             +(isAdmin()?'<div style="display:flex;gap:4px">'+btn('수정','openEmployerModal('+e.id+')','outline',true)+' '+btn('삭제','deleteEmployer('+e.id+')','danger',true)+'</div>':'')
@@ -1600,9 +1614,12 @@ function renderEmployerDB(){
     /* 헤더 */
     +'<div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0;flex-wrap:wrap;gap:10px">'
       +'<div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">취업처 관리</h2>'
-        +'<p style="margin:3px 0 0;font-size:12px;color:#94A3B8">총 '+EMPLOYERS.length+'개 기관 등록 · 검색결과 '+list.length+'건</p>'
+        +'<p style="margin:3px 0 0;font-size:12px;color:#94A3B8">총 '+EMPLOYERS.length+'개 기관 · 검색결과 '+list.length+'건'
+          +(_empSelected.size>0?' · <span style="color:#DC2626;font-weight:700">'+_empSelected.size+'개 선택됨</span>':'')
+        +'</p>'
       +'</div>'
-      +'<div style="display:flex;gap:8px">'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+        +(_empSelected.size>0&&isAdmin()?'<button onclick="deleteSelectedEmployers()" style="background:#EF4444;color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px"><i class="ti ti-trash" style="font-size:14px" aria-hidden="true"></i>선택 삭제 <span style="background:rgba(255,255,255,.25);padding:1px 8px;border-radius:99px;font-size:11px">'+_empSelected.size+'</span></button>':'')
         +btn('📤 CSV 가져오기','openEmployerImportModal()','outline')
         +' '+btn('📥 CSV 내보내기','exportEmployers()','success')
         +(isAdmin()?' '+btn('+ 취업처 등록','openEmployerModal(null)','primary'):'')
@@ -1620,12 +1637,26 @@ function renderEmployerDB(){
     +'<div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">'
       +'<table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1100px">'
         +'<thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">'
-          +['No.','카테고리','지역','기관명 / 부서','담당자','연락처','이메일','대표속기사','최종확인일 / 관리'].map(function(h){return'<th style="padding:10px 12px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">'+h+'</th>';}).join('')
+          +'<th style="padding:10px 8px;text-align:center;background:#F8FAFC;width:36px">'
+            +(list.length>0?'<input type="checkbox" '+(allChecked?'checked':'')+' onchange="toggleEmpSelectAll(['+allIds.join(',')+'])" style="width:15px;height:15px;cursor:pointer;accent-color:#7C3AED" title="전체 선택">':'')
+          +'</th>'
+          +['No.','카테고리','지역','기관명 / 부서','담당자','연락처','이메일','대표속기사','최종확인일 / 관리'].map(function(h){return'<th style="padding:10px 10px;text-align:left;font-weight:700;color:#374151;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">'+h+'</th>';}).join('')
         +'</tr></thead>'
         +'<tbody>'+tableRows+'</tbody>'
       +'</table>'
     +'</div>'
   +'</div>';
+}
+function toggleEmpSelect(id){if(_empSelected.has(id))_empSelected.delete(id);else _empSelected.add(id);renderView();}
+function toggleEmpSelectAll(ids){var allOn=ids.every(function(id){return _empSelected.has(id);});if(allOn){ids.forEach(function(id){_empSelected.delete(id);});}else{ids.forEach(function(id){_empSelected.add(id);});}renderView();}
+function deleteSelectedEmployers(){
+  if(!isAdmin()||!_empSelected.size)return;
+  customConfirm('선택한 '+_empSelected.size+'개 취업처를 삭제하시겠습니까?',async function(){
+    var ids=Array.from(_empSelected);
+    var r=await SB.from('employers').delete().in('id',ids);
+    if(r.error){customAlert('삭제 오류: '+r.error.message);return;}
+    _empSelected.clear();await loadEmployers();renderView();
+  });
 }
 function exportEmployers(){
   if(!EMPLOYERS.length){customAlert('내보낼 데이터가 없습니다.');return;}
@@ -3502,6 +3533,7 @@ var EMPLOYERS=[];
 var _empKw='';
 var _empCatF='전체';
 var _empLocF='';
+var _empSelected=new Set();
 function renderInsights(){
   var fFrom=_insightFrom, fTo=_insightTo;
   var hasFilter=!!(fFrom||fTo);
