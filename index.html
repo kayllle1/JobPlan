@@ -2505,7 +2505,13 @@ function renderJobRow(job,rowNum){
   var isOpen=expandedJobs.has(job.id),isDetail=detailJobs.has(job.id);
   var apRows='';
   if(isOpen){
-    var apBody=job.applicants.length===0?'<tr><td colspan="9" style="padding:14px 20px;color:#CBD5E1;font-size:12px;font-style:italic">등록된 지원자가 없습니다.</td></tr>':job.applicants.map(function(ap){
+    var _apStatusOrder={'최종합격':0,'취업성공':1,'면접대기':2,'서류합격':3,'서류접수':4,'불합격':5};
+    var _sortedAps=job.applicants.slice().sort(function(a,b){
+      var oa=_apStatusOrder[a.status]!==undefined?_apStatusOrder[a.status]:3;
+      var ob=_apStatusOrder[b.status]!==undefined?_apStatusOrder[b.status]:3;
+      return oa-ob;
+    });
+    var apBody=job.applicants.length===0?'<tr><td colspan="9" style="padding:14px 20px;color:#CBD5E1;font-size:12px;font-style:italic">등록된 지원자가 없습니다.</td></tr>':_sortedAps.map(function(ap){
       var st=STUDENTS.find(function(s){return s.id===ap.studentId;});
       var otherJ=JOBS.filter(function(j){return j.id!==job.id&&j.applicants.some(function(a){return a.studentId===ap.studentId;});});
       var isDup=otherJ.length>0,sc=STATUS_COLORS[ap.status]||'#6B7280';
