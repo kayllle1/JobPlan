@@ -372,8 +372,8 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
   </div>
 </div>
 
-<div id="app" style="display:none;height:100vh;overflow:hidden;flex:1">
 <div id="_print_target"></div>
+<div id="app" style="display:none;height:100vh;overflow:hidden;flex-direction:row"></div>
 <script>
 'use strict';
 /* ══════════════════════════════════════════════════════════════
@@ -423,7 +423,7 @@ function doLogin(type){
       else{localStorage.removeItem('sorizava_pw_'+type);}
     }catch(e){}
     document.getElementById('_login_screen').style.display='none';
-    document.getElementById('app').style.display='flex';
+    var _appEl=document.getElementById('app');_appEl.style.display='flex';_appEl.style.flexDirection='row';
     if(type==='staff')currentView='dashboard';
     setView(currentView);
     showLoading();
@@ -434,14 +434,7 @@ function doLogin(type){
     pw.focus();pw.select();
   }
 }
-function doLogout(){
-  _currentUser=null;
-  document.getElementById('app').style.display='none';
-  document.getElementById('_login_screen').style.display='flex';
-  document.getElementById('_login_pw').value='';
-  document.getElementById('_login_err').style.display='none';
-  document.getElementById('_login_role_master').click();
-}
+
 
 function getKSTDateString(){const n=new Date();return new Date(n.getTime()+9*3600000).toISOString().slice(0,10);}
 const TODAY=getKSTDateString(),MONTH=TODAY.slice(0,7);
@@ -4000,7 +3993,7 @@ async function init(){
   if(saved&&(saved==='master'||saved==='staff')){
     _currentUser={type:saved};
     document.getElementById('_login_screen').style.display='none';
-    document.getElementById('app').style.display='flex';
+    var _appEl=document.getElementById('app');_appEl.style.display='flex';_appEl.style.flexDirection='row';
     if(saved==='staff'&&STAFF_VIEWS.indexOf(currentView)<0)currentView='dashboard';
     setView(currentView);
     showLoading();
