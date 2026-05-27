@@ -1528,7 +1528,7 @@ function openEmployerModal(empId){
       +fInp('채용 담당자','ef_person','text',v.contact_person||'')
       +fInp('담당 연락처','ef_phone','tel',v.contact_phone||'')
       +fInp('이메일 주소','ef_email','email',v.contact_email||'')
-      +fInp('최종확인일','ef_confirmed','date',v.last_confirmed||'')
+      +fInp('등록일','ef_confirmed','date',v.last_confirmed||TODAY)
     +'</div>'
     +'<div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">대표속기사 정보</label><textarea id="ef_steno" rows="2" placeholder="성명, 연락처, 입사일 등" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">'+esc(v.stenographer_info||'')+'</textarea></div>'
     +'<div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">특이사항 메모</label><textarea id="ef_memo" rows="3" placeholder="특이사항, 채용 성향, 주의사항 등" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">'+esc(v.memo||'')+'</textarea></div>'
@@ -1588,7 +1588,7 @@ function renderEmployerDB(){
       var isDetail=_empDetailId===e.id;
       var isSel=_empSelected.has(e.id);
       var hasMemo=!!(e.memo&&e.memo.trim());
-      var daysAgo=e.last_confirmed?Math.floor((new Date()-new Date(e.last_confirmed))/86400000):-1;
+      var regDate=(e.created_at||e.last_confirmed||'').slice(0,10);var daysAgo=regDate?Math.floor((new Date()-new Date(regDate))/86400000):-1;
       var confText=daysAgo<0?'—'
         :daysAgo===0?'오늘'
         :daysAgo<=30?daysAgo+'일 전'
@@ -1619,7 +1619,7 @@ function renderEmployerDB(){
   var panelHtml='';
   if(detailEmp){
     var d=detailEmp;
-    var daysAgo2=d.last_confirmed?Math.floor((new Date()-new Date(d.last_confirmed))/86400000):-1;
+    var regDate2=(d.created_at||d.last_confirmed||'').slice(0,10);var daysAgo2=regDate2?Math.floor((new Date()-new Date(regDate2))/86400000):-1;
     panelHtml=''
       /* 다크 헤더 */
       +'<div style="background:linear-gradient(135deg,#0F172A,#1E293B);padding:16px 18px;flex-shrink:0">'
@@ -1663,8 +1663,8 @@ function renderEmployerDB(){
         +'</div>')
         /* 최종확인일 */
         +(d.last_confirmed?'<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F8FAFC;border-radius:8px;border:1px solid #E5E7EB">'
-          +'<span style="font-size:11px;color:#94A3B8">최종확인일</span>'
-          +'<span style="font-size:13px;font-weight:700;color:#374151">'+fmt(d.last_confirmed)+'</span>'
+          +'<span style="font-size:11px;color:#94A3B8">등록일</span>'
+          +'<span style="font-size:13px;font-weight:700;color:#374151">'+fmt((d.created_at||d.last_confirmed||'').slice(0,10))+'</span>'
           +(daysAgo2>=0?'<span style="font-size:11px;color:'+(daysAgo2===0?'#059669':daysAgo2<=30?'#D97706':'#DC2626')+'">('+(daysAgo2===0?'오늘':daysAgo2+'일 전')+')</span>':'')
         +'</div>':'')
       +'</div>';
@@ -1737,11 +1737,11 @@ function deleteSelectedEmployers(){
 }
 function exportEmployers(){if(isStaff())return;
   if(!EMPLOYERS.length){customAlert('내보낼 데이터가 없습니다.');return;}
-  csvExport(EMPLOYERS.map(function(e,i){return{'No':i+1,'카테고리':e.category||'','지역':e.location||'','기관명':e.name||'','채용담당부서':e.dept||'','채용담당자':e.contact_person||'','연락처':e.contact_phone||'','이메일':e.contact_email||'','대표속기사':e.stenographer_info||'','특이사항':e.memo||'','최종확인일':e.last_confirmed||''};}), '취업처목록_'+TODAY);
+  csvExport(EMPLOYERS.map(function(e,i){return{'No':i+1,'카테고리':e.category||'','지역':e.location||'','기관명':e.name||'','채용담당부서':e.dept||'','채용담당자':e.contact_person||'','연락처':e.contact_phone||'','이메일':e.contact_email||'','대표속기사':e.stenographer_info||'','특이사항':e.memo||'','등록일':e.last_confirmed||''};}), '취업처목록_'+TODAY);
 }
 function openEmployerImportModal(){
   if(!isAdmin()){customAlert('⛔ 마스터 계정만 사용 가능합니다.');return;}
-  var templateCols=['카테고리','지역','기관명','채용담당부서','채용담당자','연락처','이메일','대표속기사','특이사항','최종확인일'];
+  var templateCols=['카테고리','지역','기관명','채용담당부서','채용담당자','연락처','이메일','대표속기사','특이사항','등록일'];
   var body=''
     +'<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:12px 16px;margin-bottom:16px">'
       +'<div style="font-size:12px;font-weight:700;color:#1D4ED8;margin-bottom:6px">📋 CSV 형식 안내</div>'
@@ -1783,7 +1783,7 @@ function previewEmpCsv(){
     var headers=lines[0].split(',').map(function(h){return h.trim().replace(/^"|"$/g,'');});
     var nameIdx=headers.indexOf('기관명');
     if(nameIdx<0){customAlert('"기관명" 컬럼이 없습니다. 템플릿을 사용해주세요.');return;}
-    var COL_MAP={'카테고리':'category','지역':'location','기관명':'name','채용담당부서':'dept','채용담당자':'contact_person','연락처':'contact_phone','이메일':'contact_email','대표속기사':'stenographer_info','특이사항':'memo','최종확인일':'last_confirmed'};
+    var COL_MAP={'카테고리':'category','지역':'location','기관명':'name','채용담당부서':'dept','채용담당자':'contact_person','연락처':'contact_phone','이메일':'contact_email','대표속기사':'stenographer_info','특이사항':'memo','등록일':'last_confirmed'};
     _empCsvRows=[];
     for(var i=1;i<lines.length;i++){
       var cols=lines[i].split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});
