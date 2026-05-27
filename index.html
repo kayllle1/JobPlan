@@ -1018,7 +1018,7 @@ function printSelectedVaultPDF(){
 }
 
 /* ─ 월간 보고서 ─ */
-function showMonthlyReport(){
+function showMonthlyReport(){if(isStaff())return;
   var m=selectedMonth||MONTH;var parts=m.split('-');var yy=parts[0],mm=parts[1];
   var label=yy+'년 '+parseInt(mm)+'월';
   var newJobs=JOBS.filter(function(j){return (j.createdAt||'').slice(0,7)===m;});
@@ -1250,7 +1250,8 @@ async function _bulkUpsertParticipants(courseId,rows){
 }
 
 /* ─ 기수 삭제 ─ */
-function deleteTrCourse(id){
+function deleteTrCourse(){if(isStaff())return;return deleteTrCourse_orig.apply(this,arguments);}
+function deleteTrCourse_orig(id){
   var c=TR_COURSES.find(function(x){return x.id===id;});if(!c)return;
   var cnt=TR_PARTICIPANTS.filter(function(p){return p.course_id===id;}).length;
   customConfirm('"'+c.course_name+'"\n\n기수를 삭제하시겠습니까?'+(cnt>0?'\n\n⚠️ 소속 수강생 '+cnt+'명 데이터도 삭제됩니다.':''),async function(){
@@ -1461,7 +1462,8 @@ function getTrStats(){
 }
 
 /* ─ 기수 전체 수료/진행중 일괄 처리 ─ */
-async function bulkCourseStatus(courseId,newStatus){
+async function bulkCourseStatus(){if(isStaff())return;return bulkCourseStatus_orig.apply(this,arguments);}
+function bulkCourseStatus_orig(courseId,newStatus){
   var allM=TR_PARTICIPANTS.filter(function(p){return p.course_id===courseId;});
   if(!allM.length)return customAlert('해당 기수에 수강생이 없습니다.');
   var cName=(TR_COURSES.find(function(c){return c.id===courseId;})||{course_name:'해당 기수'}).course_name;
@@ -2003,8 +2005,8 @@ function renderTraining(){
     '</div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
     (trSelectedIds.size>0?'<button onclick="bulkCompleteTr()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✅ 선택 '+trSelectedIds.size+'명 수료 완료</button>':'')+
-    (trCourseId!=null?btn('+ 수강생 추가','openTrMemberModal('+trCourseId+',null)','primary'):'')+
-    btn('+ 기수 추가','openTrCourseModal()','outline')+
+    (isStaff()?'':(trCourseId!=null?btn('+ 수강생 추가','openTrMemberModal('+trCourseId+',null)','primary'):''))+
+    (isStaff()?'':btn('+ 기수 추가','openTrCourseModal()','outline'))+
     '</div></div>'+
 
     /* ② 누적 수료생 배너 (항상 표시) */
@@ -2069,12 +2071,12 @@ function renderTraining(){
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
     '<span style="font-size:11px;font-weight:700;color:#374151;white-space:nowrap">기수 선택:</span>'+
     renderTrCourseSelect()+
-    (trCourseId!=null?'<button onclick="openTrUploadModal('+trCourseId+')" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📤 CSV 업로드</button>':'')+
+    (isStaff()?'':(trCourseId!=null?'<button onclick="openTrUploadModal('+trCourseId+')" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📤 CSV 업로드</button>':''))+
     (trCourseId!=null?'<button onclick="downloadTrTemplate()" style="background:#F1F5F9;color:#374151;border:1px solid #E2E8F0;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📥 양식</button>':'')+
     /* 기수 전체 수료/진행중 일괄 전환 */
-    (trCourseId!=null?'<button onclick="bulkCourseStatus('+trCourseId+',\'수료\')" style="background:#059669;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✅ 기수 전체 수료</button>':'')+
-    (trCourseId!=null?'<button onclick="bulkCourseStatus('+trCourseId+',\'진행 중\')" style="background:#2563EB;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔄 진행중으로 해제</button>':'')+
-    (trCourseId!=null?'<button onclick="deleteTrCourse('+trCourseId+')" style="background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🗑 기수 삭제</button>':'')+
+    (isStaff()?'':(trCourseId!=null?'<button onclick="bulkCourseStatus('+trCourseId+',\'수료\')" style="background:#059669;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✅ 기수 전체 수료</button>':''))+
+    (isStaff()?'':(trCourseId!=null?'<button onclick="bulkCourseStatus('+trCourseId+',\'진행 중\')" style="background:#2563EB;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔄 진행중으로 해제</button>':''))+
+    (isStaff()?'':(trCourseId!=null?'<button onclick="deleteTrCourse('+trCourseId+')" style="background:#FEF2F2;color:#DC2626;border:1px solid #FECACA;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🗑 기수 삭제</button>':''))+
     '</div>'+
     /* 활성 필터 배지 표시 */
     (filterBadge?'<div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+filterBadge+'<span style="font-size:11px;color:#94A3B8">'+members.length+'명</span></div>':
@@ -2353,7 +2355,7 @@ function onBlKwCompositionStart(){_blComposing=true;clearTimeout(_blTimer);}
 function onBlKwCompositionEnd(el){_blComposing=false;clearTimeout(_blTimer);var v=el.value;_blTimer=setTimeout(function(){blKw=v;renderView();},0);}
 function onBlKwInput(el){if(_blComposing)return;clearTimeout(_blTimer);var v=el.value;_blTimer=setTimeout(function(){blKw=v;renderView();},200);}
 function clearBlKw(){blKw='';_blComposing=false;clearTimeout(_blTimer);renderView();}
-function exportEmpCsv(){var list=getEmpData(empCat);if(!list.length)return customAlert('내보낼 취업자 데이터가 없습니다.');csvExport(list.map(function(r,i){return{'No':i+1,'이름':r.name,'연락처':r.phone,'이메일':r.email,'기관유형':r.category,'공고명':r.jobName,'최종합격발표일':r.finalDate?fmt(r.finalDate):'-','급수':r.grade,'메모':r.memo};}),('취업자명단_'+(empCat==='전체'?'전체기관':empCat)+'_'+TODAY));}
+function exportEmpCsv(){if(isStaff())return;var list=getEmpData(empCat);if(!list.length)return customAlert('내보낼 취업자 데이터가 없습니다.');csvExport(list.map(function(r,i){return{'No':i+1,'이름':r.name,'연락처':r.phone,'이메일':r.email,'기관유형':r.category,'공고명':r.jobName,'최종합격발표일':r.finalDate?fmt(r.finalDate):'-','급수':r.grade,'메모':r.memo};}),('취업자명단_'+(empCat==='전체'?'전체기관':empCat)+'_'+TODAY));}
 function renderEmployment(){
   var allList=getEmpData('전체');
   var _rawList=getEmpData(empCat);
@@ -2627,8 +2629,8 @@ function renderDashboard(){
   +'<div style="position:relative;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">'
     +'<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><span style="width:3px;height:18px;background:linear-gradient(180deg,#3B82F6,#7C3AED);border-radius:99px;display:inline-block;flex-shrink:0"></span><p style="margin:0;font-size:10px;color:#3B82F6;font-weight:700;letter-spacing:.18em;text-transform:uppercase">SORIZAVA ARCHIVE</p></div><h2 style="margin:0 0 2px 11px;font-size:22px;font-weight:900;color:#111111;letter-spacing:-.04em">대시보드</h2><p style="margin:0 0 0 11px;font-size:11px;color:#64748B">'+TODAY+' KST · 실시간 채용 현황 분석</p></div>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
-      +'<button onclick="showMonthlyReport()" style="background:#7C3AED;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(124,58,237,.3)">📊 월별 보고서</button>'
-      +(totalEmp>0?'<button onclick="setView(\'employment\')" style="background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(5,150,105,.3)">🏆 취업현황 <span style="font-size:10px;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:99px">'+totalEmp+'명</span></button>':'')
+      +(isStaff()?'':'<button onclick="showMonthlyReport()" style="background:#7C3AED;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(124,58,237,.3)">📊 월별 보고서</button>')
+      +(isStaff()?'':(totalEmp>0?'<button onclick="setView(\'employment\')" style="background:#059669;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(5,150,105,.3)">🏆 취업현황 <span style="font-size:10px;background:rgba(255,255,255,.25);padding:1px 7px;border-radius:99px">'+totalEmp+'명</span></button>':''))
     +'</div>'
   +'</div></div>'
   /* ② KPI 카드 */
