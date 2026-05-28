@@ -295,7 +295,7 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 .dk-monthly-bar{background:#FEFEFE;border:0.5px solid #E2E8F0;border-radius:12px;padding:18px 22px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;color:#0F172A}
 .dk-recruit{padding:10px 22px 0;flex-shrink:0}
 .dk-4grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:12px 22px 22px;flex:1;min-height:0}
-.dk-grid-card{background:#FEFEFE;border-radius:12px;border:0.5px solid #E2E8F0;overflow:hidden;display:flex;flex-direction:column;height:auto;min-height:200px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04);color:#0F172A}
+.dk-grid-card{background:#FEFEFE;border-radius:12px;border:0.5px solid #E2E8F0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04);color:#0F172A}
 .dk-grid-head{padding:13px 15px 11px;flex-shrink:0;border-bottom:0.5px solid #F1F5F9;display:flex;align-items:center;gap:7px;background:#fff}
 .dk-grid-body{flex:1;overflow-y:auto;padding:10px 14px;min-height:0;display:flex;flex-direction:column;color:#0F172A}
 .dk-grid-body::-webkit-scrollbar{width:3px}
@@ -2603,182 +2603,168 @@ function renderDashboard(){
     }).join('');
 
   /* ══ return HTML ══ */
-  return'<div id="dash-root" style="display:flex;flex-direction:column;height:100%;overflow-y:auto;background:#F0F2F5">'
+
+  /* ══ NEW LAYOUT: 좌측 패널 + 우측 메인 ══ */
+
+
+
+  /* ══ RETURN HTML ══ */
+  return'<div id="dash-root" style="display:flex;flex-direction:column;height:100%;overflow:hidden;background:var(--color-background-primary)">'
 
   /* ① 헤더 */
-  +'<div style="background:#0F172A;padding:14px 22px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">'
-    +'<div style="display:flex;align-items:center;gap:12px">'
-      +'<div style="display:flex;flex-direction:column;gap:2px">'
-        +'<div style="font-size:12px;color:#64748B;font-weight:500;letter-spacing:.1em;text-transform:uppercase">Sorizava Archive</div>'
-        +'<div style="font-size:17px;font-weight:600;color:#FFFFFF;letter-spacing:-.02em">대시보드</div>'
-      +'</div>'
+  +'<div style="padding:12px 18px;border-bottom:0.5px solid #E5E7EB;flex-shrink:0;display:flex;align-items:center;justify-content:space-between">'
+    +'<div>'
+      +'<div style="font-size:16px;font-weight:500;color:#0F172A">대시보드</div>'
+      +'<div style="font-size:12px;color:#64748B;margin-top:1px">'+TODAY+'</div>'
     +'</div>'
-    +(isStaff()?'':'<div style="display:flex;gap:7px;align-items:center">'
-      +'<div style="font-size:12px;padding:4px 10px;background:#0D2137;border:0.5px solid #1E3A5F;border-radius:6px;color:#60A5FA;font-weight:500;display:flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:#4ADE80;flex-shrink:0;display:inline-block"></span>실시간</div>'
-      +'<button onclick="showMonthlyReport()" style="padding:5px 13px;background:rgba(255,255,255,.05);border:0.5px solid rgba(255,255,255,.1);border-radius:7px;font-size:12px;color:#64748B;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px" onmouseover="this.style.background=\'rgba(255,255,255,.1)\'" onmouseout="this.style.background=\'rgba(255,255,255,.05)\'"><i class="ti ti-chart-bar" style="font-size:12px" aria-hidden="true"></i>월별 보고서</button>'
-      +(totalEmp>0?'<button onclick="setView(\'employment\')" style="padding:5px 13px;background:#166534;border:0.5px solid #15803D;border-radius:7px;font-size:12px;color:#BBF7D0;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px" onmouseover="this.style.background=\'#14532D\'" onmouseout="this.style.background=\'#166534\'"><i class="ti ti-trophy" style="font-size:12px" aria-hidden="true"></i>취업현황 '+totalEmp+'명</button>':'')
+    +(isStaff()?'':'<div style="display:flex;gap:6px">'
+      +'<button onclick="showMonthlyReport()" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#F8FAFC;border:0.5px solid #E2E8F0;border-radius:8px;font-size:12px;color:#374151;cursor:pointer;font-family:inherit" onmouseover="this.style.background=\'#F1F5F9\'" onmouseout="this.style.background=\'#F8FAFC\'"><i class="ti ti-chart-bar" style="font-size:13px;color:#7C3AED"></i>월별 보고서</button>'
+      +(totalEmp>0?'<button onclick="setView(\'employment\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#F0FDF4;border:0.5px solid #BBF7D0;border-radius:8px;font-size:12px;color:#059669;font-weight:500;cursor:pointer;font-family:inherit"><i class="ti ti-trophy" style="font-size:13px"></i>취업현황 '+totalEmp+'명</button>':'')
     +'</div>')
   +'</div>'
 
-  /* ② KPI 4개 */
-  +(isStaff()?'':
-    '<div class="dk-kpi" style="padding-top:16px">'
-    +'<div class="dk-kpi-card" style="border-top:3px solid #2563EB;padding:12px 14px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-        +'<div style="width:30px;height:30px;border-radius:8px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-file-text" style="font-size:15px;color:#2563EB"></i></div>'
-        +'<span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:#EFF6FF;color:#1D4ED8">진행 '+active.length+'건</span>'
-      +'</div>'
-      +'<div class="dk-num dk-num-anim" style="font-size:28px" id="kpi0" data-target="'+JOBS.length+'" style="color:#0F172A">0</div>'
-      +'<div style="font-size:12px;color:#6B7280;font-weight:500;margin-top:4px">전체 공고</div>'
-    +'</div>'
-    +'<div class="dk-kpi-card" style="border-top:3px solid #059669;padding:12px 14px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-        +'<div style="width:30px;height:30px;border-radius:8px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-users" style="font-size:15px;color:#059669"></i></div>'
-        +'<span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:#F0FDF4;color:#047857">면접 '+ivWaitCount+'명</span>'
-      +'</div>'
-      +'<div class="dk-num dk-num-anim" style="font-size:28px" id="kpi1" data-target="'+allAps.length+'" style="color:#0F172A">0</div>'
-      +'<div style="font-size:12px;color:#6B7280;font-weight:500;margin-top:4px">전체 지원자</div>'
-    +'</div>'
-    +'<div class="dk-kpi-card" style="border-top:3px solid #D97706;padding:12px 14px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-        +'<div style="width:30px;height:30px;border-radius:8px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-trophy" style="font-size:15px;color:#D97706"></i></div>'
-        +'<span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:#FFFBEB;color:#B45309">합격률 '+(allAps.length>0?Math.round(totalEmp/allAps.length*100):0)+'%</span>'
-      +'</div>'
-      +'<div class="dk-num dk-num-anim" style="font-size:28px" id="kpi2" data-target="'+totalEmp+'" style="color:#0F172A">0</div>'
-      +'<div style="font-size:12px;color:#6B7280;font-weight:500;margin-top:4px">취업 완료</div>'
-    +'</div>'
-    +'<div class="dk-kpi-card" style="border-top:3px solid #7C3AED;padding:12px 14px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-        +'<div style="width:30px;height:30px;border-radius:8px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-sparkles" style="font-size:15px;color:#7C3AED"></i></div>'
-        +'<span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:#F5F3FF;color:#6D28D9">'+(passDiff>=0?'↑ +':'↓ ')+Math.abs(passDiff)+'명 전월</span>'
-      +'</div>'
-      +'<div class="dk-num dk-num-anim" style="font-size:28px" id="kpi3" data-target="'+thisMonthPass+'" style="color:#0F172A">0</div>'
-      +'<div style="font-size:12px;color:#6B7280;font-weight:500;margin-top:4px">이달 최종합격</div>'
-    +'</div>'
-    +'</div>'
-  )
+  /* ② 상단 행: 진행중인 공고(좌) + KPI 2×2(우) */
+  +'<div style="padding:12px 18px 10px;flex-shrink:0;display:grid;grid-template-columns:1.4fr 1fr;gap:10px">'
 
-  /* ③ Smart Alerts */
-  +(isStaff()?'':'<div style="padding:10px 22px 0;flex-shrink:0">'+alertHtml.replace(/<div style="padding:0 22px 0;flex-shrink:0">/,'').replace(/<\/div>$/,'')+'</div>')
-
-  /* ④ 기간별 현황 + 파이프라인 */
-  +'<div style="padding:12px 22px 0;display:grid;grid-template-columns:1.15fr .85fr;gap:12px;flex-shrink:0">'
-    /* 기간별 현황 */
-    +'<div style="background:#fff;border-radius:12px;border:0.5px solid #E2E8F0;padding:12px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04)">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">'
-        +'<div style="font-size:13px;font-weight:500;color:#0F172A;display:flex;align-items:center;gap:7px"><i class="ti ti-activity" style="font-size:15px;color:#2563EB" aria-hidden="true"></i>기간별 채용 현황</div>'
-        +'<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+_pBtns
-          +'<div style="display:flex;align-items:center;gap:3px;border:0.5px solid '+(_dashPeriodMode==='custom'?'#93C5FD':'#E2E8F0')+';border-radius:7px;padding:3px 8px;background:'+(_dashPeriodMode==='custom'?'#EFF6FF':'#F8FAFC')+'">'
-            +'<input id="_dp_from" type="date" value="'+_pFrom+'" onchange="setDashPeriod(\'custom\',this.value,document.getElementById(\'_dp_to\').value)" style="border:none;background:transparent;font-size:12px;color:#1F2937;font-family:inherit;outline:none;cursor:pointer;width:102px">'
-            +'<span style="font-size:12px;color:#CBD5E1">—</span>'
-            +'<input id="_dp_to" type="date" value="'+_pTo+'" onchange="setDashPeriod(\'custom\',document.getElementById(\'_dp_from\').value,this.value)" style="border:none;background:transparent;font-size:12px;color:#1F2937;font-family:inherit;outline:none;cursor:pointer;width:102px">'
-          +'</div>'
-          +'<button onclick="setDashPeriod(\''+_dashPeriodMode+'\')" style="background:#1E3A5F;color:#93C5FD;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">조회</button>'
-        +'</div>'
+    /* 진행중인 공고 */
+    +'<div style="background:#EFF6FF;border:0.5px solid #BFDBFE;border-radius:12px;overflow:hidden">'
+      +'<div style="padding:10px 14px;border-bottom:0.5px solid #BFDBFE;display:flex;align-items:center;gap:8px">'
+        +'<i class="ti ti-file-text" style="font-size:15px;color:#2563EB"></i>'
+        +'<span style="font-size:13px;font-weight:500;color:#0F172A">진행 중인 공고</span>'
+        +'<span style="margin-left:auto;background:#fff;color:#1D4ED8;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600;border:0.5px solid #BFDBFE">'+active.length+'건</span>'
       +'</div>'
-      +'<div style="display:flex;border:0.5px solid #F1F5F9;border-radius:10px;overflow:hidden">'
-        +statBox('ti-player-play','#1D4ED8','#EFF6FF',_activeJobs.length,'건','진행 공고','#2563EB',Math.round(_activeJobs.length/Math.max(JOBS.length,1)*100))
-        +statBox('ti-users','#6D28D9','#F5F3FF',_pAps.length,'명','기간 지원자','#7C3AED',Math.min(100,Math.round(_pAps.length/Math.max(allAps.length||1,1)*100)))
-        +statBox('ti-trophy','#065F46','#F0FDF4',_fPass.length,'명','최종 합격','#16A34A',Math.round(_fPass.length/Math.max(_pAps.length,1)*100))
-        +'<div style="padding:10px 12px;flex:1;min-width:0">'
-          +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">'
-            +'<div style="width:22px;height:22px;border-radius:6px;background:#FFFBEB;display:flex;align-items:center;justify-content:center"><i class="ti ti-chart-pie" style="font-size:12px;color:#B45309" aria-hidden="true"></i></div>'
-            +'<div style="font-size:12px;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.04em">합격률</div>'
-          +'</div>'
-          +'<div style="font-size:24px;font-weight:500;color:#0F172A;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:8px">'+_passRate+'<span style="font-size:12px;color:#64748B;margin-left:2px">%</span></div>'
-          +'<div style="height:6px;background:#F1F5F9;border-radius:99px;overflow:hidden"><div style="width:'+_passRate+'%;height:100%;background:#D97706;border-radius:99px"></div></div>'
+      +(activeSorted.length===0
+        ?'<div style="padding:14px;font-size:13px;color:#94A3B8;text-align:center">진행 중인 공고 없음</div>'
+        :'<div style="padding:8px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px">'
+          +activeSorted.slice(0,6).map(function(j){
+            var dd=j.finalDate?Math.ceil((new Date(j.finalDate)-new Date(TODAY))/86400000):-1;
+            var dc=dd>=0&&dd<=3?'#DC2626':dd>=0&&dd<=7?'#D97706':'#374151';
+            var bg=dd>=0&&dd<=3?'#FCEBEB':dd>=0&&dd<=7?'#FFFBEB':'#F8FAFC';
+            var dl=dd===0?'D-day':dd>0?'D-'+dd:'진행중';
+            return'<div style="background:#fff;border-radius:8px;padding:8px 10px;border:0.5px solid #BFDBFE">'
+              +'<div style="font-size:12px;font-weight:500;color:#0F172A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name.length>14?j.name.slice(0,14)+'…':j.name)+'</div>'
+              +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px">'
+                +badge(j.category)
+                +'<span style="font-size:11px;font-weight:600;color:'+dc+';background:'+bg+';padding:1px 7px;border-radius:99px">'+dl+'</span>'
+              +'</div>'
+            +'</div>';
+          }).join('')
+          +(activeSorted.length>6?'<div style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.6);border-radius:8px;border:0.5px solid #BFDBFE;padding:8px"><span style="font-size:12px;color:#64748B">+'+( activeSorted.length-6)+'건 더</span></div>':'')
         +'</div>'
+      )
+    +'</div>'
+
+    /* KPI 2×2 */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+      +[
+        {l:'전체 공고',v:JOBS.length,ic:'ti-file-text',sub:'진행 '+active.length+'건',sc:'#2563EB',id:'kpi0'},
+        {l:'전체 지원자',v:allAps.length,ic:'ti-users',sub:'면접 '+ivWaitCount+'명',sc:'#059669',id:'kpi1'},
+        {l:'취업 완료',v:totalEmp,ic:'ti-trophy',sub:'합격률 '+(allAps.length>0?Math.round(totalEmp/allAps.length*100):0)+'%',sc:'#D97706',id:'kpi2'},
+        {l:'이달 합격',v:thisMonthPass,ic:'ti-sparkles',sub:(passDiff>=0?'+':'')+passDiff+'명 전월',sc:'#7C3AED',id:'kpi3',acc:true}
+      ].map(function(k){
+        return'<div style="background:#F8FAFC;border-radius:10px;padding:12px 14px;'+(k.acc?'border-left:2px solid '+k.sc+';':'')+'">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+            +'<span style="font-size:12px;color:#64748B">'+k.l+'</span>'
+            +'<i class="ti '+k.ic+'" style="font-size:13px;color:#CBD5E1"></i>'
+          +'</div>'
+          +'<div class="dk-num dk-num-anim" id="'+k.id+'" data-target="'+k.v+'" style="font-size:26px;font-weight:600;color:'+(k.acc?k.sc:'#0F172A')+';line-height:1;font-variant-numeric:tabular-nums">0</div>'
+          +'<div style="font-size:12px;color:'+k.sc+';margin-top:5px;font-weight:500">'+k.sub+'</div>'
+        +'</div>';
+      }).join('')
+    +'</div>'
+
+  +'</div>'
+
+  /* ③ 하단: 1fr | 1fr 1fr | 1fr  (4열) */
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;padding:0 18px 16px;flex:1;min-height:0;overflow:hidden">'
+
+    /* 열1: 오늘 일정 + 마감임박 */
+    +'<div style="display:flex;flex-direction:column;gap:8px;min-height:0">'
+      +'<div style="flex:1;background:#fff;border:0.5px solid #E2E8F0;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:0">'
+        +'<div style="padding:10px 13px 9px;border-bottom:0.5px solid #F1F5F9;display:flex;align-items:center;gap:7px">'
+          +'<i class="ti ti-calendar" style="font-size:14px;color:#D97706"></i>'
+          +'<span style="font-size:13px;font-weight:500;color:#0F172A">오늘의 주요 일정</span>'
+          +(todayEvents.length>0?'<span style="margin-left:auto;background:#FEF3C7;color:#B45309;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600">'+todayEvents.length+'건</span>':'')
+        +'</div>'
+        +'<div style="padding:8px 13px;flex:1;overflow-y:auto">'+eventContent+'</div>'
+      +'</div>'
+      +'<div style="flex:1;background:#fff;border:0.5px solid #E2E8F0;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:0">'
+        +'<div style="padding:10px 13px 9px;border-bottom:0.5px solid #F1F5F9;display:flex;align-items:center;gap:7px">'
+          +'<i class="ti ti-alarm" style="font-size:14px;color:#DC2626"></i>'
+          +'<span style="font-size:13px;font-weight:500;color:#0F172A">마감 임박</span>'
+          +(urgentList.length>0?'<span style="margin-left:auto;background:#FEF2F2;color:#DC2626;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600">'+urgentList.length+'건</span>':'')
+        +'</div>'
+        +'<div style="padding:8px 13px;flex:1;overflow-y:auto">'+urgentContent+'</div>'
       +'</div>'
     +'</div>'
-    /* 파이프라인 퍼널 */
-    +'<div style="background:#fff;border-radius:12px;border:0.5px solid #E2E8F0;padding:12px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04)">'
-      +'<div style="font-size:13px;font-weight:500;color:#0F172A;margin-bottom:14px;display:flex;align-items:center;gap:7px"><i class="ti ti-git-branch" style="font-size:15px;color:#16A34A" aria-hidden="true"></i>채용 파이프라인</div>'
-      +'<div style="display:flex;flex-direction:column;gap:5px">'
+
+    /* 열2: 채용 파이프라인 (가로 넓게) */
+    +'<div style="background:#fff;border:0.5px solid #E2E8F0;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:0">'
+      +'<div style="padding:10px 13px 9px;border-bottom:0.5px solid #F1F5F9;display:flex;align-items:center;gap:7px">'
+        +'<i class="ti ti-git-branch" style="font-size:14px;color:#059669"></i>'
+        +'<span style="font-size:13px;font-weight:500;color:#0F172A">채용 파이프라인</span>'
+        +(allAps.length>0?'<span style="margin-left:auto;font-size:12px;color:#059669;font-weight:600">합격률 '+Math.round(totalEmp/allAps.length*100)+'%</span>':'')
+      +'</div>'
+      +'<div style="padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:7px;justify-content:center;overflow:hidden">'
         +[
-          {l:'서류 접수',n:allAps.length,w:100,c:'#BFDBFE',tc:'#1E3A8A'},
-          {l:'서류 합격',n:docPassCount+ivWaitCount+passCount,w:allAps.length?Math.round((docPassCount+ivWaitCount+passCount)/allAps.length*100):0,c:'#A5B4FC',tc:'#312E81'},
-          {l:'면접',n:ivWaitCount+passCount,w:allAps.length?Math.round((ivWaitCount+passCount)/allAps.length*100):0,c:'#FCD34D',tc:'#78350F'},
-          {l:'최종 합격',n:passCount,w:allAps.length?Math.round(passCount/allAps.length*100):0,c:'#6EE7B7',tc:'#065F46'}
-        ].map(function(p,pi){
-          var barW=Math.max(p.w,8);
-          return'<div style="display:flex;align-items:center;gap:10px">'
-            +'<div style="font-size:16px;font-weight:600;color:#0F172A;min-width:32px;text-align:right;font-variant-numeric:tabular-nums;line-height:1">'+p.n+'</div>'
-            +'<div style="position:relative;flex:'+(barW/100)+';height:28px;background:'+p.c+';border-radius:6px;display:flex;align-items:center;padding:0 10px;min-width:44px;overflow:hidden">'
-              +'<div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);pointer-events:none;border-radius:7px"></div>'
-              +'<span style="font-size:12px;color:'+p.tc+';font-weight:700;white-space:nowrap;position:relative;z-index:1">'+p.l+'</span>'
+          {l:'서류 접수',n:allAps.length,c:'#BFDBFE',tc:'#1E40AF'},
+          {l:'서류 합격',n:docPassCount+ivWaitCount+passCount,c:'#A5B4FC',tc:'#3730A3'},
+          {l:'면접',n:ivWaitCount+passCount,c:'#FCD34D',tc:'#78350F'},
+          {l:'최종 합격',n:passCount,c:'#6EE7B7',tc:'#065F46'}
+        ].map(function(p){
+          var w=allAps.length>0?Math.max(Math.round(p.n/allAps.length*100),p.n>0?8:0):0;
+          return'<div style="display:flex;align-items:center;gap:8px">'
+            +'<span style="font-size:14px;font-weight:600;color:#0F172A;min-width:28px;text-align:right;font-variant-numeric:tabular-nums">'+p.n+'</span>'
+            +'<div style="flex:1;height:26px;background:#F1F5F9;border-radius:6px;overflow:hidden;position:relative">'
+              +'<div style="position:absolute;left:0;top:0;height:100%;width:'+w+'%;background:'+p.c+';border-radius:6px;display:flex;align-items:center;padding:0 10px;min-width:'+(p.n>0?48:0)+'px">'
+                +(p.n>0?'<span style="font-size:12px;font-weight:600;color:'+p.tc+';white-space:nowrap">'+p.l+'</span>':'')
+              +'</div>'
             +'</div>'
-            +'<div style="flex:'+(1-barW/100)+';display:flex;align-items:center;padding-left:4px">'
-              +(p.w<100?'<span style="font-size:12px;color:#6B7280;font-weight:600">'+p.w+'%</span>':'<span style="font-size:12px;color:#16A34A;font-weight:600">✓</span>')
-            +'</div>'
+            +(w<100&&p.n>0?'<span style="font-size:11px;color:#94A3B8;min-width:30px">'+w+'%</span>':'<span style="min-width:30px"></span>')
           +'</div>';
         }).join('')
       +'</div>'
     +'</div>'
+
+    /* 열3: 이번 주 면접 예정자 */
+    +(function(){
+      if(isStaff()||!interviews.length)
+        return'<div style="background:#EFF6FF;border:0.5px solid #BFDBFE;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px"><i class="ti ti-calendar-event" style="font-size:28px;color:#93C5FD"></i><div style="font-size:13px;font-weight:500;color:#1D4ED8">이번 주 면접 없음</div></div>';
+      return'<div style="background:#EFF6FF;border:0.5px solid #BFDBFE;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:0">'
+        +'<div style="padding:10px 13px 9px;border-bottom:0.5px solid #BFDBFE;display:flex;align-items:center;gap:7px">'
+          +'<i class="ti ti-calendar-event" style="font-size:14px;color:#2563EB"></i>'
+          +'<span style="font-size:13px;font-weight:500;color:#0F172A">이번 주 면접</span>'
+          +'<span style="margin-left:auto;background:#fff;color:#1D4ED8;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;border:0.5px solid #BFDBFE">'+interviews.length+'명</span>'
+        +'</div>'
+        +'<div style="padding:8px 12px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:5px">'
+          +interviews.map(function(iv){
+            var d=Math.ceil((new Date(iv.interviewDate)-new Date(TODAY))/86400000);
+            var dc=d===0?'#DC2626':d===1?'#2563EB':'#374151';
+            var dl=d===0?'오늘':d===1?'내일':fmt(iv.interviewDate);
+            return'<div style="background:#fff;border-radius:8px;padding:8px 10px;border:0.5px solid #BFDBFE;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+              +'<div style="min-width:0">'
+                +'<div style="font-size:12px;font-weight:600;color:#0F172A">'+esc(isStaff()?maskName(iv.studentName||'?'):iv.studentName)+'</div>'
+                +'<div style="font-size:11px;color:#64748B;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(iv.jobName.length>12?iv.jobName.slice(0,12)+'…':iv.jobName)+'</div>'
+              +'</div>'
+              +'<span style="font-size:12px;font-weight:600;color:'+dc+';white-space:nowrap;flex-shrink:0">'+dl+'</span>'
+            +'</div>';
+          }).join('')
+        +'</div>'
+      +'</div>';
+    })()
+
+    /* 열4: 연령대별 합격자 */
+    +'<div style="background:#fff;border:0.5px solid #E2E8F0;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:0">'
+      +'<div style="padding:10px 13px 9px;border-bottom:0.5px solid #F1F5F9;display:flex;align-items:center;gap:7px">'
+        +'<i class="ti ti-users" style="font-size:14px;color:#64748B"></i>'
+        +'<span style="font-size:13px;font-weight:500;color:#0F172A">연령대별 합격자</span>'
+        +'<span style="margin-left:auto;font-size:12px;color:#64748B">'+finalSids.length+'명</span>'
+      +'</div>'
+      +'<div style="padding:10px 13px;flex:1;overflow:hidden">'+renderAgeInfographic(finalSids)+'</div>'
+    +'</div>'
+
   +'</div>'
 
-  /* ⑤ 기관별 채용 인원 */
-  +'<div class="dk-recruit" style="padding-top:12px">'
-    +'<div style="background:#fff;border-radius:12px;border:0.5px solid #E2E8F0;padding:10px 16px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04)">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
-        +'<div style="display:flex;align-items:center;gap:8px">'
-          +'<div style="width:28px;height:28px;border-radius:8px;background:#EFF6FF;display:flex;align-items:center;justify-content:center"><i class="ti ti-chart-bar" style="font-size:14px;color:#1D4ED8" aria-hidden="true"></i></div>'
-          +'<div><div style="font-size:13px;font-weight:500;color:#0F172A">'+mLabel+' 기관별 채용 인원</div><div style="font-size:12px;color:#4B5563;margin-top:2px">서류 접수일 기준</div></div>'
-        +'</div>'
-        +'<div style="display:flex;align-items:center;gap:6px">'+(_totalRecruit>0?'<span style="background:#EFF6FF;color:#1D4ED8;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500">총 '+_totalRecruit+'명 예정</span>':'')+'<span style="color:#94A3B8;font-size:12px">공고 '+_monthJobs.length+'건</span></div>'
-      +'</div>'
-      +'<div id="dash-rec-content"><div style="display:flex;flex-wrap:wrap;gap:6px">'+chipsHtml+'</div>'+selDetail+'</div>'
-    +'</div>'
-  +'</div>'
-
-  /* ⑥ 4그리드 */
-  +'<div class="dk-4grid" style="flex:1;min-height:0">'
-    /* 오늘 일정 */
-    +'<div class="dk-grid-card">'
-      +'<div class="dk-grid-head">'
-        +'<div style="width:24px;height:24px;border-radius:7px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-calendar" style="font-size:12px;color:#B45309" aria-hidden="true"></i></div>'
-        +'<span style="font-size:12px;font-weight:500;color:#0F172A">오늘의 주요 일정</span>'
-        +(todayEvents.length>0?'<span style="margin-left:auto;background:#FEF3C7;color:#B45309;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:500">'+todayEvents.length+'건</span>':'')
-      +'</div>'
-      +'<div class="dk-grid-body">'+eventContent+'</div>'
-    +'</div>'
-    /* 마감 임박 */
-    +'<div class="dk-grid-card">'
-      +'<div class="dk-grid-head">'
-        +'<div style="width:24px;height:24px;border-radius:7px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-alarm" style="font-size:13px;color:#DC2626" aria-hidden="true"></i></div>'
-        +'<span style="font-size:12px;font-weight:500;color:#0F172A">마감 임박</span>'
-        +(urgentList.length>0?'<span style="margin-left:auto;background:#FEF2F2;color:#DC2626;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:500">'+urgentList.length+'건</span>':'')
-      +'</div>'
-      +'<div class="dk-grid-body">'+urgentContent+'</div>'
-    +'</div>'
-    /* 진행 공고 */
-    +'<div class="dk-grid-card">'
-      +'<div class="dk-grid-head">'
-        +'<div style="width:24px;height:24px;border-radius:7px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-file-text" style="font-size:12px;color:#1D4ED8" aria-hidden="true"></i></div>'
-        +'<span style="font-size:12px;font-weight:500;color:#0F172A">진행 중인 공고</span>'
-        +'<span style="margin-left:auto;background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:500">'+active.length+'건</span>'
-      +'</div>'
-      +'<div class="dk-grid-body">'+activeContent+'</div>'
-    +'</div>'
-    /* 지원 현황 */
-    +(isStaff()?
-      '<div class="dk-grid-card">'
-        +'<div class="dk-grid-head">'
-          +'<div style="width:24px;height:24px;border-radius:7px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-chart-donut" style="font-size:13px;color:#7C3AED" aria-hidden="true"></i></div>'
-          +'<span style="font-size:12px;font-weight:500;color:#0F172A">지원 현황</span>'
-        +'</div>'
-        +'<div class="dk-grid-body">'+statusContent+'</div>'
-      +'</div>'
-      :
-      '<div class="dk-grid-card">'
-        +'<div class="dk-grid-head">'
-          +'<div style="width:24px;height:24px;border-radius:7px;background:#F5F3FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-chart-donut" style="font-size:13px;color:#7C3AED" aria-hidden="true"></i></div>'
-          +'<span style="font-size:12px;font-weight:500;color:#0F172A">지원 현황</span>'
-          +'<span style="margin-left:auto;color:#64748B;font-size:12px">전체 '+allAps.length+'건</span>'
-        +'</div>'
-        +'<div class="dk-grid-body">'+statusContent+'</div>'
-      +'</div>'
-    )
-  +'</div>'
 +'</div>';
 }
 
