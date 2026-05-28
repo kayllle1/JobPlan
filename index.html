@@ -353,7 +353,7 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
         <input id="_login_pw" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password"
           onkeydown="if(event.key==='Enter')doLogin(_loginRole)"
           style="width:100%;padding:13px 48px 13px 16px;background:#0C1524;border:1.5px solid rgba(255,255,255,.1);border-radius:11px;color:#fff;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;transition:border-color .15s"
-          onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          onfocus="this.style.borderColor=&apos;#2563EB&apos;" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
         <button id="_pw_toggle" onclick="var p=document.getElementById('_login_pw');var on=p.type==='password';p.type=on?'text':'password';this.querySelector('svg').style.opacity=on?'1':'0.5'" style="position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
@@ -2180,6 +2180,62 @@ function removeFromBlacklist(studentId){
     await loadAllData();
   },'해제','#059669');
 }
+/* ─ 블랙리스트 렌더 ─ */
+function renderBlacklist(){
+  var blList=STUDENTS.filter(function(s){return s.restrictionLevel==='제한';});
+  var warnList=STUDENTS.filter(function(s){return s.restrictionLevel==='주의';});
+  var candidates=getBlacklistCandidates();
+
+  function blRow(s,type){
+    var apps=JOBS.reduce(function(a,j){return a.concat(j.applicants.filter(function(ap){return ap.studentId===s.id;}));}, []);
+    return'<tr style="border-bottom:1px solid #F1F5F9">'
+      +'<td style="padding:10px 14px"><div style="font-size:13px;font-weight:600;color:#0F172A">'+esc(s.name)+'</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">'+esc(s.phone)+'</div></td>'
+      +'<td style="padding:10px 14px"><span style="font-size:12px;color:#64748B">지원 '+apps.length+'건</span></td>'
+      +'<td style="padding:10px 14px;text-align:right">'
+        +(type==='제한'?'<button onclick="removeFromBlacklist('+s.id+')" style="background:#F1F5F9;border:1px solid #E2E8F0;color:#374151;padding:5px 11px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit">해제</button>'
+         :'<button onclick="confirmBlacklist('+s.id+')" style="background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;padding:5px 11px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit">블랙 확정</button>')
+      +'</td>'
+    +'</tr>';
+  }
+
+  function section(title,icon,color,bg,rows,empty){
+    return'<div style="background:#fff;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;margin-bottom:14px">'
+      +'<div style="padding:14px 18px;border-bottom:1px solid #F1F5F9;display:flex;align-items:center;gap:8px">'
+        +'<div style="width:28px;height:28px;border-radius:8px;background:'+bg+';display:flex;align-items:center;justify-content:center"><i class="ti '+icon+'" style="font-size:14px;color:'+color+'"></i></div>'
+        +'<span style="font-size:14px;font-weight:600;color:#0F172A">'+title+'</span>'
+        +'<span style="margin-left:auto;background:'+bg+';color:'+color+';padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600">'+rows.length+'명</span>'
+      +'</div>'
+      +(rows.length===0
+        ?'<div style="padding:24px;text-align:center;color:#94A3B8;font-size:13px">'+empty+'</div>'
+        :'<table style="width:100%;border-collapse:collapse"><tbody>'+rows+'</tbody></table>'
+      )
+    +'</div>';
+  }
+
+  var candRows=candidates.map(function(c){
+    return'<tr style="border-bottom:1px solid #F1F5F9">'
+      +'<td style="padding:10px 14px"><div style="font-size:13px;font-weight:600;color:#0F172A">'+esc(c.student.name)+'</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">'+esc(c.student.phone)+'</div></td>'
+      +'<td style="padding:10px 14px;font-size:12px;color:#64748B">'+esc(c.job.name.length>20?c.job.name.slice(0,20)+'…':c.job.name)+'</td>'
+      +'<td style="padding:10px 14px"><span style="background:#FEF3C7;color:#B45309;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600">'+c.daysDiff+'일 경과</span></td>'
+      +'<td style="padding:10px 14px;text-align:right"><button onclick="confirmBlacklist('+c.student.id+')" style="background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;padding:5px 11px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit">블랙 확정</button></td>'
+    +'</tr>';
+  }).join('');
+
+  return'<div style="display:flex;flex-direction:column;height:100%;background:#FAFAF9">'
+    +'<div style="padding:20px 24px 14px;border-bottom:1px solid #E5E7EB;background:#fff;flex-shrink:0">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="width:36px;height:36px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;display:flex;align-items:center;justify-content:center"><i class="ti ti-ban" style="font-size:18px;color:#DC2626"></i></div>'
+        +'<div><div style="font-size:17px;font-weight:700;color:#0F172A">블랙리스트</div><div style="font-size:12px;color:#64748B;margin-top:1px">제한 '+blList.length+'명 · 주의 '+warnList.length+'명 · 후보 '+candidates.length+'명</div></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:16px 24px 24px">'
+      +section('등록된 블랙리스트','ti-ban','#DC2626','#FEF2F2',blList.map(function(s){return blRow(s,'제한');}).join(''),'등록된 블랙리스트가 없습니다')
+      +section('주의 대상','ti-alert-triangle','#D97706','#FFFBEB',warnList.map(function(s){return blRow(s,'주의');}).join(''),'주의 대상이 없습니다')
+      +section('잠재 후보 (7일 이상 미회신)','ti-clock','#7C3AED','#F5F3FF',candRows,'해당 조건의 후보가 없습니다')
+    +'</div>'
+  +'</div>';
+}
+
 /* ─ 즐겨찾기 ─ */
 var _favKw='';
 var _favTagFilter='전체';
@@ -2311,7 +2367,7 @@ function renderFavorites(){
                 +(isAdmin()
                   ?'<div>'
                     +'<div style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">특징 / 태그</div>'
-                    +'<input id="fav_tags_'+sid+'" type="text" placeholder="예: 적극적, 정보전달, 네트워크" value="'+esc(f.tags||'')+'" style="width:100%;padding:7px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;color:#0F172A;outline:none;background:#F8FAFC;box-sizing:border-box" onfocus="this.style.borderColor=\'#BFDBFE\'" onblur="this.style.borderColor=\'#E2E8F0\'">'
+                    +'<textarea id="fav_tags_'+sid+'" rows="2" placeholder="예: 적극적, 정보전달&#10;법원 인맥 넓음" style="width:100%;padding:7px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;color:#0F172A;outline:none;background:#F8FAFC;resize:none;line-height:1.5;box-sizing:border-box" onfocus="this.style.borderColor=&apos;#BFDBFE&apos;" onblur="this.style.borderColor=&apos;#E2E8F0&apos;">'+esc(f.tags||'')+'</textarea>'
                   +'</div>'
                   +'<div>'
                     +'<div style="font-size:11px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">메모</div>'
