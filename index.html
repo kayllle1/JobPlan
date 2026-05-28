@@ -294,8 +294,8 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 .dk-monthly{padding:10px 22px 0;flex-shrink:0}
 .dk-monthly-bar{background:#FEFEFE;border:0.5px solid #E2E8F0;border-radius:12px;padding:18px 22px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;color:#0F172A}
 .dk-recruit{padding:10px 22px 0;flex-shrink:0}
-.dk-4grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:12px 22px 22px;flex:1;min-height:0}
-.dk-grid-card{background:#FEFEFE;border-radius:12px;border:0.5px solid #E2E8F0;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04);color:#0F172A}
+.dk-4grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:12px 22px 24px;flex-shrink:0}
+.dk-grid-card{background:#FEFEFE;border-radius:12px;border:0.5px solid #E2E8F0;overflow:hidden;display:flex;flex-direction:column;height:320px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04);color:#0F172A}
 .dk-grid-head{padding:13px 15px 11px;flex-shrink:0;border-bottom:0.5px solid #F1F5F9;display:flex;align-items:center;gap:7px;background:#fff}
 .dk-grid-body{flex:1;overflow-y:auto;padding:10px 14px;min-height:0;display:flex;flex-direction:column;color:#0F172A}
 .dk-grid-body::-webkit-scrollbar{width:3px}
@@ -2555,7 +2555,7 @@ function renderDashboard(){
 
   var activeContent=activeSorted.length===0?'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px"><i class="ti ti-file-off" style="font-size:30px;color:#E2E8F0"></i><span style="font-size:13px;color:#94A3B8">진행 중인 공고 없음</span></div>':activeSorted.map(function(j){var dd=j.finalDate?Math.ceil((new Date(j.finalDate)-_now)/86400000):-1;var dc=dd>=0&&dd<=3?'#DC2626':dd>=0&&dd<=7?'#D97706':'#94A3B8';return'<div style="display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:0.5px solid #F1F5F9">'+badge(j.category)+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:#0F172A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name.length>16?j.name.slice(0,16)+'…':j.name)+'</div></div><span style="font-size:11px;color:'+dc+';white-space:nowrap;font-weight:500">'+(dd>=0?'D-'+dd:j.applicants.length+'명')+'</span></div>';}).join('');
 
-  return'<div id="dash-root" style="display:flex;flex-direction:column;height:100%;overflow-y:auto;background:#FAFAF9">'
+  return'<div id="dash-root" style="display:flex;flex-direction:column;height:100%;overflow-y:auto;background:#FAFAF9;padding-bottom:8px">'
   +'<div style="padding:16px 24px 10px;flex-shrink:0">'
     +'<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">'
       +'<div><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><span style="width:3px;height:18px;background:linear-gradient(180deg,#3B82F6,#7C3AED);border-radius:99px;display:inline-block;flex-shrink:0"></span><p style="margin:0;font-size:11px;color:#3B82F6;font-weight:700;letter-spacing:.15em;text-transform:uppercase">SORIZAVA ARCHIVE</p></div><h2 style="margin:0 0 2px 11px;font-size:22px;font-weight:700;color:#0F172A;letter-spacing:-.03em">대시보드</h2><p style="margin:0 0 0 11px;font-size:12px;color:#64748B">'+TODAY+' KST · 실시간 채용 현황</p></div>'
