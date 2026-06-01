@@ -447,7 +447,7 @@ function getKSTDateString(){const n=new Date();return new Date(n.getTime()+9*360
 const TODAY=getKSTDateString(),MONTH=TODAY.slice(0,7);
 
 /* ─ 상수 ─ */
-const CATS=['전체','법원','의회','국회','검찰청','공공기관','해바라기','팀벨','사기업','대학교','기타'];
+const CATS=['전체','법원','의회','국회','검찰청','공공기관','해바라기','팀벨','SDH','사기업','대학교','기타'];
 const JOB_TYPES=['한시임기제','전문임기제','서기보','기간제','프리랜서','공무직','무기계약직','대체직','공무원','의회임기제'];
 const GRADES=['1급','2급','3급','무급'];
 const STATUSES=['서류접수','서류합격','면접대기','최종합격','불합격'];
@@ -479,11 +479,11 @@ function geoNameToLoc(gName){
   return null;
 }
 const STATUS_COLORS={'서류접수':'#94A3B8','서류합격':'#60A5FA','면접대기':'#FBBF24','면접완료':'#A78BFA','최종합격':'#34D399','취업성공':'#10B981','불합격':'#F87171'};
-const CAT_COLORS={'법원':'#1D4ED8','의회':'#7C3AED','국회':'#4338CA','검찰청':'#DC2626','공공기관':'#059669','해바라기':'#D97706','팀벨':'#0891B2','사기업':'#374151','대학교':'#9333EA','기타':'#6B7280'};
+const CAT_COLORS={'법원':'#1D4ED8','의회':'#7C3AED','국회':'#4338CA','검찰청':'#DC2626','공공기관':'#059669','해바라기':'#D97706','팀벨':'#0891B2','SDH':'#DB2777','사기업':'#374151','대학교':'#9333EA','기타':'#6B7280'};
 const IV_CATS=['검찰','교육속기사','국회','공공기관','법원','사기업','의회'];
 const IV_COLORS={'검찰':'#DC2626','교육속기사':'#D97706','국회':'#4338CA','공공기관':'#059669','법원':'#1D4ED8','사기업':'#374151','의회':'#7C3AED'};
 const IV_CAT_LABEL={'검찰':'검찰청','교육속기사':'교육청','국회':'국회','공공기관':'공공기관','법원':'법원','사기업':'민간기업','의회':'지방의회'};
-function jobCatToIV(cat){return{'법원':'법원','의회':'의회','국회':'국회','검찰청':'검찰','공공기관':'공공기관','해바라기':'공공기관','팀벨':'공공기관','사기업':'사기업','기타':'사기업','대학교':'교육속기사'}[cat]||null;}
+function jobCatToIV(cat){return{'법원':'법원','의회':'의회','국회':'국회','검찰청':'검찰','공공기관':'공공기관','해바라기':'공공기관','팀벨':'공공기관','SDH':'공공기관','사기업':'사기업','기타':'사기업','대학교':'교육속기사'}[cat]||null;}
 
 /* ─ 상태 ─ */
 let currentView='dashboard',expandedJobs=new Set(),detailJobs=new Set();
@@ -2608,7 +2608,7 @@ function renderDashboard(){
     +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:0">'+_stat('📋','진행 공고',_activeJobs.length,'건','채용인원 '+_totalRecruitKpi+'명','#2563EB')+_statDiv+_stat('👤','기간 지원자',_pAps.length,'명','서류접수일 기준','#7C3AED')+_statDiv+_stat('🏆','최종 합격',_fPass.length,'명','불합격 '+_fFail.length+'명','#059669')+_statDiv+_stat('📈','합격률',_passRate,'%','지원 '+_pAps.length+'명 기준','#D97706')+'</div>';
 
   var mLabel=(function(){var p=selectedMonth.split('-');return p[0]+'년 '+parseInt(p[1])+'월';})();
-  var _FIXED_CATS=['법원','의회','국회','검찰청','공공기관','해바라기','팀벨','사기업','대학교','기타'];
+  var _FIXED_CATS=['법원','의회','국회','검찰청','공공기관','해바라기','팀벨','SDH','사기업','대학교','기타'];
   var _monthJobs=JSON.parse(JSON.stringify(JOBS)).filter(function(j){return parseDocMonth(j.docDate)===selectedMonth;});
   var _instMap={};_FIXED_CATS.forEach(function(c){_instMap[c]={total:0,jobs:[]};});
   _monthJobs.forEach(function(j){var cat=(_FIXED_CATS.slice(0,9).indexOf(j.category||'기타')>=0)?j.category:'기타';var cnt=Number(j.recruitmentCount)||0;_instMap[cat].total+=cnt;_instMap[cat].jobs.push({name:j.name,count:cnt});});
