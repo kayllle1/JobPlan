@@ -330,13 +330,13 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
     </div>
     <div style="margin-bottom:20px">
       <div style="font-size:10.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">계정 유형</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
         <button id="_login_role_master" onclick="selectRole('master')" style="padding:13px;border-radius:12px;border:1.5px solid #2563EB;background:rgba(37,99,235,.15);cursor:pointer;text-align:left;transition:all .15s">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
             <i class="ti ti-shield-check" style="font-size:16px;color:#60A5FA" aria-hidden="true"></i>
             <span style="font-size:13px;font-weight:700;color:#fff">마스터</span>
           </div>
-          <div style="font-size:10.5px;color:#64748B;line-height:1.4">전체 권한 · 모든 기능 사용</div>
+          <div style="font-size:10.5px;color:#64748B;line-height:1.4">전체 권한 · 모든 기능</div>
         </button>
         <button id="_login_role_staff" onclick="selectRole('staff')" style="padding:13px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:transparent;cursor:pointer;text-align:left;transition:all .15s">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
@@ -344,6 +344,13 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
             <span style="font-size:13px;font-weight:700;color:#64748B">스태프</span>
           </div>
           <div style="font-size:10.5px;color:#64748B;line-height:1.4">제한 접근 · 개인정보 비공개</div>
+        </button>
+        <button id="_login_role_staff2" onclick="selectRole('staff2')" style="padding:13px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:transparent;cursor:pointer;text-align:left;transition:all .15s">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+            <i class="ti ti-user" style="font-size:16px;color:#64748B" aria-hidden="true"></i>
+            <span style="font-size:13px;font-weight:700;color:#64748B">스태프2</span>
+          </div>
+          <div style="font-size:10.5px;color:#64748B;line-height:1.4">연수관리 전용</div>
         </button>
       </div>
     </div>
@@ -401,14 +408,16 @@ let _dbConnected=false,_reloadTimer=null;
    AUTH — 로그인 권한 시스템
    마스터: 전체 권한  |  스태프: 제한 접근 + 개인정보 마스킹
 ════════════════════════════════════════════════ */
-var _currentUser=null; /* {type:'master'|'staff'} */
-var _CREDS={master:'sorizava2026',staff:'staff2026'};
+var _currentUser=null; /* {type:'master'|'staff'|'staff2'} */
+var _CREDS={master:'sorizava2026',staff:'staff2026',staff2:'staff2_2026'};
 function isAdmin(){return _currentUser&&_currentUser.type==='master';}
-function isStaff(){return _currentUser&&_currentUser.type==='staff';}
+function isStaff(){return _currentUser&&(_currentUser.type==='staff'||_currentUser.type==='staff2');}
+function isStaff2(){return _currentUser&&_currentUser.type==='staff2';}
 function isLoggedIn(){return !!_currentUser;}
 
 /* 스태프 접근 가능 뷰 */
-var STAFF_VIEWS=['dashboard','jobs','employment','calendar','employers','training','favorites'];
+var STAFF_VIEWS=['dashboard','jobs','employment','calendar','employers','favorites'];
+var STAFF2_VIEWS=['dashboard','training'];
 
 /* 개인정보 마스킹 */
 function maskName(n){if(!n)return'***';return n[0]+'**';}
@@ -431,7 +440,7 @@ function doLogin(type){
     }catch(e){}
     document.getElementById('_login_screen').style.display='none';
     var _appEl=document.getElementById('app');_appEl.style.display='flex';_appEl.style.flexDirection='row';
-    if(type==='staff')currentView='dashboard';
+    if(type==='staff'||type==='staff2')currentView='dashboard';
     setView(currentView);
     showLoading();
     loadAllData().finally(hideLoading).then(function(){setupRealtime();});
@@ -2446,16 +2455,21 @@ function renderSidebar(){
   }
 
   var navHtml='';
-  if(isStaff()){
+  if(isStaff2()){
+    /* 스태프2: 연수관리만 */
+    navHtml+=navBtn('dashboard','📊','대시보드')
+      +section('#A78BFA','도구')
+      +navBtn('training','🎓','연수 관리');
+  } else if(isStaff()){
+    /* 스태프: 연수관리 제외 */
     navHtml+=navBtn('dashboard','📊','대시보드')
       +section('#38BDF8','인사이트')
       +navBtn('calendar','📅','일정 캘린더')
       +navBtn('employers','🏢','취업처 관리')
       +section('#34D399','채용 관리')
       +navBtn('jobs','📋','공고관리')
-      +navBtn('employment','🏆','취업 현황')
-      +section('#A78BFA','도구')
-      +navBtn('training','🎓','연수 관리');
+      +navBtn('favorites','⭐','즐겨찾기')
+      +navBtn('employment','🏆','취업 현황');
   } else {
     navHtml+=navBtn('dashboard','📊','대시보드')
       +section('#38BDF8','인사이트')
@@ -4233,7 +4247,8 @@ function renderView(){
 }
 function setView(v){
   /* 스태프 접근 제한 */
-  if(isStaff()&&STAFF_VIEWS.indexOf(v)<0)v='dashboard';
+  if(isStaff2()&&STAFF2_VIEWS.indexOf(v)<0)v='training';
+  else if(isStaff()&&!isStaff2()&&STAFF_VIEWS.indexOf(v)<0)v='dashboard';
   _savedScrollTop=0;_savedTblScrollTop=0;currentView=v;
   $('app').innerHTML=renderSidebar()+'<main id="_main" style="flex:1;overflow:hidden;background:#FAFAF9;color:#0F172A;display:flex;flex-direction:column;min-height:0"></main>';
   renderView();
@@ -4272,25 +4287,25 @@ function selectRole(r){
   _loginRole=r;
   var mb=document.getElementById('_login_role_master');
   var sb=document.getElementById('_login_role_staff');
-  if(!mb||!sb)return;
-  if(r==='master'){
-    mb.style.cssText=mb.style.cssText.replace(/border:[^;]+/,'border:1.5px solid #2563EB');
-    mb.style.background='rgba(37,99,235,.15)';
-    mb.querySelector('span').style.color='#fff';
-    mb.querySelector('i').style.color='#60A5FA';
-    sb.style.background='transparent';
-    sb.style.cssText=sb.style.cssText.replace(/border:[^;]+/,'border:1.5px solid rgba(255,255,255,.1)');
-    sb.querySelector('span').style.color='#94A3B8';
-    sb.querySelector('i').style.color='#94A3B8';
-  } else {
-    sb.style.cssText=sb.style.cssText.replace(/border:[^;]+/,'border:1.5px solid #A78BFA');
-    sb.style.background='rgba(124,58,237,.15)';
-    sb.querySelector('span').style.color='#fff';
-    sb.querySelector('i').style.color='#A78BFA';
-    mb.style.background='transparent';
-    mb.style.cssText=mb.style.cssText.replace(/border:[^;]+/,'border:1.5px solid rgba(255,255,255,.1)');
-    mb.querySelector('span').style.color='#94A3B8';
-    mb.querySelector('i').style.color='#94A3B8';
+  var s2b=document.getElementById('_login_role_staff2');
+  var btns=[mb,sb,s2b];
+  btns.forEach(function(b){
+    if(!b)return;
+    b.style.background='transparent';
+    b.style.border='1.5px solid rgba(255,255,255,.1)';
+    var sp=b.querySelector('span');var ic=b.querySelector('i');
+    if(sp)sp.style.color='#94A3B8';
+    if(ic)ic.style.color='#94A3B8';
+  });
+  var active=r==='master'?mb:r==='staff'?sb:s2b;
+  var color=r==='master'?'#2563EB':r==='staff'?'#7C3AED':'#059669';
+  var iconColor=r==='master'?'#60A5FA':r==='staff'?'#A78BFA':'#34D399';
+  if(active){
+    active.style.background='rgba('+( r==='master'?'37,99,235':r==='staff'?'124,58,237':'5,150,105')+',.15)';
+    active.style.border='1.5px solid '+color;
+    var sp=active.querySelector('span');var ic=active.querySelector('i');
+    if(sp)sp.style.color='#fff';
+    if(ic)ic.style.color=iconColor;
   }
   var err=document.getElementById('_login_err');
   if(err)err.style.display='none';
@@ -4317,11 +4332,12 @@ async function init(){
   /* 저장된 세션 확인 → 자동 로그인 */
   var saved=null;
   try{saved=localStorage.getItem('sorizava_session');}catch(e){}
-  if(saved&&(saved==='master'||saved==='staff')){
+  if(saved&&(saved==='master'||saved==='staff'||saved==='staff2')){
     _currentUser={type:saved};
     document.getElementById('_login_screen').style.display='none';
     var _appEl=document.getElementById('app');_appEl.style.display='flex';_appEl.style.flexDirection='row';
-    if(saved==='staff'&&STAFF_VIEWS.indexOf(currentView)<0)currentView='dashboard';
+    var allowedViews=saved==='staff2'?STAFF2_VIEWS:saved==='staff'?STAFF_VIEWS:null;
+    if(allowedViews&&allowedViews.indexOf(currentView)<0)currentView='dashboard';
     setView(currentView);
     showLoading();
     try{await loadAllData();}finally{hideLoading();}
