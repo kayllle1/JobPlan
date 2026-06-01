@@ -417,7 +417,7 @@ function isLoggedIn(){return !!_currentUser;}
 
 /* 스태프 접근 가능 뷰 */
 var STAFF_VIEWS=['dashboard','jobs','employment','calendar','employers','favorites','national'];
-var STAFF2_VIEWS=['dashboard','training'];
+var STAFF2_VIEWS=['training'];
 
 /* 개인정보 마스킹 */
 function maskName(n){if(!n)return'***';return n[0]+'**';}
@@ -440,7 +440,8 @@ function doLogin(type){
     }catch(e){}
     document.getElementById('_login_screen').style.display='none';
     var _appEl=document.getElementById('app');_appEl.style.display='flex';_appEl.style.flexDirection='row';
-    if(type==='staff'||type==='staff2')currentView='dashboard';
+    if(type==='staff')currentView='dashboard';
+    if(type==='staff2')currentView='training';
     setView(currentView);
     showLoading();
     loadAllData().finally(hideLoading).then(function(){setupRealtime();});
@@ -2460,8 +2461,7 @@ function renderSidebar(){
   var navHtml='';
   if(isStaff2()){
     /* 스태프2: 연수관리만 */
-    navHtml+=navBtn('dashboard','📊','대시보드')
-      +section('#A78BFA','도구')
+    navHtml+=section('#A78BFA','도구')
       +navBtn('training','🎓','연수 관리');
   } else if(isStaff()){
     /* 스태프: 연수관리 제외 */
@@ -4341,7 +4341,7 @@ async function init(){
     document.getElementById('_login_screen').style.display='none';
     var _appEl=document.getElementById('app');_appEl.style.display='flex';_appEl.style.flexDirection='row';
     var allowedViews=saved==='staff2'?STAFF2_VIEWS:saved==='staff'?STAFF_VIEWS:null;
-    if(allowedViews&&allowedViews.indexOf(currentView)<0)currentView='dashboard';
+    if(allowedViews&&allowedViews.indexOf(currentView)<0)currentView=saved==='staff2'?'training':'dashboard';
     setView(currentView);
     showLoading();
     try{await loadAllData();}finally{hideLoading();}
