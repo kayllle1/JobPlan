@@ -334,23 +334,23 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
         <button id="_login_role_master" onclick="selectRole('master')" style="padding:13px;border-radius:12px;border:1.5px solid #2563EB;background:rgba(37,99,235,.15);cursor:pointer;text-align:left;transition:all .15s">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
             <i class="ti ti-shield-check" style="font-size:16px;color:#60A5FA" aria-hidden="true"></i>
-            <span style="font-size:13px;font-weight:700;color:#fff">마스터</span>
+            <span style="font-size:13px;font-weight:700;color:#fff">교육팀</span>
           </div>
           <div style="font-size:10.5px;color:#64748B;line-height:1.4">전체 권한 · 모든 기능</div>
         </button>
         <button id="_login_role_staff" onclick="selectRole('staff')" style="padding:13px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:transparent;cursor:pointer;text-align:left;transition:all .15s">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
             <i class="ti ti-user-check" style="font-size:16px;color:#64748B" aria-hidden="true"></i>
-            <span style="font-size:13px;font-weight:700;color:#64748B">스태프</span>
+            <span style="font-size:13px;font-weight:700;color:#64748B">상담팀</span>
           </div>
-          <div style="font-size:10.5px;color:#64748B;line-height:1.4">제한 접근 · 개인정보 비공개</div>
+          <div style="font-size:10.5px;color:#64748B;line-height:1.4">채용 현황 조회 · 개인정보 비공개</div>
         </button>
         <button id="_login_role_staff2" onclick="selectRole('staff2')" style="padding:13px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:transparent;cursor:pointer;text-align:left;transition:all .15s">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
             <i class="ti ti-user" style="font-size:16px;color:#64748B" aria-hidden="true"></i>
-            <span style="font-size:13px;font-weight:700;color:#64748B">스태프2</span>
+            <span style="font-size:13px;font-weight:700;color:#64748B">연수팀</span>
           </div>
-          <div style="font-size:10.5px;color:#64748B;line-height:1.4">연수관리 전용</div>
+          <div style="font-size:10.5px;color:#64748B;line-height:1.4">연수 관리 전용</div>
         </button>
       </div>
     </div>
@@ -2460,11 +2460,11 @@ function renderSidebar(){
 
   var navHtml='';
   if(isStaff2()){
-    /* 스태프2: 연수관리만 */
+    /* 연수팀: 연수관리만 */
     navHtml+=section('#A78BFA','도구')
       +navBtn('training','🎓','연수 관리');
   } else if(isStaff()){
-    /* 스태프: 연수관리 제외 */
+    /* 상담팀: 연수관리 제외 */
     navHtml+=navBtn('dashboard','📊','대시보드')
       +section('#38BDF8','인사이트')
       +navBtn('calendar','📅','일정 캘린더')
