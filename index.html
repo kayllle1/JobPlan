@@ -416,7 +416,7 @@ function isStaff2(){return _currentUser&&_currentUser.type==='staff2';}
 function isLoggedIn(){return !!_currentUser;}
 
 /* 스태프 접근 가능 뷰 */
-var STAFF_VIEWS=['dashboard','jobs','employment','calendar','employers','favorites'];
+var STAFF_VIEWS=['dashboard','jobs','employment','calendar','employers','favorites','national'];
 var STAFF2_VIEWS=['dashboard','training'];
 
 /* 개인정보 마스킹 */
@@ -1989,8 +1989,7 @@ function renderTraining(){
           'padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;font-family:inherit;white-space:nowrap">'+
           '+ 입력</button>';
       return'<tr class="tbl-tr'+(isSel?' row-urgent':'')+'" style="border-bottom:1px solid #F1F5F9">'+
-        '<td style="padding:10px 8px;text-align:center"><input type="checkbox" '+(isSel?'checked':'')+
-        ' onchange="toggleTrSelect('+p.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB"></td>'+
+        (!isStaff2()?'<td style="padding:10px 8px;text-align:center"><input type="checkbox" '+(isSel?'checked':'')+' onchange="toggleTrSelect('+p.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB"></td>':'')+
         '<td style="padding:10px 12px;text-align:center;color:#64748B;font-size:11px;font-weight:700">'+(i+1)+'</td>'+
         '<td style="padding:8px 12px"><span style="font-weight:700;font-size:13px;color:#0F172A">'+esc(p.student_name)+'</span>'+courseInfo+'</td>'+
         '<td style="padding:10px 12px;color:#6B7280;font-size:12px">'+esc(p.phone_number||'-')+'</td>'+
@@ -2006,7 +2005,7 @@ function renderTraining(){
   /* ── 테이블 헤더 ── */
   var thead='<tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">'+
     '<th style="padding:10px 8px;text-align:center;background:#F8FAFC;width:36px">'+
-    (visibleIds.length>0?'<input type="checkbox" '+(allChecked?'checked':'')+
+    (!isStaff2()&&visibleIds.length>0?'<input type="checkbox" '+(allChecked?'checked':'')+
     ' onchange="toggleTrSelectAll(['+visibleIds.join(',')+'])" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">':'')+
     '</th>'+
     ['No.','이름','연락처','자격증','연수 진행 상태','특이사항 / 데일리 피드백','테스트 통과 유무','관리'].map(function(h){
@@ -2473,7 +2472,8 @@ function renderSidebar(){
       +section('#34D399','채용 관리')
       +navBtn('jobs','📋','공고관리')
       +navBtn('favorites','⭐','즐겨찾기')
-      +navBtn('employment','🏆','취업 현황');
+      +navBtn('employment','🏆','취업 현황')
+      +navBtn('national','📊','지역 현황');
   } else {
     navHtml+=navBtn('dashboard','📊','대시보드')
       +section('#38BDF8','인사이트')
