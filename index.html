@@ -1172,6 +1172,7 @@ function downloadTrTemplate(){if(isStaff())return;
 
 /* ─ 기수 추가 모달 ─ */
 function openTrCourseModal(){
+  if(isStaff2())return;
   showModal('📋 기수 추가',
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">'+
     fInp('기수 명칭 *','trc_name','text','','placeholder="예: 2026년 4월 1기"')+
@@ -1200,6 +1201,7 @@ function openTrCourseModal(){
 
 /* ─ 기수 저장 ─ */
 async function saveTrCourse(){
+  if(isStaff2())return;
   var name=document.getElementById('trc_name')&&document.getElementById('trc_name').value.trim();
   if(!name)return customAlert('기수 명칭을 입력하세요');
   var typeEl=document.getElementById('trc_type');
@@ -1311,6 +1313,7 @@ async function executeTrUpload(courseId){
 
 /* ─ 수강생 추가/수정 모달 ─ */
 function openTrMemberModal(courseId,participantId){
+  if(isStaff2())return;
   var p=participantId!=null?TR_PARTICIPANTS.find(function(x){return x.id===participantId;}):null;
   var f=p||{student_name:'',phone_number:'',license_info:'',status:'진행 중',first_test_score:'',first_test_result:''};
   var suryoOpts=['합격','불합격'].map(function(o){
@@ -1350,6 +1353,7 @@ function openTrMemberModal(courseId,participantId){
 
 /* ─ 수강생 저장 ─ */
 async function saveTrMember(courseId,participantId){
+  if(isStaff2())return;
   var nm=document.getElementById('trm_nm')&&document.getElementById('trm_nm').value.trim();
   if(!nm)return customAlert('이름을 입력하세요');
   var ph=(document.getElementById('trm_ph')&&document.getElementById('trm_ph').value)||'';
@@ -1370,6 +1374,7 @@ async function saveTrMember(courseId,participantId){
 }
 
 async function deleteTrMember(participantId){
+  if(isStaff2())return;
   customConfirm('이 수강생 데이터를 삭제하시겠습니까?',async function(){
     var r=await SB.from('training_participants').delete().eq('id',participantId);
     if(r.error){customAlert('오류: '+r.error.message);return;}
@@ -1994,8 +1999,7 @@ function renderTraining(){
         '<td style="padding:8px 12px">'+noteCell+'</td>'+
         '<td style="padding:8px 12px">'+trSuryoBadge(p.first_test_result)+'</td>'+
         '<td style="padding:10px 12px;white-space:nowrap"><div style="display:flex;gap:4px">'+
-        btn('\u270F','openTrMemberModal('+p.course_id+','+p.id+')','outline',true)+' '+
-        btn('\uD83D\uDDD1','deleteTrMember('+p.id+')','danger',true)+'</div></td></tr>';
+        (!isStaff2()?btn('\u270F','openTrMemberModal('+p.course_id+','+p.id+')','outline',true)+' '+btn('\uD83D\uDDD1','deleteTrMember('+p.id+')','danger',true):'')+'</div></td></tr>'
     }).join('');
   }
 
