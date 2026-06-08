@@ -2210,7 +2210,7 @@ function removeFromBlacklist(studentId){
 }
 
 /* ─ 합격 확인 ─ */
-var _ccOpenMonth='';
+var _ccOpenMonth=null;
 
 function showCallJobInfo(jobId){
   var j=JOBS.find(function(x){return String(x.id)===String(jobId);});
@@ -2327,7 +2327,7 @@ function renderCallCheck(){
 
   /* 기본 열림: 이번달 또는 최신달 */
   var thisYM=TODAY.slice(0,7);
-  if(!_ccOpenMonth){
+  if(_ccOpenMonth===null){
     _ccOpenMonth=sortedMonths.indexOf(thisYM)>=0?thisYM:(sortedMonths[0]||'');
   }
 
