@@ -2302,17 +2302,16 @@ async function saveCallTrack(jobId){
 
   var newRow={job_id:jobIdStr,status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
 
-  /* ① 로컬 즉시 반영 */
+  /* ① Supabase에 먼저 저장 */
+  var r=await SB.from('call_tracking').upsert(newRow,{onConflict:'job_id'});
+  if(r&&r.error){customAlert('저장 오류: '+r.error.message);return;}
+
+  /* ② 저장 성공 후 로컬 배열 업데이트 */
   var idx=CALL_TRACKING.findIndex(function(c){return String(c.job_id)===jobIdStr;});
   if(idx>=0){CALL_TRACKING[idx]=newRow;}else{CALL_TRACKING.push(newRow);}
+
+  /* ③ 화면 갱신 */
   renderView();
-
-  /* ② Supabase 저장: DELETE 후 INSERT (가장 안정적) */
-  var delR=await SB.from('call_tracking').delete().eq('job_id',jobIdStr);
-  if(delR&&delR.error){customAlert('저장 오류(삭제): '+delR.error.message);return;}
-  var insR=await SB.from('call_tracking').insert(newRow);
-  if(insR&&insR.error){customAlert('저장 오류(입력): '+insR.error.message);return;}
-
   customAlert('저장되었습니다 ✓');
 }
 
