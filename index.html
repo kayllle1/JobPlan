@@ -911,7 +911,9 @@ async function loadAllData(){
     TR_PARTICIPANTS=tpd;
     /* employers (없으면 빈 배열) */
     try{var r6=await SB.from('employers').select('*').order('name',{ascending:true});EMPLOYERS=(r6&&!r6.error)?safeArr(r6):[];}catch(e){EMPLOYERS=[];}
-    /* favorites (없으면 빈 배열) */
+    /* call_tracking */
+    try{var r_ct=await SB.from('call_tracking').select('*');CALL_TRACKING=(r_ct&&!r_ct.error)?safeArr(r_ct):[];}catch(e){CALL_TRACKING=[];}
+    /* favorites */
     try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error)?safeArr(r7):[];}catch(e){FAVORITES=[];}
     console.log('Loaded: students='+STUDENTS.length+' jobs='+JOBS.length+' vault='+VAULT.length+' employers='+EMPLOYERS.length+' favorites='+FAVORITES.length);
     renderView();
@@ -926,6 +928,7 @@ function setupRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'interview_vault'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'training_courses'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'employers'},scheduleReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'call_tracking'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'favorites'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'training_participants'},scheduleReload)
     .subscribe(function(s){
@@ -2205,6 +2208,192 @@ function removeFromBlacklist(studentId){
     await loadAllData();
   },'해제','#059669');
 }
+
+/* ─ 합격 확인 ─ */
+var _ccOpenMonth='';
+
+function getCallTrack(jobId){
+  return CALL_TRACKING.find(function(c){return String(c.job_id)===String(jobId);})||null;
+}
+
+async function saveCallTrack(jobId){
+  if(!isAdmin())return;
+  var status=$('ct_status_'+jobId)&&$('ct_status_'+jobId).value||'미확인';
+  var kb=$('ct_kb_'+jobId)&&$('ct_kb_'+jobId).value||'확인중';
+  var cname=$('ct_cname_'+jobId)&&$('ct_cname_'+jobId).value||'';
+  var cphone=$('ct_cphone_'+jobId)&&$('ct_cphone_'+jobId).value||'';
+  var memo=$('ct_memo_'+jobId)&&$('ct_memo_'+jobId).value||'';
+  var existing=getCallTrack(jobId);
+  var called_at=existing&&existing.called_at;
+  if(status!=='미확인'&&!called_at)called_at=new Date().toISOString();
+  var row={job_id:String(jobId),status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,called_at:called_at};
+  var r=existing
+    ?await SB.from('call_tracking').update(row).eq('id',existing.id)
+    :await SB.from('call_tracking').insert(row);
+  if(r&&r.error){customAlert('저장 오류: '+r.error.message);return;}
+  await loadAllData();
+  customAlert('저장되었습니다 ✓');
+}
+
+function renderCallCheck(){
+  /* 최종합격 발표일이 있는 공고를 월별로 그룹핑 */
+  var jobs=JOBS.filter(function(j){return j.finalDate&&j.finalDate.length>=7;});
+
+  /* 월별 그룹 */
+  var months={};
+  jobs.forEach(function(j){
+    var ym=j.finalDate.slice(0,7); /* 2026-05 */
+    if(!months[ym])months[ym]=[];
+    months[ym].push(j);
+  });
+
+  /* 내림차순 정렬 */
+  var sortedMonths=Object.keys(months).sort(function(a,b){return b.localeCompare(a);});
+
+  /* 기본 열림: 이번달 또는 최신달 */
+  var thisYM=TODAY.slice(0,7);
+  if(!_ccOpenMonth){
+    _ccOpenMonth=sortedMonths.indexOf(thisYM)>=0?thisYM:(sortedMonths[0]||'');
+  }
+
+  var statusColors={'미확인':'#94A3B8','전화완료':'#2563EB','합격자확인':'#059669','기종확인':'#7C3AED','정보없음':'#DC2626'};
+  var statusBg={'미확인':'#F8FAFC','전화완료':'#EFF6FF','합격자확인':'#F0FDF4','기종확인':'#F5F3FF','정보없음':'#FEF2F2'};
+  var kbColors={'소리자바':'#0891B2','카스':'#D97706','알려주지 않음':'#DC2626','확인중':'#94A3B8'};
+
+  var accordions=sortedMonths.map(function(ym){
+    var mJobs=months[ym];
+    var p=ym.split('-');
+    var label=p[0]+'년 '+parseInt(p[1])+'월';
+    var tracks=mJobs.map(function(j){return getCallTrack(j.id);});
+    var confirmed=tracks.filter(function(t){return t&&t.status!=='미확인';}).length;
+    var total=mJobs.length;
+    var pct=Math.round(confirmed/total*100);
+    var isOpen=_ccOpenMonth===ym;
+
+    var rows=isOpen?mJobs.map(function(j){
+      var t=getCallTrack(j.id)||{};
+      var st=t.status||'미확인';
+      var kb=t.keyboard_type||'확인중';
+      var myAps=j.applicants?j.applicants.length:0;
+      var emp=EMPLOYERS.find(function(e){return e.name&&j.name&&j.name.includes(e.name);});
+      var autoPhone=emp&&emp.phone||'';
+
+      return'<div style="border:1px solid #E2E8F0;border-radius:10px;padding:14px 16px;background:#fff;display:flex;flex-direction:column;gap:10px">'
+        /* 공고명 + 날짜 + 내 지원자 */
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+          +'<div>'
+            +'<div style="font-size:14px;font-weight:600;color:#0F172A">'+esc(j.name)+'</div>'
+            +'<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'
+              +'<span style="font-size:11px;color:#64748B">발표일 '+fmt(j.finalDate)+'</span>'
+              +(myAps>0
+                ?'<span style="background:#EFF6FF;color:#1D4ED8;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600">내 지원자 '+myAps+'명</span>'
+                :'<span style="background:#F1F5F9;color:#94A3B8;padding:1px 8px;border-radius:99px;font-size:11px">지원자 없음</span>'
+              )
+            +'</div>'
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+            +(t.called_at?'<span style="font-size:11px;color:#94A3B8">'+t.called_at.slice(0,10)+'</span>':'')
+            +'<span style="background:'+statusBg[st]+';color:'+statusColors[st]+';padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600">'+st+'</span>'
+          +'</div>'
+        +'</div>'
+
+        /* 입력 필드 */
+        +(isAdmin()
+          ?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+            +'<div><div style="font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:3px">확인 상태</div>'
+              +'<select id="ct_status_'+j.id+'" style="width:100%;padding:6px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;background:#fff">'+
+              ['미확인','전화완료','합격자확인','기종확인','정보없음'].map(function(s){return'<option value="'+s+'" '+(st===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'
+            +'<div><div style="font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:3px">키보드 기종</div>'
+              +'<select id="ct_kb_'+j.id+'" style="width:100%;padding:6px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;background:#fff">'+
+              ['확인중','소리자바','카스','알려주지 않음'].map(function(k){return'<option value="'+k+'" '+(kb===k?'selected':'')+'>'+k+'</option>';}).join('')+'</select></div>'
+            +'<div><div style="font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:3px">담당자명</div>'
+              +'<input id="ct_cname_'+j.id+'" type="text" value="'+esc(t.contact_name||'')+'" placeholder="담당자 이름" style="width:100%;padding:6px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;outline:none;background:#F8FAFC"></div>'
+            +'<div><div style="font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:3px">기관 연락처</div>'
+              +'<input id="ct_cphone_'+j.id+'" type="text" value="'+esc(t.contact_phone||autoPhone)+'" placeholder="'+esc(autoPhone||'연락처 입력')+'" style="width:100%;padding:6px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;outline:none;background:#F8FAFC"></div>'
+          +'</div>'
+          +'<div><div style="font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:3px">메모</div>'
+            +'<textarea id="ct_memo_'+j.id+'" rows="2" placeholder="전화 결과, 합격자 정보 등 자유롭게 기록…" style="width:100%;padding:6px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;outline:none;resize:none;background:#F8FAFC;line-height:1.5">'+esc(t.memo||'')+'</textarea></div>'
+          +'<button onclick="saveCallTrack(\''+j.id+'\')" style="align-self:flex-start;background:#0F172A;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px" onmouseover="this.style.background=\'#1E293B\'" onmouseout="this.style.background=\'#0F172A\'"><i class="ti ti-device-floppy" style="font-size:14px"></i> 저장</button>'
+          /* 스태프 — 읽기 전용 */
+          :'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+            +(t.contact_phone?'<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:7px 12px;font-size:12px;color:#374151;display:flex;align-items:center;gap:5px"><i class="ti ti-phone" style="font-size:13px;color:#64748B"></i>'+esc(t.contact_phone)+'</div>':'')
+            +(kb!=='확인중'?'<span style="background:'+kbColors[kb]+'18;color:'+kbColors[kb]+';border:1px solid '+kbColors[kb]+'30;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600">'+kb+'</span>':'')
+            +(t.memo?'<div style="font-size:12px;color:#64748B;padding:7px 12px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;flex:1">'+esc(t.memo)+'</div>':'')
+          +'</div>'
+        )
+      +'</div>';
+    }).join(''):null;
+
+    return'<div style="margin-bottom:10px">'
+      /* 월 헤더 */
+      +'<div onclick="_ccOpenMonth=\''+(isOpen?'':ym)+'\';renderView()" style="background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:12px;'+(isOpen?'border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:1px solid #F1F5F9':'')+'">'
+        +'<i class="ti '+(isOpen?'ti-folder-open':'ti-folder')+'" style="font-size:18px;color:'+(isOpen?'#2563EB':'#94A3B8')+'"></i>'
+        +'<div style="flex:1">'
+          +'<div style="font-size:14px;font-weight:600;color:#0F172A">'+label+'</div>'
+          +'<div style="margin-top:4px;display:flex;align-items:center;gap:8px">'
+            +'<div style="flex:1;height:5px;background:#F1F5F9;border-radius:99px;overflow:hidden;max-width:120px"><div style="width:'+pct+'%;height:100%;background:'+(pct===100?'#059669':'#2563EB')+';border-radius:99px"></div></div>'
+            +'<span style="font-size:11px;color:#64748B">'+confirmed+'/'+total+' 확인완료</span>'
+          +'</div>'
+        +'</div>'
+        +'<i class="ti '+(isOpen?'ti-chevron-up':'ti-chevron-down')+'" style="font-size:16px;color:#94A3B8"></i>'
+      +'</div>'
+      /* 펼침 영역 */
+      +(isOpen
+        ?'<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-top:none;border-bottom-left-radius:10px;border-bottom-right-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px">'+rows+'</div>'
+        :''
+      )
+    +'</div>';
+  }).join('');
+
+  /* 발표일 없는 공고 */
+  var noDateJobs=JOBS.filter(function(j){return !j.finalDate||j.finalDate.trim()==='';});
+
+  return'<div style="display:flex;flex-direction:column;height:100%;background:#FAFAF9">'
+    +'<div style="padding:18px 24px 14px;border-bottom:1px solid #E5E7EB;background:#fff;flex-shrink:0">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="width:38px;height:38px;border-radius:10px;background:#EFF6FF;border:1px solid #BFDBFE;display:flex;align-items:center;justify-content:center"><i class="ti ti-phone-call" style="font-size:18px;color:#2563EB"></i></div>'
+        +'<div>'
+          +'<div style="font-size:17px;font-weight:700;color:#0F172A">합격 확인</div>'
+          +'<div style="font-size:12px;color:#64748B;margin-top:1px">최종합격 발표 기관에 직접 전화해서 결과 확인</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="flex:1;overflow-y:auto;padding:16px 24px 24px">'
+      +(sortedMonths.length===0
+        ?'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:12px"><i class="ti ti-phone-off" style="font-size:40px;color:#E2E8F0"></i><div style="font-size:15px;color:#94A3B8">최종합격 발표일이 등록된 공고가 없습니다</div></div>'
+        :accordions
+      )
+      /* 발표일 미등록 공고 */
+      +(noDateJobs.length>0
+        ?'<div style="margin-top:16px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+          +'<div style="height:1px;flex:1;background:#E2E8F0"></div>'
+          +'<span style="font-size:12px;color:#94A3B8;font-weight:500;white-space:nowrap">📋 발표일 미등록 공고 '+noDateJobs.length+'건</span>'
+          +'<div style="height:1px;flex:1;background:#E2E8F0"></div>'
+        +'</div>'
+        +'<div style="background:#fff;border:1px solid #FDE68A;border-radius:10px;overflow:hidden">'
+          +'<div style="padding:11px 16px;background:#FFFBEB;border-bottom:1px solid #FDE68A;display:flex;align-items:center;gap:7px">'
+            +'<i class="ti ti-alert-triangle" style="font-size:14px;color:#D97706"></i>'
+            +'<span style="font-size:13px;font-weight:600;color:#92400E">최종합격 발표일이 입력되지 않은 공고</span>'
+            +'<span style="margin-left:auto;font-size:11px;color:#B45309">공고관리에서 발표일 입력 후 자동으로 폴더에 추가됩니다</span>'
+          +'</div>'
+          +'<div style="padding:8px 12px;display:flex;flex-direction:column;gap:1px">'
+            +noDateJobs.map(function(j){
+              return'<div style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:0.5px solid #F1F5F9">'
+                +badge(j.category)
+                +'<div style="flex:1;font-size:13px;font-weight:500;color:#0F172A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name)+'</div>'
+                +(j.isClosed?'<span style="font-size:11px;color:#94A3B8">마감</span>':'<span style="font-size:11px;color:#059669;font-weight:500">진행중</span>')
+                +(isAdmin()?'<button onclick="openEditJobModal('+j.id+')" style="border:1px solid #E2E8F0;background:#F8FAFC;color:#374151;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">발표일 입력</button>':'')
+              +'</div>';
+            }).join('')
+          +'</div>'
+        +'</div>'
+      +'</div>'
+        :''
+      )
+    +'</div>'
+  +'</div>';
+}
+
 /* ─ 블랙리스트 렌더 ─ */
 function renderBlacklist(){
   var blList=STUDENTS.filter(function(s){return s.restrictionLevel==='제한';});
@@ -2498,6 +2687,7 @@ function renderSidebar(){
       +navBtn('favorites','⭐','즐겨찾기')
       +navBtn('employment','🏆','취업 현황')
       +navBtn('national','📊','지역 현황')
+      +navBtn('call_check','📞','결과 추적')
       +section('#A78BFA','도구')
       +navBtn('interview','📚','면접 자료실')
       +navBtn('training','🎓','연수 관리')
@@ -3620,7 +3810,8 @@ var _natTo='';
 var _natType='';
 /* ── 취업처 관리 ── */
 var EMPLOYERS=[];
-var FAVORITES=[]; // 즐겨찾기
+var FAVORITES=[];
+var CALL_TRACKING=[]; // 합격 확인 // 즐겨찾기
 var _empKw='';
 var _empCatF='전체';
 var _empLocF='';
@@ -4254,6 +4445,7 @@ function renderView(){
     else if(currentView==='employers')main.innerHTML=renderEmployerDB();
     else if(currentView==='blacklist')main.innerHTML=renderBlacklist();
     else if(currentView==='favorites')main.innerHTML=renderFavorites();
+    else if(currentView==='call_check')main.innerHTML=renderCallCheck();
     else if(currentView==='training')main.innerHTML=renderTraining();
   }catch(e){console.error('renderView error',e);main.innerHTML='<div style="padding:40px;text-align:center;color:#DC2626">렌더링 오류: '+(e.message||String(e))+'</div>';}
   var sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();
