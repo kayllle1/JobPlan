@@ -2212,8 +2212,75 @@ function removeFromBlacklist(studentId){
 /* ─ 합격 확인 ─ */
 var _ccOpenMonth='';
 
+function showCallJobInfo(jobId){
+  var j=JOBS.find(function(x){return String(x.id)===String(jobId);});
+  if(!j)return;
+  var aps=j.applicants||[];
+  var passAps=aps.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';});
+
+  function dateRow(label,val){
+    if(!val)return'';
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid #F1F5F9">'
+      +'<span style="font-size:12px;color:#64748B">'+label+'</span>'
+      +'<span style="font-size:12px;font-weight:500;color:#0F172A">'+fmt(val)+'</span>'
+    +'</div>';
+  }
+
+  var html=''
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">'
+      +badge(j.category)
+      +'<div><div style="font-size:15px;font-weight:700;color:#0F172A">'+esc(j.name)+'</div>'
+        +(j.location?'<div style="font-size:12px;color:#64748B;margin-top:2px">📍 '+esc(j.location)+'</div>':'')
+      +'</div>'
+      +(j.jobUrl?'<a href="'+esc(j.jobUrl)+'" target="_blank" style="margin-left:auto;display:flex;align-items:center;gap:4px;background:#EFF6FF;color:#2563EB;padding:5px 10px;border-radius:7px;font-size:12px;font-weight:500;text-decoration:none"><i class="ti ti-external-link" style="font-size:13px"></i>공고 원문</a>':'')
+    +'</div>'
+
+    /* 날짜 정보 */
+    +'<div style="background:#F8FAFC;border-radius:10px;padding:10px 14px;margin-bottom:12px">'
+      +dateRow('서류 접수일', j.docDate)
+      +dateRow('서류 합격 발표', j.documentPassDate)
+      +dateRow('면접일', j.interviewDate)
+      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;'+(j.finalDate?'border-bottom:0.5px solid #F1F5F9':'')+'">'
+        +'<span style="font-size:12px;color:#DC2626;font-weight:600">최종합격 발표일</span>'
+        +'<span style="font-size:12px;font-weight:700;color:#DC2626">'+(j.finalDate?fmt(j.finalDate):'미등록')+'</span>'
+      +'</div>'
+      +(j.managerName||j.managerPhone
+        ?'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">'
+          +'<span style="font-size:12px;color:#64748B">담당자</span>'
+          +'<span style="font-size:12px;font-weight:500;color:#374151">'+esc(j.managerName||'')+(j.managerPhone?' · '+esc(j.managerPhone):'')+'</span>'
+        +'</div>'
+        :'')
+    +'</div>'
+
+    /* 지원자 현황 */
+    +'<div style="margin-bottom:12px">'
+      +'<div style="font-size:11px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">지원자 현황</div>'
+      +(aps.length===0
+        ?'<div style="font-size:13px;color:#94A3B8;text-align:center;padding:10px;background:#F8FAFC;border-radius:8px">등록된 지원자 없음</div>'
+        :'<div style="display:flex;flex-direction:column;gap:4px">'
+          +aps.map(function(a){
+            var st=STUDENTS.find(function(s){return String(s.id)===String(a.studentId);});
+            var sc={'서류접수':'#94A3B8','서류합격':'#2563EB','면접대기':'#D97706','최종합격':'#059669','취업성공':'#059669','불합격':'#DC2626'}[a.status]||'#64748B';
+            return'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#F8FAFC;border-radius:7px">'
+              +'<span style="font-size:13px;font-weight:600;color:#0F172A">'+esc(st?st.name:'?')+'</span>'
+              +'<span style="font-size:11px;font-weight:600;color:'+sc+';margin-left:auto;background:'+sc+'18;padding:2px 8px;border-radius:99px">'+esc(a.status||'')+'</span>'
+            +'</div>';
+          }).join('')
+        +'</div>'
+      )
+    +'</div>'
+
+    /* 비고 */
+    +(j.note?'<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 12px;font-size:12px;color:#78350F;line-height:1.6">📝 '+esc(j.note)+'</div>':'')
+
+    +'<div style="display:flex;justify-content:flex-end;padding-top:14px;border-top:1px solid #F3F4F6;margin-top:12px">'
+      +btn('닫기','closeModal()','outline')
+    +'</div>';
+
+  showModal(j.name, html, '500px');
+}
+
 function getCallTrack(jobId){
-  return CALL_TRACKING.find(function(c){return String(c.job_id)===String(jobId);})||null;
 }
 
 async function saveCallTrack(jobId){
@@ -2236,8 +2303,16 @@ async function saveCallTrack(jobId){
 }
 
 function renderCallCheck(){
-  /* 최종합격 발표일이 있는 공고를 월별로 그룹핑 */
-  var jobs=JOBS.filter(function(j){return j.finalDate&&j.finalDate.length>=7;});
+  /* 최종합격 발표일이 있는 공고를 월별로 그룹핑
+     조건: 추천 제외 + 최종합격자 없는 공고 + 이전 달까지만 */
+  var thisYM=TODAY.slice(0,7);
+  var jobs=JOBS.filter(function(j){
+    if(!j.finalDate||j.finalDate.length<7)return false;
+    if(j.isRec)return false;
+    if(j.finalDate.slice(0,7)>=thisYM)return false; // 현재 달 제외 (달 끝나면 자동 추가)
+    var hasWinner=(j.applicants||[]).some(function(a){return a.status==='최종합격'||a.status==='취업성공';});
+    return !hasWinner; // 합격자 있으면 제외
+  });
 
   /* 월별 그룹 */
   var months={};
@@ -2282,7 +2357,10 @@ function renderCallCheck(){
         /* 공고명 + 날짜 + 내 지원자 */
         +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
           +'<div>'
-            +'<div style="font-size:14px;font-weight:600;color:#0F172A">'+esc(j.name)+'</div>'
+            +'<div style="font-size:14px;font-weight:600;color:#0F172A;display:flex;align-items:center;gap:6px">'
+            +'<button onclick="showCallJobInfo(\''+j.id+'\')" style="border:none;background:none;padding:0;cursor:pointer;font-size:14px;font-weight:600;color:#2563EB;text-decoration:underline;font-family:inherit;text-align:left">'+esc(j.name)+'</button>'
+            +(j.jobUrl?'<a href="'+esc(j.jobUrl)+'" target="_blank" title="공고 원문" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;background:#EFF6FF;color:#2563EB;text-decoration:none;font-size:12px;flex-shrink:0"><i class="ti ti-external-link"></i></a>':'')
+          +'</div>'
             +'<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'
               +'<span style="font-size:11px;color:#64748B">발표일 '+fmt(j.finalDate)+'</span>'
               +(myAps>0
@@ -2346,7 +2424,12 @@ function renderCallCheck(){
   }).join('');
 
   /* 발표일 없는 공고 */
-  var noDateJobs=JOBS.filter(function(j){return !j.finalDate||j.finalDate.trim()==='';});
+  var noDateJobs=JOBS.filter(function(j){
+    if(j.isRec)return false;
+    if(j.finalDate&&j.finalDate.trim()!=='')return false;
+    var hasWinner=(j.applicants||[]).some(function(a){return a.status==='최종합격'||a.status==='취업성공';});
+    return !hasWinner;
+  });
 
   return'<div style="display:flex;flex-direction:column;height:100%;background:#FAFAF9">'
     +'<div style="padding:18px 24px 14px;border-bottom:1px solid #E5E7EB;background:#fff;flex-shrink:0">'
