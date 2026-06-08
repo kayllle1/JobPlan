@@ -2359,7 +2359,7 @@ function renderCallCheck(){
         +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
           +'<div>'
             +'<div style="font-size:14px;font-weight:600;color:#0F172A;display:flex;align-items:center;gap:6px">'
-            +'<button onclick="showCallJobInfo(\''+j.id+'\')" style="border:none;background:none;padding:0;cursor:pointer;font-size:14px;font-weight:600;color:#2563EB;text-decoration:underline;font-family:inherit;text-align:left">'+esc(j.name)+'</button>'
+            +'<button onclick="event.stopPropagation();showCallJobInfo(\''+j.id+'\')" style="border:none;background:none;padding:0;cursor:pointer;font-size:14px;font-weight:600;color:#2563EB;text-decoration:underline;font-family:inherit;text-align:left">'+esc(j.name)+'</button>'
             +(j.jobUrl?'<a href="'+esc(j.jobUrl)+'" target="_blank" title="공고 원문" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;background:#EFF6FF;color:#2563EB;text-decoration:none;font-size:12px;flex-shrink:0"><i class="ti ti-external-link"></i></a>':'')
           +'</div>'
             +'<div style="display:flex;align-items:center;gap:8px;margin-top:4px">'
@@ -2377,8 +2377,7 @@ function renderCallCheck(){
         +'</div>'
 
         /* 입력 필드 */
-        +(isAdmin()
-          ?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
             +'<div><div style="font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:3px">확인 상태</div>'
               +'<select id="ct_status_'+j.id+'" style="width:100%;padding:6px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;background:#fff">'+
               ['미확인','전화완료','합격자확인','기종확인','정보없음'].map(function(s){return'<option value="'+s+'" '+(st===s?'selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'
@@ -2393,14 +2392,6 @@ function renderCallCheck(){
           +'<div><div style="font-size:11px;font-weight:600;color:#94A3B8;margin-bottom:3px">메모</div>'
             +'<textarea id="ct_memo_'+j.id+'" rows="2" placeholder="전화 결과, 합격자 정보 등 자유롭게 기록…" style="width:100%;padding:6px 10px;border:1px solid #E2E8F0;border-radius:7px;font-size:12px;font-family:inherit;outline:none;resize:none;background:#F8FAFC;line-height:1.5">'+esc(t.memo||'')+'</textarea></div>'
           +'<button onclick="saveCallTrack(\''+j.id+'\')" style="align-self:flex-start;background:#0F172A;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px" onmouseover="this.style.background=\'#1E293B\'" onmouseout="this.style.background=\'#0F172A\'"><i class="ti ti-device-floppy" style="font-size:14px"></i> 저장</button>'
-          /* 스태프 — 읽기 전용 */
-          :'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-            +(t.contact_phone?'<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:7px 12px;font-size:12px;color:#374151;display:flex;align-items:center;gap:5px"><i class="ti ti-phone" style="font-size:13px;color:#64748B"></i>'+esc(t.contact_phone)+'</div>':'')
-            +(kb!=='확인중'?'<span style="background:'+kbColors[kb]+'18;color:'+kbColors[kb]+';border:1px solid '+kbColors[kb]+'30;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600">'+kb+'</span>':'')
-            +(t.announcement_info?'<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:6px 10px;font-size:12px;color:#92400E;display:flex;align-items:flex-start;gap:5px"><i class="ti ti-speakerphone" style="font-size:13px;margin-top:1px;flex-shrink:0"></i><span>'+esc(t.announcement_info)+'</span></div>':'')
-            +(t.memo?'<div style="font-size:12px;color:#64748B;padding:7px 12px;background:#F8FAFC;border-radius:8px;border:1px solid #E2E8F0;flex:1">'+esc(t.memo)+'</div>':'')
-          +'</div>'
-        )
       +'</div>';
     }).join(''):null;
 
