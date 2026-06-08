@@ -912,7 +912,7 @@ async function loadAllData(){
     /* employers (없으면 빈 배열) */
     try{var r6=await SB.from('employers').select('*').order('name',{ascending:true});EMPLOYERS=(r6&&!r6.error)?safeArr(r6):[];}catch(e){EMPLOYERS=[];}
     /* call_tracking */
-    try{var r_ct=await SB.from('call_tracking').select('*');CALL_TRACKING=(r_ct&&!r_ct.error)?safeArr(r_ct):[];}catch(e){CALL_TRACKING=[];}
+    try{var r_ct=await SB.from('call_tracking').select('*');CALL_TRACKING=(r_ct&&!r_ct.error)?safeArr(r_ct.data):[];}catch(e){CALL_TRACKING=[];}
     /* favorites */
     try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error)?safeArr(r7):[];}catch(e){FAVORITES=[];}
     console.log('Loaded: students='+STUDENTS.length+' jobs='+JOBS.length+' vault='+VAULT.length+' employers='+EMPLOYERS.length+' favorites='+FAVORITES.length);
@@ -2296,9 +2296,8 @@ async function saveCallTrack(jobId){
   var called_at=existing&&existing.called_at||null;
   if(status!=='미확인'&&!called_at)called_at=new Date().toISOString();
   var row={job_id:jobIdStr,status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
-  var r;
-  /* Supabase에서 직접 존재 여부 확인 후 UPDATE 또는 INSERT */
   var check=await SB.from('call_tracking').select('id').eq('job_id',jobIdStr);
+  var r;
   if(check.data&&check.data.length>0){
     r=await SB.from('call_tracking').update(row).eq('job_id',jobIdStr);
   } else {
