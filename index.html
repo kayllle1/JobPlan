@@ -2286,25 +2286,25 @@ function getCallTrack(jobId){
 async function saveCallTrack(jobId){
   if(!isAdmin())return;
   var jobIdStr=String(jobId);
-  var status=$('ct_status_'+jobId)&&$('ct_status_'+jobId).value||'미확인';
-  var kb=$('ct_kb_'+jobId)&&$('ct_kb_'+jobId).value||'확인중';
-  var cname=$('ct_cname_'+jobId)&&$('ct_cname_'+jobId).value||'';
-  var cphone=$('ct_cphone_'+jobId)&&$('ct_cphone_'+jobId).value||'';
-  var memo=$('ct_memo_'+jobId)&&$('ct_memo_'+jobId).value||'';
-  var announce=$('ct_announce_'+jobId)&&$('ct_announce_'+jobId).value||'';
+  var status=($('ct_status_'+jobId)||{}).value||'미확인';
+  var kb=($('ct_kb_'+jobId)||{}).value||'확인중';
+  var cname=($('ct_cname_'+jobId)||{}).value||'';
+  var cphone=($('ct_cphone_'+jobId)||{}).value||'';
+  var memo=($('ct_memo_'+jobId)||{}).value||'';
+  var announce=($('ct_announce_'+jobId)||{}).value||'';
   var existing=getCallTrack(jobId);
-  var called_at=existing&&existing.called_at||null;
+  var called_at=(existing&&existing.called_at)||null;
   if(status!=='미확인'&&!called_at)called_at=new Date().toISOString();
   var row={job_id:jobIdStr,status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
-  var check=await SB.from('call_tracking').select('id').eq('job_id',jobIdStr);
-  var r;
-  if(check.data&&check.data.length>0){
-    r=await SB.from('call_tracking').update(row).eq('job_id',jobIdStr);
-  } else {
-    r=await SB.from('call_tracking').insert(row);
-  }
+  /* upsert 후 저장된 데이터 직접 반환받아 배열 업데이트 */
+  var r=await SB.from('call_tracking').upsert(row,{onConflict:'job_id'}).select();
   if(r&&r.error){customAlert('저장 오류: '+r.error.message);return;}
-  await loadAllData();
+  var saved=r.data&&r.data[0];
+  if(saved){
+    var idx=CALL_TRACKING.findIndex(function(c){return String(c.job_id)===jobIdStr;});
+    if(idx>=0){CALL_TRACKING[idx]=JSON.parse(JSON.stringify(saved));}
+    else{CALL_TRACKING.push(JSON.parse(JSON.stringify(saved)));}
+  }
   renderView();
   customAlert('저장되었습니다 ✓');
 }
