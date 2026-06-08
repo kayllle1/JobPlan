@@ -928,7 +928,7 @@ function setupRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'interview_vault'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'training_courses'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'employers'},scheduleReload)
-    .on('postgres_changes',{event:'*',schema:'public',table:'call_tracking'},scheduleReload)
+    /* call_tracking은 realtime 구독 제외 - 로컬 상태로 관리 */
     .on('postgres_changes',{event:'*',schema:'public',table:'favorites'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'training_participants'},scheduleReload)
     .subscribe(function(s){
@@ -2286,31 +2286,30 @@ function getCallTrack(jobId){
 async function saveCallTrack(jobId){
   if(!isAdmin())return;
   var jobIdStr=String(jobId);
-  var status=($('ct_status_'+jobId)||{}).value||'미확인';
-  var kb=($('ct_kb_'+jobId)||{}).value||'확인중';
-  var cname=($('ct_cname_'+jobId)||{}).value||'';
-  var cphone=($('ct_cphone_'+jobId)||{}).value||'';
-  var memo=($('ct_memo_'+jobId)||{}).value||'';
-  var announce=($('ct_announce_'+jobId)||{}).value||'';
+  var status=document.getElementById('ct_status_'+jobId)?document.getElementById('ct_status_'+jobId).value:'미확인';
+  var kb=document.getElementById('ct_kb_'+jobId)?document.getElementById('ct_kb_'+jobId).value:'확인중';
+  var cname=document.getElementById('ct_cname_'+jobId)?document.getElementById('ct_cname_'+jobId).value:'';
+  var cphone=document.getElementById('ct_cphone_'+jobId)?document.getElementById('ct_cphone_'+jobId).value:'';
+  var memo=document.getElementById('ct_memo_'+jobId)?document.getElementById('ct_memo_'+jobId).value:'';
+  var announce=document.getElementById('ct_announce_'+jobId)?document.getElementById('ct_announce_'+jobId).value:'';
   var existing=getCallTrack(jobId);
   var called_at=(existing&&existing.called_at)||null;
   if(status!=='미확인'&&!called_at)called_at=new Date().toISOString();
 
-  /* ① 로컬 배열 즉시 업데이트 → UI 바로 반영 */
-  var localRow={job_id:jobIdStr,status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
+  /* ① 로컬 배열 즉시 업데이트 */
+  var newRow={job_id:jobIdStr,status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
   var idx=CALL_TRACKING.findIndex(function(c){return String(c.job_id)===jobIdStr;});
-  if(idx>=0){CALL_TRACKING[idx]=localRow;}else{CALL_TRACKING.push(localRow);}
+  if(idx>=0){CALL_TRACKING[idx]=newRow;}else{CALL_TRACKING.push(newRow);}
 
-  /* ② 화면 먼저 갱신 */
+  /* ② 화면 즉시 갱신 */
   renderView();
-
-  /* ③ Supabase에 저장 (백그라운드) */
-  var r=await SB.from('call_tracking').upsert(localRow,{onConflict:'job_id'});
-  if(r&&r.error){
-    customAlert('저장 오류: '+r.error.message);
-    return;
-  }
   customAlert('저장되었습니다 ✓');
+
+  /* ③ Supabase 저장 (화면 갱신 후 백그라운드) */
+  try{
+    await SB.from('call_tracking').delete().eq('job_id',jobIdStr);
+    await SB.from('call_tracking').insert(newRow);
+  }catch(e){console.warn('call_tracking 저장 실패',e);}
 }
 
 function renderCallCheck(){
