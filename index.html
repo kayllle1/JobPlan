@@ -2295,9 +2295,7 @@ async function saveCallTrack(jobId){
   if(status!=='미확인'&&!called_at)called_at=new Date().toISOString();
   var announce=$('ct_announce_'+jobId)&&$('ct_announce_'+jobId).value||'';
   var row={job_id:String(jobId),status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
-  var r=existing
-    ?await SB.from('call_tracking').update(row).eq('id',existing.id)
-    :await SB.from('call_tracking').insert(row);
+  var r=await SB.from('call_tracking').upsert(row,{onConflict:'job_id'});
   if(r&&r.error){customAlert('저장 오류: '+r.error.message);return;}
   await loadAllData();
   customAlert('저장되었습니다 ✓');
