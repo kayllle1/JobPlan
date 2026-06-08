@@ -2285,19 +2285,28 @@ function getCallTrack(jobId){
 
 async function saveCallTrack(jobId){
   if(!isAdmin())return;
+  var jobIdStr=String(jobId);
   var status=$('ct_status_'+jobId)&&$('ct_status_'+jobId).value||'미확인';
   var kb=$('ct_kb_'+jobId)&&$('ct_kb_'+jobId).value||'확인중';
   var cname=$('ct_cname_'+jobId)&&$('ct_cname_'+jobId).value||'';
   var cphone=$('ct_cphone_'+jobId)&&$('ct_cphone_'+jobId).value||'';
   var memo=$('ct_memo_'+jobId)&&$('ct_memo_'+jobId).value||'';
-  var existing=getCallTrack(jobId);
-  var called_at=existing&&existing.called_at;
-  if(status!=='미확인'&&!called_at)called_at=new Date().toISOString();
   var announce=$('ct_announce_'+jobId)&&$('ct_announce_'+jobId).value||'';
-  var row={job_id:String(jobId),status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
-  var r=await SB.from('call_tracking').upsert(row,{onConflict:'job_id'});
+  var existing=getCallTrack(jobId);
+  var called_at=existing&&existing.called_at||null;
+  if(status!=='미확인'&&!called_at)called_at=new Date().toISOString();
+  var row={job_id:jobIdStr,status:status,keyboard_type:kb,contact_name:cname,contact_phone:cphone,memo:memo,announcement_info:announce,called_at:called_at};
+  var r;
+  /* Supabase에서 직접 존재 여부 확인 후 UPDATE 또는 INSERT */
+  var check=await SB.from('call_tracking').select('id').eq('job_id',jobIdStr);
+  if(check.data&&check.data.length>0){
+    r=await SB.from('call_tracking').update(row).eq('job_id',jobIdStr);
+  } else {
+    r=await SB.from('call_tracking').insert(row);
+  }
   if(r&&r.error){customAlert('저장 오류: '+r.error.message);return;}
   await loadAllData();
+  renderView();
   customAlert('저장되었습니다 ✓');
 }
 
