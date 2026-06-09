@@ -2483,12 +2483,11 @@ var _ccOpenMonth=null;
 
 function renderCallCheck(){
   var thisYM=TODAY.slice(0,7);
-  /* 최종합격 발표일 있고, 추천 아니고, 합격자 없고, 이전 달 공고만 */
+  /* 최종합격 발표일 있는 공고 (추천 제외, 이달 포함 전체) */
   var jobs=JOBS.filter(function(j){
-    if(!j.finalDate||j.finalDate.slice(0,7)>=thisYM)return false;
+    if(!j.finalDate||!j.finalDate.trim())return false;
     if(j.isRec)return false;
-    var hasWinner=(j.applicants||[]).some(function(a){return a.status==='최종합격'||a.status==='취업성공';});
-    return !hasWinner;
+    return true;
   });
 
   /* 월별 그룹 */
@@ -2607,9 +2606,7 @@ function renderCallCheck(){
 
   /* 발표일 미등록 */
   var noDateJobs=JOBS.filter(function(j){
-    if(j.isRec||j.finalDate)return false;
-    var hasWinner=(j.applicants||[]).some(function(a){return a.status==='최종합격'||a.status==='취업성공';});
-    return !hasWinner;
+    return !j.isRec&&(!j.finalDate||!j.finalDate.trim());
   });
 
   return'<div style="display:flex;flex-direction:column;height:100%;background:var(--color-background-tertiary)">'
