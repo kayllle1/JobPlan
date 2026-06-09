@@ -912,7 +912,7 @@ async function loadAllData(){
     /* employers (없으면 빈 배열) */
     try{var r6=await SB.from('employers').select('*').order('name',{ascending:true});EMPLOYERS=(r6&&!r6.error)?safeArr(r6):[];}catch(e){EMPLOYERS=[];}
     /* call_tracking */
-    try{var r_ct=await SB.from('call_tracking').select('*');CALL_TRACKING=(r_ct&&!r_ct.error&&r_ct.data)?safeArr(r_ct.data):[];}catch(e){CALL_TRACKING=[];}
+    try{var r_ct=await SB.from('call_tracking').select('*');}catch(e){}
     /* favorites */
     try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error)?safeArr(r7):[];}catch(e){FAVORITES=[];}
     console.log('Loaded: students='+STUDENTS.length+' jobs='+JOBS.length+' vault='+VAULT.length+' employers='+EMPLOYERS.length+' favorites='+FAVORITES.length);
@@ -928,11 +928,7 @@ function setupRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'interview_vault'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'training_courses'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'employers'},scheduleReload)
-    .on('postgres_changes',{event:'*',schema:'public',table:'call_tracking'},function(payload){
-      try{var r2=payload.new||payload.old;if(!r2)return;
-      if(payload.eventType==='DELETE'){CALL_TRACKING=CALL_TRACKING.filter(function(c){return c.id!==r2.id;});}
-      else{var i2=CALL_TRACKING.findIndex(function(c){return c.id===r2.id;});if(i2>=0){CALL_TRACKING[i2]=r2;}else{CALL_TRACKING.push(r2);}}
-      if(currentView==='call_check')renderView();}catch(e){}})
+    /* call_tracking realtime 제거됨 */
     .on('postgres_changes',{event:'*',schema:'public',table:'favorites'},scheduleReload)
     .on('postgres_changes',{event:'*',schema:'public',table:'training_participants'},scheduleReload)
     .subscribe(function(s){
@@ -2775,7 +2771,6 @@ function renderSidebar(){
       +navBtn('favorites','⭐','즐겨찾기')
       +navBtn('employment','🏆','취업 현황')
       +navBtn('national','📊','지역 현황')
-      +navBtn('call_check','📞','결과 추적')
       +section('#A78BFA','도구')
       +navBtn('interview','📚','면접 자료실')
       +navBtn('training','🎓','연수 관리')
@@ -3899,7 +3894,7 @@ var _natType='';
 /* ── 취업처 관리 ── */
 var EMPLOYERS=[];
 var FAVORITES=[];
-var CALL_TRACKING=[]; // 합격 확인 // 즐겨찾기
+var CALL_TRACKING=[];
 var _empKw='';
 var _empCatF='전체';
 var _empLocF='';
@@ -4533,7 +4528,7 @@ function renderView(){
     else if(currentView==='employers')main.innerHTML=renderEmployerDB();
     else if(currentView==='blacklist')main.innerHTML=renderBlacklist();
     else if(currentView==='favorites')main.innerHTML=renderFavorites();
-    else if(currentView==='call_check')main.innerHTML=renderCallCheck();
+    
     else if(currentView==='training')main.innerHTML=renderTraining();
   }catch(e){console.error('renderView error',e);main.innerHTML='<div style="padding:40px;text-align:center;color:#DC2626">렌더링 오류: '+(e.message||String(e))+'</div>';}
   var sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();
