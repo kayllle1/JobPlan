@@ -2466,7 +2466,7 @@ function renderCallCheck(){
                 +badge(j.category)
                 +'<div style="flex:1;font-size:13px;font-weight:500;color:#0F172A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name)+'</div>'
                 +(j.isClosed?'<span style="font-size:11px;color:#94A3B8">마감</span>':'<span style="font-size:11px;color:#059669;font-weight:500">진행중</span>')
-                +(isAdmin()?'<button onclick="openEditJobModal('+j.id+')" style="border:1px solid #E2E8F0;background:#F8FAFC;color:#374151;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">발표일 입력</button>':'')
+                +(isAdmin()?'<button onclick="openJobModal('+j.id+')" style="border:1px solid #E2E8F0;background:#F8FAFC;color:#374151;padding:3px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">발표일 입력</button>':'')
               +'</div>';
             }).join('')
           +'</div>'
@@ -2483,17 +2483,15 @@ var _ccOpenMonth=null;
 
 function renderCallCheck(){
   var thisYM=TODAY.slice(0,7);
-  /* 최종합격 발표일 있는 공고 (추천 제외, 이달 포함 전체) */
-  var jobs=JOBS.filter(function(j){
-    if(!j.finalDate||!j.finalDate.trim())return false;
-    if(j.isRec)return false;
-    return true;
-  });
+  /* 종료(마감)된 공고 기준 - 추천 제외 */
+  var jobs=JOBS.filter(function(j){return j.isClosed&&!j.isRec;});
 
   /* 월별 그룹 */
   var months={};
   jobs.forEach(function(j){
-    var ym=j.finalDate.slice(0,7);
+    var d=j.finalDate||j.applyDeadline||j.endDate||j.docDate||'';
+    if(!d||d.length<7)return;
+    var ym=d.slice(0,7);
     if(!months[ym])months[ym]=[];
     months[ym].push(j);
   });
@@ -2605,8 +2603,9 @@ function renderCallCheck(){
   }).join('');
 
   /* 발표일 미등록 */
+  /* 발표일 미입력 종료 공고 */
   var noDateJobs=JOBS.filter(function(j){
-    return !j.isRec&&(!j.finalDate||!j.finalDate.trim());
+    return j.isClosed&&!j.isRec&&(!j.finalDate||!j.finalDate.trim());
   });
 
   return'<div style="display:flex;flex-direction:column;height:100%;background:var(--color-background-tertiary)">'
@@ -2629,7 +2628,7 @@ function renderCallCheck(){
         +'<div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden">'
           +'<div style="padding:10px 14px;background:#FAEEDA;border-bottom:0.5px solid #FAC775;display:flex;align-items:center;gap:6px"><i class="ti ti-alert-triangle" style="font-size:13px;color:#BA7517" aria-hidden="true"></i><span style="font-size:12px;font-weight:500;color:#854F0B">최종합격 발표일을 입력하면 자동으로 추가됩니다</span></div>'
           +'<div style="padding:8px 12px;display:flex;flex-direction:column;gap:1px">'
-          +noDateJobs.map(function(j){return'<div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:0.5px solid var(--color-border-tertiary)">'+badge(j.category)+'<div style="flex:1;font-size:12px;color:var(--color-text-primary)">'+esc(j.name)+'</div><button onclick="openEditJobModal('+j.id+')" style="font-size:11px;padding:3px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;font-family:inherit">발표일 입력</button></div>';}).join('')
+          +noDateJobs.map(function(j){return'<div style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:0.5px solid var(--color-border-tertiary)">'+badge(j.category)+'<div style="flex:1;font-size:12px;color:var(--color-text-primary)">'+esc(j.name)+'</div><button onclick="openJobModal('+j.id+')" style="font-size:11px;padding:3px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;font-family:inherit">발표일 입력</button></div>';}).join('')
           +'</div></div></div>'
         :''
       )
