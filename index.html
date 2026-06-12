@@ -2287,6 +2287,7 @@ function getCallTrack(jobId){
 
 /* ─ 신원 확인 현황 ─ */
 var _idShowOnlyMissing=false;
+var _idCat='전체';
 
 function renderIdentifyStatus(){
   /* 최종합격 발표일 있고, 추천 아닌 공고만 */
@@ -2304,7 +2305,15 @@ function renderIdentifyStatus(){
   });
 
   var missingCnt=rowsData.filter(function(r){return r.missing!=null&&r.missing>0;}).length;
-  var shown=_idShowOnlyMissing?rowsData.filter(function(r){return r.missing!=null&&r.missing>0;}):rowsData;
+
+  /* 카테고리 탭 (전체 + 데이터에 존재하는 카테고리만, CATS 순서 유지) */
+  var catCounts={};
+  rowsData.forEach(function(r){catCounts[r.job.category]=(catCounts[r.job.category]||0)+1;});
+  var catList=['전체'].concat(CATS.slice(1).filter(function(c){return catCounts[c];}));
+  if(_idCat!=='전체'&&!catCounts[_idCat])_idCat='전체';
+
+  var byCat=_idCat==='전체'?rowsData:rowsData.filter(function(r){return r.job.category===_idCat;});
+  var shown=_idShowOnlyMissing?byCat.filter(function(r){return r.missing!=null&&r.missing>0;}):byCat;
 
   var KB_BADGE={
     '소리자바':'background:#EFF6FF;color:#1D4ED8',
@@ -2329,7 +2338,8 @@ function renderIdentifyStatus(){
         :'<span style="color:#CBD5E1">-</span>';
       var memoText=j.idMemo?esc(j.idMemo):'<span style="color:#CBD5E1">-</span>';
 
-      return'<tr style="border-bottom:1px solid #F1F5F9;background:'+bg+';cursor:pointer" onclick="jobFilter={kw:'+JSON.stringify(j.name)+',cat:\'전체\',year:\'\',type:\'전체\',dateFrom:\'\',dateTo:\'\',location:\'\'};detailJobs.add('+j.id+');setView(\'jobs\')">'
+      var jName=esc(j.name).replace(/'/g,"\\'");
+      return'<tr style="border-bottom:1px solid #F1F5F9;background:'+bg+';cursor:pointer" onclick="jobFilter={kw:\''+jName+'\',cat:\'전체\',year:\'\',type:\'전체\',dateFrom:\'\',dateTo:\'\',location:\'\'};detailJobs.add('+j.id+');setView(\'jobs\')">'
         +'<td style="padding:10px;font-weight:700;color:#1F2937;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+badge(j.category)+' '+esc(j.name)+'</td>'
         +'<td style="padding:10px;text-align:center;color:#64748B;white-space:nowrap;font-size:12px">'+fmt(j.finalDate)+'</td>'
         +'<td style="padding:10px;text-align:center"><span style="color:'+ratioColor+';font-weight:700">'+ratioText+'</span></td>'
@@ -2348,6 +2358,13 @@ function renderIdentifyStatus(){
       +'<button onclick="_idShowOnlyMissing=false;renderView()" style="background:'+(!_idShowOnlyMissing?'#2563EB':'#fff')+';color:'+(!_idShowOnlyMissing?'#fff':'#374151')+';border:1.5px solid '+(!_idShowOnlyMissing?'#2563EB':'#E2E8F0')+';padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">전체 '+rowsData.length+'</button>'
       +'<button onclick="_idShowOnlyMissing=true;renderView()" style="background:'+(_idShowOnlyMissing?'#DC2626':'#fff')+';color:'+(_idShowOnlyMissing?'#fff':'#374151')+';border:1.5px solid '+(_idShowOnlyMissing?'#DC2626':'#E2E8F0')+';padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">미확인만 '+missingCnt+'</button>'
     +'</div>'
+  +'</div>'
+  +'<div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">'
+    +catList.map(function(c){
+      var cnt=c==='전체'?rowsData.length:(catCounts[c]||0);
+      var a=c===_idCat;
+      return'<button onclick="_idCat=\''+c+'\';renderView()" style="white-space:nowrap;padding:6px 14px;border-radius:99px;border:1.5px solid '+(a?'#2563EB':'#E2E8F0')+';background:'+(a?'#2563EB':'#fff')+';color:'+(a?'#fff':'#374151')+';font-size:12px;font-weight:'+(a?700:500)+';cursor:pointer;font-family:inherit">'+c+' <span style="font-size:10px;opacity:.75">'+cnt+'</span></button>';
+    }).join('')
   +'</div>'
   +'<div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">'
     +'<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px">'
