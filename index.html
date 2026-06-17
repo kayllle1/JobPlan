@@ -2300,7 +2300,7 @@ function getCallTrack(jobId){
 
 
 /* ─ 기관별 채용 이력 ─ */
-var _ihKw=''; var _ihCat='전체'; var _ihOpenKey='';
+var _ihKw=''; var _ihCat='전체'; var _ihOpenKey=''; var _ihComposing=false;
 
 function renderInstHistory(){
   /* 기관명 추출: 공고명에서 공통 키워드 제거 */
@@ -2428,7 +2428,7 @@ function renderInstHistory(){
   /* 검색 */
   +'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0">'
     +'<i class="ti ti-search" style="font-size:14px;color:#94A3B8"></i>'
-    +'<input value="'+esc(_ihKw)+'" oninput="_ihKw=this.value;renderView()" placeholder="기관명 검색…" style="border:none;outline:none;font-size:13px;font-family:inherit;width:100%">'
+    +'<input id="ihSearchInput" value="'+esc(_ihKw)+'" oncompositionstart="_ihComposing=true" oncompositionend="_ihComposing=false;_ihKw=this.value;renderView()" oninput="if(!_ihComposing){_ihKw=this.value;renderView()}" placeholder="기관명 검색…" style="border:none;outline:none;font-size:13px;font-family:inherit;width:100%" autocomplete="off">'
     +(_ihKw?'<button onclick="_ihKw=\'\';renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>':'')
   +'</div>'
   /* 테이블 */
