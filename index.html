@@ -3273,10 +3273,17 @@ function renderJobs(){
       return !!(dl&&dl.slice(0,10)<TODAY&&!j.interviewDate&&!j.finalDate);
     });
     if(!isAdmin()||!autoClose.length)return'';
-    return'<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">'
-      +'<span style="font-size:16px">📋</span>'
-      +'<div style="flex:1;font-size:13px;color:#92400E;font-weight:600">마감 처리 대기 '+autoClose.length+'건 — 기간이 지났지만 마감 처리되지 않은 공고가 있습니다</div>'
-      +'<button onclick="autoCloseJobs(['+autoClose.map(function(j){return j.id;}).join(',')+'])" style="background:#D97706;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">일괄 마감 처리</button>'
+    var jobListHtml=autoClose.map(function(j){
+      return'<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:0.5px solid #FDE68A">'+badge(j.category)+'<span style="font-size:12px;font-weight:600;color:#78350F">'+esc(j.name)+'</span>'+(j.finalDate?'<span style="font-size:11px;color:#92400E;margin-left:auto">발표일 '+fmt(j.finalDate)+'</span>':'')+'</div>';
+    }).join('');
+    return'<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;overflow:hidden;flex-shrink:0">'
+      +'<div style="padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+        +'<span style="font-size:16px">📋</span>'
+        +'<div style="flex:1;font-size:13px;color:#92400E;font-weight:600">마감 처리 대기 '+autoClose.length+'건 — 기간이 지났지만 마감 처리되지 않은 공고가 있습니다</div>'
+        +'<button onclick="document.getElementById(\'_autoclose_list\').style.display=document.getElementById(\'_autoclose_list\').style.display===\'none\'?\'block\':\'none\'" style="background:transparent;color:#92400E;border:1px solid #FDE68A;padding:4px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">공고 목록 ▼</button>'
+        +'<button onclick="confirmAutoClose(['+autoClose.map(function(j){return j.id;}).join(',')+'],'+autoClose.length+')" style="background:#D97706;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">일괄 마감 처리</button>'
+      +'</div>'
+      +'<div id="_autoclose_list" style="display:none;padding:6px 16px 10px;border-top:0.5px solid #FDE68A">'+jobListHtml+'</div>'
     +'</div>';
   }()
   +'<div style="display:flex;justify-content:space-between;align-items:center;flex-shrink:0">'
@@ -3666,6 +3673,24 @@ async function exportDashboardExcel(){
   }catch(e){
     customAlert('엑셀 내보내기 오류: '+e.message);
   }
+}
+
+function confirmAutoClose(ids,cnt){
+  var rows=ids.map(function(id){
+    var j=JOBS.find(function(x){return x.id===id;});
+    if(!j)return'';
+    return'<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #F1F5F9">'+badge(j.category)
+      +'<span style="font-size:13px;font-weight:600;color:#0F172A;flex:1">'+esc(j.name)+'</span>'
+      +(j.finalDate?'<span style="font-size:11px;color:#64748B">발표일 '+fmt(j.finalDate)+'</span>':'')
+    +'</div>';
+  }).join('');
+  showModal('마감 처리 확인',
+    '<p style="margin:0 0 12px;font-size:13px;color:#374151">아래 <strong>'+cnt+'개 공고</strong>를 마감 처리하겠습니까?</p>'
+    +'<div style="background:#F8FAFC;border:1px solid #E5E7EB;border-radius:8px;padding:8px 14px;margin-bottom:16px;max-height:260px;overflow-y:auto">'+rows+'</div>'
+    +'<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400E;margin-bottom:16px">⚠ 마감 처리 후에도 공고 수정에서 개별 취소 가능합니다.</div>'
+    +'<div style="display:flex;justify-content:flex-end;gap:8px">'+btn('취소','closeModal()','outline')+'<button onclick="closeModal();autoCloseJobs(['+ids.join(',')+'])" style="background:#D97706;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✓ 마감 처리</button></div>',
+    '480px'
+  );
 }
 
 async function autoCloseJobs(ids){
