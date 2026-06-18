@@ -2451,7 +2451,7 @@ function renderInstHistory(){
   function sortBtn(label,key){
     var active=_ihSort===key;
     var dir=active?(_ihSortDir==='desc'?'↓':'↑'):'';
-    return'<button onclick="_ihSort=\''+key+'\';_ihSortDir=_ihSort===\''+key+'\'&&_ihSortDir===\'desc\'?\'asc\':\'desc\';updateInstTable()" style="padding:5px 12px;border-radius:99px;border:1px solid '+(active?'#2563EB':'#E2E8F0')+';background:'+(active?'#EFF6FF':'#fff')+';color:'+(active?'#2563EB':'#374151')+';font-size:11px;font-weight:'+(active?700:500)+';cursor:pointer;font-family:inherit;white-space:nowrap">'+label+(dir?' '+dir:'')+'</button>';
+    return'<button onclick="_ihSort=\''+key+'\';_ihSortDir=_ihSort===\''+key+'\'&&_ihSortDir===\'desc\'?\'asc\':\'desc\';updateInstTable()" style="padding:5px 12px;border-radius:99px;border:1px solid '+(active?'#2563EB':'#E2E8F0')+';background:'+(active?'#EFF6FF':'#fff')+';color:'+(active?'#2563EB':'#374151')+';font-size:11px;font-weight:'+(active?700:500)+';cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s" onmousedown="this.style.transform=\'scale(0.93)\'" onmouseup="this.style.transform=\'scale(1)\'" onmouseleave="this.style.transform=\'scale(1)\'">'+label+(dir?' '+dir:'')+'</button>';
   }
 
   return'<div id="_view_scroll" style="padding:20px 32px 24px 24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:10px">'
@@ -2460,7 +2460,14 @@ function renderInstHistory(){
       +'<p style="margin:3px 0 0;font-size:12px;color:#64748B">기관 '+totalInst+'곳 · 총 지원 '+totalAps+'건 · 최종합격 '+totalPass+'명 · 검색 <span id="ihResultCnt">'+filtered.length+'곳</span></p></div>'
   +'</div>'
   +'<div style="flex-shrink:0;display:flex;gap:6px;flex-wrap:wrap">'
-    +catList.map(function(c){var a=c===_ihCat;return'<button onclick="_ihCat=\''+c+'\';updateInstTable()" style="white-space:nowrap;padding:6px 14px;border-radius:99px;border:1.5px solid '+(a?'#2563EB':'#E2E8F0')+';background:'+(a?'#2563EB':'#fff')+';color:'+(a?'#fff':'#374151')+';font-size:12px;font-weight:'+(a?700:500)+';cursor:pointer;font-family:inherit">'+c+' <span style="font-size:10px;opacity:.75">'+(catCounts[c]||0)+'</span></button>';}).join('')
+    +catList.map(function(c){
+      var a=c===_ihCat;
+      var cc=c==='전체'?'#2563EB':(CAT_COLORS[c]||'#2563EB');
+      var style=a
+        ?'background:'+cc+';color:#fff;border:1.5px solid '+cc+';box-shadow:0 2px 8px '+cc+'40;'
+        :'background:'+cc+'0D;color:'+cc+';border:1.5px solid '+cc+'30;';
+      return'<button onclick="_ihCat=\''+c+'\';updateInstTable()" style="white-space:nowrap;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:'+(a?700:500)+';cursor:pointer;font-family:inherit;transition:all .15s;'+style+'\" onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'" onmousedown="this.style.transform=\'scale(0.95)\'" onmouseup="this.style.transform=\'scale(1)\'">'+c+' <span style="font-size:10px;opacity:.8">'+(catCounts[c]||0)+'</span></button>';
+    }).join('')
   +'</div>'
   +'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0">'
     +'<i class="ti ti-search" style="font-size:14px;color:#94A3B8"></i>'
