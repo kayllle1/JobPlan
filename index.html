@@ -3415,10 +3415,10 @@ function renderDetailPanel(job){
 }
 function renderJobRow(job,rowNum){
   var deadline=job.applyDeadline||job.docDate,dlDNum=calcDDay(deadline),finalDNum=calcDDay(job.finalDate);
-  var tD=isToday(job.docDate),tDP=isToday(job.documentPassDate),tI=isToday(job.interviewDate),tF=isToday(job.finalDate);
+  var tD=!job.isClosed&&isToday(job.docDate),tDP=!job.isClosed&&isToday(job.documentPassDate),tI=!job.isClosed&&isToday(job.interviewDate),tF=!job.isClosed&&isToday(job.finalDate);
   var isUrgent=!job.isClosed&&tF,over=isTrulyOver(job);
   var cTotal=job.applicants.length,cDocP=job.applicants.filter(function(a){return a.status==='서류합격';}).length,cInter=job.applicants.filter(function(a){return a.status==='면접대기';}).length,cPass=job.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length,cFail=job.applicants.filter(function(a){return a.status==='불합격';}).length;
-  var rowClass='tbl-tr',rowBg='#fff';if(isUrgent)rowClass='row-urgent';else if(tD||tDP||tI)rowBg='#FFFBEB';else if(job.isClosed)rowBg='#F9FAFB';
+  var rowClass='tbl-tr',rowBg='#fff';if(isUrgent)rowClass='row-urgent';else if(!job.isClosed&&(tD||tDP||tI))rowBg='#FFFBEB';else if(job.isClosed)rowBg='#F9FAFB';
   var isOpen=expandedJobs.has(job.id),isDetail=detailJobs.has(job.id);
   var apRows='';
   if(isOpen){
