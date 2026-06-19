@@ -916,6 +916,27 @@ async function loadAllData(){
     try{var r_ct=await SB.from('call_tracking').select('*');}catch(e){}
     /* favorites */
     try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error)?safeArr(r7):[];}catch(e){FAVORITES=[];}
+
+    /* 자동 마감: 최종합격발표일이 지난 공고를 조용히 마감 처리 (교육팀만, 무한루프 방지 위해 loadAllData 재호출 없이 직접 처리) */
+    if(isAdmin()){
+      try{
+        var toAutoClose=JOBS.filter(function(j){
+          if(j.isClosed||j.isRec)return false;
+          if(j.finalDate&&j.finalDate.slice(0,10)<TODAY)return true;
+          var dl=j.applyDeadline||j.docDate;
+          return !!(dl&&dl.slice(0,10)<TODAY&&!j.interviewDate&&!j.finalDate);
+        });
+        if(toAutoClose.length>0){
+          var acIds=toAutoClose.map(function(j){return j.id;});
+          var acR=await SB.from('jobs').update({is_closed:true}).in('id',acIds);
+          if(!acR.error){
+            toAutoClose.forEach(function(j){j.isClosed=true;});
+            showToast(acIds.length+'개 공고가 마감일 경과로 자동 마감 처리되었습니다');
+          }
+        }
+      }catch(ace){console.warn('자동 마감 처리 실패',ace);}
+    }
+
     console.log('Loaded: students='+STUDENTS.length+' jobs='+JOBS.length+' vault='+VAULT.length+' employers='+EMPLOYERS.length+' favorites='+FAVORITES.length);
     renderView();
   }catch(err){console.error('loadAllData error',err);customAlert('네트워크 오류: '+(err&&err.message||String(err)));}
