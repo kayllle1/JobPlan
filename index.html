@@ -805,7 +805,7 @@ function filterStudents(){
 function getThisWeekInterviews(){
   var result=[],todayMs=new Date(TODAY).getTime(),weekMs=todayMs+7*86400000;
   JOBS.forEach(function(j){
-    if(!j.interviewDate)return;
+    if(!j.interviewDate||j.isClosed)return;
     var d=new Date(String(j.interviewDate).slice(0,10)).getTime();
     if(d>=todayMs&&d<=weekMs){
       j.applicants.filter(function(a){return a.status==='면접대기';}).forEach(function(a){
@@ -2980,6 +2980,7 @@ function renderDashboard(){
   var totalEmp=getEmpData('전체').length;
   var finalSids=JOBS.reduce(function(acc,j){return acc.concat(j.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).map(function(a){return a.studentId;}));}, []);
   var todayEvents=JOBS.reduce(function(acc,j){
+    if(j.isClosed)return acc;
     if(isToday(j.docDate))acc.push({jname:j.name,type:'서류접수',c:'#60A5FA'});
     if(isToday(j.documentPassDate))acc.push({jname:j.name,type:'서류합격발표',c:'#34D399'});
     if(isToday(j.interviewDate))acc.push({jname:j.name,type:'면접',c:'#A78BFA'});
@@ -4107,6 +4108,7 @@ function renderCalendar(){
   /* ── 이벤트 수집 ── */
   var evMap={};
   JOBS.forEach(function(j){
+    if(j.isClosed)return;
     var jn=j.name.length>16?j.name.slice(0,16)+'…':j.name;
     var cat=j.category||'기타';
     function mark(ds,lbl,c){
