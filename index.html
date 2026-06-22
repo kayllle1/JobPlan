@@ -915,7 +915,7 @@ async function loadAllData(){
     /* call_tracking */
     try{var r_ct=await SB.from('call_tracking').select('*');}catch(e){}
     /* favorites */
-    try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error)?safeArr(r7):[];}catch(e){FAVORITES=[];}
+    try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error&&r7.data)?safeArr(r7.data):[];}catch(e){FAVORITES=[];}
 
     /* 자동 마감: 최종합격발표일이 지난 공고를 조용히 마감 처리 (교육팀만, 무한루프 방지 위해 loadAllData 재호출 없이 직접 처리) */
     if(isAdmin()){
@@ -3885,7 +3885,15 @@ async function saveIdentify(jobId){
     job.idMemo=memo;
   }
   /* 패널만 갱신 - 스크롤 유지 */
-  updateIdPanel();
+  _idSelectedJobId=jobId;
+  var panel=document.getElementById('_id_panel');
+  if(panel){
+    updateIdPanel();
+  } else {
+    /* 공고 펼침에서 저장한 경우 - 해당 펼침 영역만 갱신 */
+    var detailEl=document.getElementById('_detail_'+jobId);
+    if(detailEl)detailEl.innerHTML=renderDetailPanel(JOBS.find(function(j){return j.id===jobId;}));
+  }
   showToast('저장되었습니다 ✓');
 }
 
