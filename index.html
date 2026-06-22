@@ -2524,8 +2524,8 @@ var _idCat='전체';
 var _idSelectedJobId=null;
 
 function renderIdentifyStatus(){
-  /* 최종합격 발표일 있고, 추천 아닌 공고만 */
-  var jobs=JOBS.filter(function(j){return j.finalDate&&!j.isRec;});
+  /* 최종합격 발표일 있고, 추천 아닌 공고 (단, 재공고는 포함) */
+  var jobs=JOBS.filter(function(j){return j.finalDate&&(!j.isRec||j.isReA);});
   /* 최신 발표일순 */
   jobs=jobs.slice().sort(function(a,b){return(b.finalDate||'').localeCompare(a.finalDate||'');});
 
@@ -3574,7 +3574,7 @@ function renderDetailPanel(job){
   if(job.note)rows+='<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">비고 </span><span style="font-size:12px;color:#374151">'+esc(job.note)+'</span></div>';
 
   /* ── 최종합격자 신원 확인 (신규) ── */
-  if(job.finalDate&&!job.isRec){
+  if(job.finalDate&&(!job.isRec||job.isReA)){
     var confirmedAps=job.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';});
     var confirmedNums=confirmedAps.map(function(a){return a.examNumber;}).filter(Boolean);
     var announced=job.finalPassAnnouncedCount;
