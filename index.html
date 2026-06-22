@@ -2524,8 +2524,8 @@ var _idCat='전체';
 var _idSelectedJobId=null;
 
 function renderIdentifyStatus(){
-  /* 최종합격 발표일 있고, 추천 아닌 공고 (단, 재공고는 포함) */
-  var jobs=JOBS.filter(function(j){return j.finalDate&&(!j.isRec||j.isReA);});
+  /* 최종합격 발표일 있는 모든 공고 (추천 포함, 추천은 배지로 구별) */
+  var jobs=JOBS.filter(function(j){return j.finalDate;});
   /* 최신 발표일순 */
   jobs=jobs.slice().sort(function(a,b){return(b.finalDate||'').localeCompare(a.finalDate||'');});
 
@@ -2575,7 +2575,7 @@ function renderIdentifyStatus(){
       var jName=esc(j.name).replace(/'/g,"\\'");
       return'<tr data-jobid="'+j.id+'" style="border-bottom:1px solid #F1F5F9;background:'+(bg)+';cursor:pointer;transition:background .1s" onclick="_idSelectedJobId='+j.id+';updateIdPanel()" '
         +'onmouseover="this.style.background=\'#F8FAFF\'" onmouseout="this.style.background=\''+(hasMissing?'#FEF2F2':'#fff')+'\'">'
-        +'<td style="padding:10px;font-weight:700;color:#1F2937;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+badge(j.category)+' '+esc(j.name)+'</td>'
+        +'<td style="padding:10px;font-weight:700;color:#1F2937;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+badge(j.category)+' '+(j.isRec?'<span style="background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid #6EE7B7">추천</span> ':'')+( j.isReA?'<span style="background:#FEE2E2;color:#DC2626;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid #FECACA">재공고</span> ':'')+esc(j.name)+'</td>'
         +'<td style="padding:10px;text-align:center;color:#64748B;white-space:nowrap;font-size:12px">'+fmt(j.finalDate)+'</td>'
         +'<td style="padding:10px;text-align:center"><span style="color:'+ratioColor+';font-weight:700">'+ratioText+'</span></td>'
         +'<td style="padding:10px;text-align:center;font-size:12px;color:#374151">'+numsText+'</td>'
@@ -2840,19 +2840,24 @@ function updateFavList(){
   });
 
   /* 정렬 */
-  list=list.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'','ko');});
+  list=list.slice().sort(function(a,b){
+    var an=a.name||(STUDENTS.find(function(s){return String(s.id)===String(a.student_id);})||{name:''}).name||'';
+    var bn=b.name||(STUDENTS.find(function(s){return String(s.id)===String(b.student_id);})||{name:''}).name||'';
+    return an.localeCompare(bn,'ko');
+  });
 
   var palettes=[['#DBEAFE','#1D4ED8'],['#D1FAE5','#065F46'],['#EDE9FE','#5B21B6'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D'],['#CCFBF1','#0F766E']];
 
   function cardHtml(f){
     var sid=f.student_id;
     var st=STUDENTS.find(function(s){return String(s.id)===String(sid);});
-    var phone=st?st.phone||'':f.phone||'';
+    var name=f.name||(st?st.name:'')||'';
+    var phone=f.phone||(st?st.phone||'':'');
     var av=palettes[sid.toString().split('').reduce(function(a,c){return a+c.charCodeAt(0);},0)%palettes.length];
     var tagList=(f.tags||'').split(/[\n,]/).map(function(t){return t.trim();}).filter(Boolean);
     return'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05);display:flex;flex-direction:column">'
       +'<div style="background:linear-gradient(135deg,'+av[0]+','+av[0]+'cc);padding:14px 16px 10px;display:flex;align-items:center;gap:12px">'
-        +'<div style="width:40px;height:40px;border-radius:50%;background:'+av[1]+';display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0">'+(f.name||'?')[0]+'</div>'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:'+av[1]+';display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0">'+(name||'?')[0]+'</div>'
         +'<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;color:#0F172A">'+esc(f.name||'')+'</div>'
           +'<div style="font-size:12px;color:#64748B;margin-top:1px;display:flex;align-items:center;gap:6px">'
             +(phone?'<a href="tel:'+esc(phone)+'" style="color:#2563EB;text-decoration:none;font-weight:600">'+esc(f.phone)+'</a>':'<span style="color:#CBD5E1">연락처 없음</span>')
@@ -2886,7 +2891,7 @@ function updateFavList(){
   if(_favSort==='initial'){
     /* 성씨별 그룹핑 */
     var groups={};
-    list.forEach(function(f){var g=(f.name||'?')[0];if(!groups[g])groups[g]=[];groups[g].push(f);});
+    list.forEach(function(f){var st2=STUDENTS.find(function(s){return String(s.id)===String(f.student_id);});var nm=f.name||(st2?st2.name:'')||'?';var g=nm[0];if(!groups[g])groups[g]=[];groups[g].push(Object.assign({},f,{_resolved_name:nm}));});
     var initials=Object.keys(groups).sort(function(a,b){return a.localeCompare(b,'ko');});
     html=initials.map(function(init){
       return'<div style="margin-bottom:20px">'
