@@ -915,7 +915,7 @@ async function loadAllData(){
     /* call_tracking */
     try{var r_ct=await SB.from('call_tracking').select('*');}catch(e){}
     /* favorites */
-    try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error&&r7.data)?safeArr(r7.data):[];}catch(e){FAVORITES=[];}
+    try{var r7=await SB.from('favorites').select('*').order('created_at',{ascending:false});FAVORITES=(r7&&!r7.error)?safeArr(r7):[];}catch(e){FAVORITES=[];}
 
     /* 자동 마감: 최종합격발표일이 지난 공고를 조용히 마감 처리 (교육팀만, 무한루프 방지 위해 loadAllData 재호출 없이 직접 처리) */
     if(isAdmin()){
@@ -2945,8 +2945,7 @@ function renderFavorites(){
         +'<i class="ti ti-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:#94A3B8"></i>'
         +'<input type="text" placeholder="이름, 연락처, 태그, 메모 검색…" value="'+esc(_favKw)+'" id="favSearchInput" oncompositionstart="_favComposing=true" oncompositionend="_favComposing=false;_favKw=this.value;updateFavList()" oninput="if(!_favComposing){_favKw=this.value;updateFavList()}" style="width:100%;padding:9px 12px 9px 34px;border:1px solid #E2E8F0;border-radius:9px;font-size:13px;font-family:inherit;outline:none;color:#0F172A;background:#F8FAFC;box-sizing:border-box">'
       +'</div>'
-        +'<span style="font-size:11px;color:#94A3B8;font-weight:600">정렬:</span>'
-        +(_favKw?'<button onclick="_favKw=\'\';var el=document.getElementById(\'favSearchInput\');if(el)el.value=\'\';updateFavList()" style="margin-left:auto;border:none;background:#F1F5F9;color:#64748B;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">✕ 초기화</button>':'')
+        +(_favKw?'<button onclick="_favKw=\'\';var el=document.getElementById(\'favSearchInput\');if(el)el.value=\'\';updateFavList()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:#F1F5F9;color:#64748B;padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>':'')
       +'</div>'
     +'</div>'
 
