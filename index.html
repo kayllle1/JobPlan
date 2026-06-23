@@ -1778,7 +1778,7 @@ function renderEmployerDB(){
     /* ── 본문: 테이블 + 상세 패널 ── */
     +'<div style="flex:1;min-height:0;display:flex;overflow:hidden">'
       /* 테이블 */
-      +'<div style="flex:1;min-width:0;height:0;overflow-y:auto;background:#fff;border-right:1px solid #E5E7EB">'
+      +'<div style="flex:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:auto;background:#fff;border-right:1px solid #E5E7EB">'
         +'<table style="width:100%;border-collapse:collapse;font-size:13px;min-width:680px">'
           +'<thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">'
             +'<th style="padding:9px 8px;text-align:center;background:#F8FAFC;width:36px">'
@@ -1790,7 +1790,7 @@ function renderEmployerDB(){
         +'</table>'
       +'</div>'
       /* 우측 상세 패널 */
-      +'<div style="width:360px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;background:#fff;box-shadow:-2px 0 8px rgba(0,0,0,.04)">'
+      +'<div style="width:360px;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;background:#fff;box-shadow:-2px 0 8px rgba(0,0,0,.04)">'
         +panelHtml
       +'</div>'
     +'</div>'
@@ -2580,7 +2580,7 @@ function renderIdentifyStatus(){
         +'<td style="padding:10px;text-align:center"><span style="color:'+ratioColor+';font-weight:700">'+ratioText+'</span></td>'
         +'<td style="padding:10px;text-align:center;font-size:12px;color:#374151">'+numsText+'</td>'
         +'<td style="padding:10px;text-align:center">'+kbCell+'</td>'
-        +'<td style="padding:10px;font-size:12px;color:#374151;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+contactText+'</td>'
+        +'<td style="padding:10px;font-size:12px;color:#374151;max-width:180px;word-break:break-word">'+contactText+'</td>'
         +'<td style="padding:10px;font-size:12px;color:#64748B;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+memoText+'</td>'
       +'</tr>';
     }).join('');
@@ -2604,7 +2604,7 @@ function renderIdentifyStatus(){
   +'</div>'
   +'<div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">'
     +'<table id="_id_tbl" style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">'
-      +'<colgroup><col style="width:22%"><col style="width:10%"><col style="width:9%"><col style="width:13%"><col style="width:9%"><col style="width:15%"><col style="width:22%"></colgroup>'
+      +'<colgroup><col style="width:20%"><col style="width:9%"><col style="width:8%"><col style="width:10%"><col style="width:9%"><col style="width:22%"><col style="width:22%"></colgroup>'
       +'<thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">'
         +'<th style="padding:10px;text-align:left;font-weight:700;color:#1F2937;font-size:11px">공고명</th>'
         +'<th style="padding:10px;text-align:center;font-weight:700;color:#1F2937;font-size:11px">발표일</th>'
@@ -2944,12 +2944,7 @@ function renderFavorites(){
       +'<div style="margin-top:12px;position:relative">'
         +'<i class="ti ti-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:#94A3B8"></i>'
         +'<input type="text" placeholder="이름, 연락처, 태그, 메모 검색…" value="'+esc(_favKw)+'" id="favSearchInput" oncompositionstart="_favComposing=true" oncompositionend="_favComposing=false;_favKw=this.value;updateFavList()" oninput="if(!_favComposing){_favKw=this.value;updateFavList()}" style="width:100%;padding:9px 12px 9px 34px;border:1px solid #E2E8F0;border-radius:9px;font-size:13px;font-family:inherit;outline:none;color:#0F172A;background:#F8FAFC;box-sizing:border-box">'
-      +'</div>'
-      +'<div style="margin-top:8px;display:flex;gap:6px;align-items:center">'
-        +'<span style="font-size:11px;color:#94A3B8;font-weight:600">정렬:</span>'
-        +'<button onclick="_favSort=\'name\';updateFavList()" onmousedown="this.style.transform=\'scale(0.93)\'" onmouseup="this.style.transform=\'scale(1)\'" onmouseleave="this.style.transform=\'scale(1)\'" style="padding:4px 12px;border-radius:99px;border:1.5px solid '+(_favSort==='name'?'#2563EB':'#E2E8F0')+';background:'+(_favSort==='name'?'#2563EB':'#fff')+';color:'+(_favSort==='name'?'#fff':'#374151')+';font-size:11px;font-weight:'+(_favSort==='name'?700:500)+';cursor:pointer;font-family:inherit;transition:all .15s">가나다순</button>'
-        +'<button onclick="_favSort=\'initial\';updateFavList()" onmousedown="this.style.transform=\'scale(0.93)\'" onmouseup="this.style.transform=\'scale(1)\'" onmouseleave="this.style.transform=\'scale(1)\'" style="padding:4px 12px;border-radius:99px;border:1.5px solid '+(_favSort==='initial'?'#2563EB':'#E2E8F0')+';background:'+(_favSort==='initial'?'#2563EB':'#fff')+';color:'+(_favSort==='initial'?'#fff':'#374151')+';font-size:11px;font-weight:'+(_favSort==='initial'?700:500)+';cursor:pointer;font-family:inherit;transition:all .15s">성씨별</button>'
-        +(_favKw?'<button onclick="_favKw=\'\';var el=document.getElementById(\'favSearchInput\');if(el)el.value=\'\';updateFavList()" style="margin-left:auto;border:none;background:#F1F5F9;color:#64748B;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">✕ 초기화</button>':'')
+        +(_favKw?'<button onclick="_favKw=\'\';var el=document.getElementById(\'favSearchInput\');if(el)el.value=\'\';updateFavList()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:#F1F5F9;color:#64748B;padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>':'')
       +'</div>'
     +'</div>'
 
@@ -3887,7 +3882,16 @@ async function saveIdentify(jobId){
     job.idContactPhone=cphone;
     job.idMemo=memo;
   }
-  renderView();
+  /* 패널만 갱신 - 스크롤 유지 */
+  _idSelectedJobId=jobId;
+  var panel=document.getElementById('_id_panel');
+  if(panel){
+    updateIdPanel();
+  } else {
+    /* 공고 펼침에서 저장한 경우 - 해당 펼침 영역만 갱신 */
+    var detailEl=document.getElementById('_detail_'+jobId);
+    if(detailEl)detailEl.innerHTML=renderDetailPanel(JOBS.find(function(j){return j.id===jobId;}));
+  }
   showToast('저장되었습니다 ✓');
 }
 
