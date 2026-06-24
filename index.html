@@ -1797,8 +1797,8 @@ function renderEmployerDB(){
   +'</div>';
 }
 function toggleEmpSelect(id){var t=document.getElementById('_emp_tbl');var st=t?t.scrollTop:0;if(_empSelected.has(id))_empSelected.delete(id);else _empSelected.add(id);renderView();var t2=document.getElementById('_emp_tbl');if(t2)t2.scrollTop=st;}
-function fixEmpTbl(){var t=document.getElementById('_emp_tbl');if(!t)return;var top=t.getBoundingClientRect().top;var avail=window.innerHeight-top;if(avail>100){t.style.height=avail+'px';t.style.overflowY='auto';}}
-function openEmpDetail(id){var t=document.getElementById('_emp_tbl');var st=t?t.scrollTop:0;_empDetailId=(_empDetailId===id)?null:id;renderView();var t2=document.getElementById('_emp_tbl');if(t2)t2.scrollTop=st;}
+function fixEmpTbl(restoreTop){var t=document.getElementById('_emp_tbl');if(!t)return;var top=t.getBoundingClientRect().top;var avail=window.innerHeight-top;if(avail>100){t.style.height=avail+'px';t.style.overflowY='auto';}if(restoreTop!=null)t.scrollTop=restoreTop;}
+function openEmpDetail(id){var t=document.getElementById('_emp_tbl');var st=t?t.scrollTop:0;_empDetailId=(_empDetailId===id)?null:id;renderView();setTimeout(function(){fixEmpTbl(st);},0);}
 function toggleEmpSelectAll(ids){var allOn=ids.every(function(id){return _empSelected.has(id);});if(allOn){ids.forEach(function(id){_empSelected.delete(id);});}else{ids.forEach(function(id){_empSelected.add(id);});}renderView();}
 function deleteSelectedEmployers(){
   if(!isAdmin()||!_empSelected.size)return;
