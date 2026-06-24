@@ -1778,7 +1778,7 @@ function renderEmployerDB(){
     /* ── 본문: 테이블 + 상세 패널 ── */
     +'<div style="flex:1;min-height:0;display:flex;overflow:hidden">'
       /* 테이블 */
-      +'<div style="flex:1;min-width:0;overflow-y:scroll;background:#fff;border-right:1px solid #E5E7EB;max-height:calc(100vh - 220px)">'
+      +'<div id="_emp_tbl" style="flex:1;min-width:0;overflow-y:auto;background:#fff;border-right:1px solid #E5E7EB">'
         +'<table style="width:100%;border-collapse:collapse;font-size:13px;min-width:680px">'
           +'<thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;position:sticky;top:0;z-index:2">'
             +'<th style="padding:9px 8px;text-align:center;background:#F8FAFC;width:36px">'
@@ -1790,14 +1790,15 @@ function renderEmployerDB(){
         +'</table>'
       +'</div>'
       /* 우측 상세 패널 */
-      +'<div style="width:360px;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;background:#fff;box-shadow:-2px 0 8px rgba(0,0,0,.04);max-height:calc(100vh - 220px)">'
+      +'<div style="width:360px;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;background:#fff;box-shadow:-2px 0 8px rgba(0,0,0,.04)">'
         +panelHtml
       +'</div>'
     +'</div>'
   +'</div>';
 }
-function toggleEmpSelect(id){if(_empSelected.has(id))_empSelected.delete(id);else _empSelected.add(id);renderView();}
-function openEmpDetail(id){_empDetailId=(_empDetailId===id)?null:id;renderView();}
+function toggleEmpSelect(id){var t=document.getElementById('_emp_tbl');var st=t?t.scrollTop:0;if(_empSelected.has(id))_empSelected.delete(id);else _empSelected.add(id);renderView();var t2=document.getElementById('_emp_tbl');if(t2)t2.scrollTop=st;}
+function fixEmpTbl(){var t=document.getElementById('_emp_tbl');if(!t)return;var rect=t.parentElement?t.parentElement.getBoundingClientRect():null;if(rect){t.style.height=rect.height+'px';t.style.overflowY='auto';}}
+function openEmpDetail(id){var t=document.getElementById('_emp_tbl');var st=t?t.scrollTop:0;_empDetailId=(_empDetailId===id)?null:id;renderView();var t2=document.getElementById('_emp_tbl');if(t2)t2.scrollTop=st;}
 function toggleEmpSelectAll(ids){var allOn=ids.every(function(id){return _empSelected.has(id);});if(allOn){ids.forEach(function(id){_empSelected.delete(id);});}else{ids.forEach(function(id){_empSelected.add(id);});}renderView();}
 function deleteSelectedEmployers(){
   if(!isAdmin()||!_empSelected.size)return;
@@ -5135,7 +5136,7 @@ function renderView(){
     else if(currentView==='students')main.innerHTML=renderStudents();
     else if(currentView==='employment')main.innerHTML=renderEmployment();
     else if(currentView==='interview')main.innerHTML=renderInterviewRoom();
-    else if(currentView==='employers')main.innerHTML=renderEmployerDB();
+    else if(currentView==='employers'){main.innerHTML=renderEmployerDB();setTimeout(fixEmpTbl,0);}
     else if(currentView==='blacklist')main.innerHTML=renderBlacklist();
     else if(currentView==='favorites')main.innerHTML=renderFavorites();
     
