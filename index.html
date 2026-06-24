@@ -2522,6 +2522,7 @@ function renderInstHistory(){
 var _idShowOnlyMissing=false;
 var _idCat='전체';
 var _idSelectedJobId=null;
+var _idKw=''; var _idComposing=false;
 
 function renderIdentifyStatus(){
   /* 최종합격 발표일 있는 모든 공고 (추천 포함, 추천은 배지로 구별) */
@@ -2547,7 +2548,9 @@ function renderIdentifyStatus(){
   if(_idCat!=='전체'&&!catCounts[_idCat])_idCat='전체';
 
   var byCat=_idCat==='전체'?rowsData:rowsData.filter(function(r){return r.job.category===_idCat;});
-  var shown=_idShowOnlyMissing?byCat.filter(function(r){return r.missing!=null&&r.missing>0;}):byCat;
+  var kw=(_idKw||'').trim().toLowerCase();
+  var byKw=kw===''?byCat:byCat.filter(function(r){return r.job.name.toLowerCase().indexOf(kw)>=0;});
+  var shown=_idShowOnlyMissing?byKw.filter(function(r){return r.missing!=null&&r.missing>0;}):byKw;
 
   var KB_BADGE={
     '소리자바':'background:#EFF6FF;color:#1D4ED8',
@@ -2601,6 +2604,11 @@ function renderIdentifyStatus(){
       var a=c===_idCat;
       return'<button onclick="_idCat=\''+c+'\';renderView()" style="white-space:nowrap;padding:6px 14px;border-radius:99px;border:1.5px solid '+(a?'#2563EB':'#E2E8F0')+';background:'+(a?'#2563EB':'#fff')+';color:'+(a?'#fff':'#374151')+';font-size:12px;font-weight:'+(a?700:500)+';cursor:pointer;font-family:inherit">'+c+' <span style="font-size:10px;opacity:.75">'+cnt+'</span></button>';
     }).join('')
+  +'</div>'
+    +'<div style="position:relative;flex-shrink:0">'
+    +'<i class="ti ti-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:#94A3B8;pointer-events:none"></i>'
+    +'<input id="_idKwInput" value="'+esc(_idKw)+'" placeholder="기관명으로 검색…" oncompositionstart="_idComposing=true" oncompositionend="_idComposing=false;_idKw=this.value;renderView()" oninput="if(!_idComposing){_idKw=this.value;renderView()}" style="width:100%;padding:9px 12px 9px 34px;border:1px solid #E2E8F0;border-radius:9px;font-size:13px;font-family:inherit;outline:none;background:#F8FAFC;box-sizing:border-box" autocomplete="off">'
+    +(_idKw?'<button onclick="_idKw=\'\';renderView()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:#F1F5F9;color:#64748B;padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>':'')
   +'</div>'
   +'<div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">'
     +'<table id="_id_tbl" style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">'
