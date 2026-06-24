@@ -2607,8 +2607,8 @@ function renderIdentifyStatus(){
   +'</div>'
     +'<div style="position:relative;flex-shrink:0">'
     +'<i class="ti ti-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:#94A3B8;pointer-events:none"></i>'
-    +'<input id="_idKwInput" value="'+esc(_idKw)+'" placeholder="기관명으로 검색…" oncompositionstart="_idComposing=true" oncompositionend="_idComposing=false;_idKw=this.value;renderView()" oninput="if(!_idComposing){_idKw=this.value;renderView()}" style="width:100%;padding:9px 12px 9px 34px;border:1px solid #E2E8F0;border-radius:9px;font-size:13px;font-family:inherit;outline:none;background:#F8FAFC;box-sizing:border-box" autocomplete="off">'
-    +(_idKw?'<button onclick="_idKw=\'\';renderView()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:#F1F5F9;color:#64748B;padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>':'')
+    +'<input id="_idKwInput" value="'+esc(_idKw)+'" placeholder="기관명으로 검색…" oncompositionstart="_idComposing=true" oncompositionend="_idComposing=false;_idKw=this.value;updateIdRows()" oninput="if(!_idComposing){_idKw=this.value;updateIdRows()}" style="width:100%;padding:9px 12px 9px 34px;border:1px solid #E2E8F0;border-radius:9px;font-size:13px;font-family:inherit;outline:none;background:#F8FAFC;box-sizing:border-box" autocomplete="off">'
+    +(_idKw?'<button onclick="_idKw=\'\';var el=document.getElementById(\'_idKwInput\');if(el)el.value=\'\';updateIdRows()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:#F1F5F9;color:#64748B;padding:3px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>':'')
   +'</div>'
   +'<div style="background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:auto;flex:1;min-height:0">'
     +'<table id="_id_tbl" style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">'
@@ -2714,6 +2714,47 @@ function renderIdJobPanel(jobId){
       +(isAdm?'<button onclick="saveIdentify('+j.id+')" style="width:100%;background:#2563EB;color:#fff;border:none;padding:8px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💾 저장</button>':'')
     +'</div>'
   +'</div>';
+}
+
+function updateIdRows(){
+  var tbody=document.querySelector('#_id_tbl tbody');
+  if(!tbody){renderView();return;}
+  var jobs=JOBS.filter(function(j){return j.finalDate;});
+  jobs=jobs.slice().sort(function(a,b){return(b.finalDate||'').localeCompare(a.finalDate||'');});
+  var rowsData=jobs.map(function(j){
+    var confirmedAps=j.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';});
+    var confirmedNums=confirmedAps.map(function(a){return a.examNumber;}).filter(Boolean);
+    var announced=j.finalPassAnnouncedCount;
+    var confirmedCnt=confirmedAps.length;
+    var missing=(announced!=null)?Math.max(0,announced-confirmedCnt):null;
+    return{job:j,confirmedCnt:confirmedCnt,confirmedNums:confirmedNums,announced:announced,missing:missing};
+  });
+  var byCat=_idCat==='전체'?rowsData:rowsData.filter(function(r){return r.job.category===_idCat;});
+  var kw=(_idKw||'').trim().toLowerCase();
+  var byKw=kw===''?byCat:byCat.filter(function(r){return r.job.name.toLowerCase().indexOf(kw)>=0;});
+  var shown=_idShowOnlyMissing?byKw.filter(function(r){return r.missing!=null&&r.missing>0;}):byKw;
+  var KB_BADGE={'소리자바':'background:#EFF6FF;color:#1D4ED8','카스':'background:#FEF3C7;color:#92400E','알려주지 않음':'background:#FEF2F2;color:#DC2626'};
+  tbody.innerHTML=shown.length===0
+    ?'<tr><td colspan="7" style="padding:40px;text-align:center;color:#CBD5E1;font-size:13px">검색 결과가 없습니다.</td></tr>'
+    :shown.map(function(r){
+      var j=r.job;var hasMissing=r.missing!=null&&r.missing>0;var bg=hasMissing?'#FEF2F2':'#fff';
+      var ratioColor=r.announced==null?'#94A3B8':hasMissing?'#DC2626':'#059669';
+      var ratioText=r.announced!=null?(r.confirmedCnt+' / '+r.announced):(r.confirmedCnt+' / -');
+      var numsText=r.confirmedNums.length>0?r.confirmedNums.map(esc).join(', '):'<span style="color:#CBD5E1">-</span>';
+      var kb=j.idKeyboard||'확인중';var kbStyle=KB_BADGE[kb]||'';
+      var kbCell=kb!=='확인중'?'<span style="padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;'+kbStyle+'">'+kb+'</span>':'<span style="color:#CBD5E1">-</span>';
+      var contactText=(j.idContactName||j.idContactPhone)?esc(j.idContactName||'')+(j.idContactPhone?' ('+esc(j.idContactPhone)+')':''):'<span style="color:#CBD5E1">-</span>';
+      var memoText=j.idMemo?esc(j.idMemo):'<span style="color:#CBD5E1">-</span>';
+      return'<tr data-jobid="'+j.id+'" style="border-bottom:1px solid #F1F5F9;background:'+bg+';cursor:pointer;transition:background .1s" onclick="_idSelectedJobId='+j.id+';updateIdPanel()" onmouseover="this.style.background=\'#F8FAFF\'" onmouseout="this.style.background=\''+bg+'\'">'
+        +'<td style="padding:10px;font-weight:700;color:#1F2937;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+badge(j.category)+' '+(j.isRec?'<span style="background:#D1FAE5;color:#065F46;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid #6EE7B7">추천</span> ':'')+( j.isReA?'<span style="background:#FEE2E2;color:#DC2626;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid #FECACA">재공고</span> ':'')+esc(j.name)+'</td>'
+        +'<td style="padding:10px;text-align:center;color:#64748B;white-space:nowrap;font-size:12px">'+fmt(j.finalDate)+'</td>'
+        +'<td style="padding:10px;text-align:center"><span style="color:'+ratioColor+';font-weight:700">'+ratioText+'</span></td>'
+        +'<td style="padding:10px;text-align:center;font-size:12px;color:#374151">'+numsText+'</td>'
+        +'<td style="padding:10px;text-align:center">'+kbCell+'</td>'
+        +'<td style="padding:10px;font-size:12px;color:#374151;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+contactText+'</td>'
+        +'<td style="padding:10px;font-size:12px;color:#64748B;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+memoText+'</td>'
+      +'</tr>';
+    }).join('');
 }
 
 function updateIdPanel(){
