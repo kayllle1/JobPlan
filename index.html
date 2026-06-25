@@ -3207,13 +3207,141 @@ function getEmpData(cat){
     if(cat!=='전체'&&j.category!==cat)return;
     j.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).forEach(function(a){
       var st=STUDENTS.find(function(s){return s.id===a.studentId;});
-      result.push({name:st?(isStaff()?maskName(st.name):st.name):'(삭제된 학생)',phone:st?(isStaff()?maskPhone(st.phone||''):st.phone||'-'):'-',email:st?(isStaff()?maskEmail(st.email||''):st.email||'-'):'-',jobName:j.name,category:j.category,finalDate:j.finalDate||'',grade:a.grade||'-',memo:a.memo||''});
+      result.push({name:st?(isStaff()?maskName(st.name):st.name):'(삭제된 학생)',phone:st?(isStaff()?maskPhone(st.phone||''):st.phone||'-'):'-',email:st?(isStaff()?maskEmail(st.email||''):st.email||'-'):'-',jobName:j.name,category:j.category,finalDate:j.finalDate||'',grade:a.grade||'-',memo:a.memo||'',jobType:j.type||''});
     });
   });
   result.sort(function(a,b){return (b.finalDate||'').localeCompare(a.finalDate||'');});
   return result;
 }
 function setEmpCat(cat){empCat=cat;renderView();}
+
+function openEmpCompare(){
+  /* 25년 데이터 */
+  var d25=EMP_2025;
+  /* 26년 데이터 */
+  var d26=getEmpDataRaw();
+
+  /* 총합 */
+  var t25=d25.length, t26=d26.length;
+
+  /* 카테고리별 */
+  var CATS_CMP=['법원','의회','검찰청','공공기관','해바라기','팀벨','SDH','사기업','대학교','기타'];
+  function countCat(d){var m={};CATS_CMP.forEach(function(c){m[c]=0;});d.forEach(function(r){var k=CATS_CMP.indexOf(r.category)>=0?r.category:'기타';m[k]++;});return m;}
+  var cat25=countCat(d25), cat26=countCat(d26);
+
+  /* 월별 */
+  function countMonth(d,yr){var m={};for(var i=1;i<=12;i++)m[yr+'.'+String(i).padStart(2,'0')]=0;d.forEach(function(r){var fd=r.finalDate||'';if(fd.slice(0,4)===yr)m[fd.slice(0,7)]=(m[fd.slice(0,7)]||0)+1;});return m;}
+  var mo25=countMonth(d25,'2025'), mo26=countMonth(d26,'2026');
+
+  /* 급수별 */
+  var GRADES=['1급','2급','3급','미취득'];
+  function countGrade(d){var m={};GRADES.forEach(function(g){m[g]=0;});d.forEach(function(r){var g=GRADES.indexOf(r.grade)>=0?r.grade:'미취득';m[g]++;});return m;}
+  var gr25=countGrade(d25), gr26=countGrade(d26);
+
+  var COLORS=['#2563EB','#7C3AED','#059669','#D97706','#DC2626','#0891B2','#9333EA','#EA580C','#16A34A','#64748B'];
+
+  /* SVG 막대 그래프 생성 */
+  function barChart(labels, vals25, vals26, maxVal, w, h){
+    var pad={t:30,r:10,b:55,l:40};
+    var cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+    var n=labels.length, bw=Math.floor(cw/n*0.35), gap=Math.floor(cw/n);
+    var scaleY=function(v){return ch-Math.round(v/maxVal*ch);};
+    var svg='<svg width="'+w+'" height="'+h+'" xmlns="http://www.w3.org/2000/svg" style="font-family:Pretendard,sans-serif">';
+    /* Y축 */
+    for(var yi=0;yi<=4;yi++){
+      var yv=Math.round(maxVal/4*yi);
+      var yp=pad.t+scaleY(yv);
+      svg+='<line x1="'+pad.l+'" y1="'+yp+'" x2="'+(pad.l+cw)+'" y2="'+yp+'" stroke="#F1F5F9" stroke-width="1"/>';
+      svg+='<text x="'+(pad.l-5)+'" y="'+(yp+4)+'" text-anchor="end" font-size="9" fill="#94A3B8">'+yv+'</text>';
+    }
+    /* 막대 */
+    for(var i=0;i<n;i++){
+      var x=pad.l+i*gap+Math.floor(gap/2)-bw;
+      var v25=vals25[i]||0, v26=vals26[i]||0;
+      var y25=pad.t+scaleY(v25), y26=pad.t+scaleY(v26);
+      /* 25년 */
+      svg+='<rect x="'+x+'" y="'+y25+'" width="'+bw+'" height="'+(ch-scaleY(v25))+'" fill="#93C5FD" rx="3"/>';
+      if(v25>0)svg+='<text x="'+(x+bw/2)+'" y="'+(y25-4)+'" text-anchor="middle" font-size="9" fill="#2563EB" font-weight="700">'+v25+'</text>';
+      /* 26년 */
+      svg+='<rect x="'+(x+bw+3)+'" y="'+y26+'" width="'+bw+'" height="'+(ch-scaleY(v26))+'" fill="#2563EB" rx="3"/>';
+      if(v26>0)svg+='<text x="'+(x+bw+3+bw/2)+'" y="'+(y26-4)+'" text-anchor="middle" font-size="9" fill="#1D4ED8" font-weight="700">'+v26+'</text>';
+      /* X 레이블 */
+      svg+='<text x="'+(x+bw)+'" y="'+(pad.t+ch+16)+'" text-anchor="middle" font-size="9" fill="#64748B">'+labels[i]+'</text>';
+    }
+    /* 범례 */
+    svg+='<rect x="'+(pad.l)+'" y="'+(h-18)+'" width="10" height="10" fill="#93C5FD" rx="2"/>';
+    svg+='<text x="'+(pad.l+14)+'" y="'+(h-10)+'" font-size="10" fill="#374151">2025년</text>';
+    svg+='<rect x="'+(pad.l+60)+'" y="'+(h-18)+'" width="10" height="10" fill="#2563EB" rx="2"/>';
+    svg+='<text x="'+(pad.l+74)+'" y="'+(h-10)+'" font-size="10" fill="#374151">2026년</text>';
+    svg+='</svg>';
+    return svg;
+  }
+
+  /* 카테고리 그래프 */
+  var cLabels=CATS_CMP.filter(function(k){return cat25[k]>0||cat26[k]>0;});
+  var cV25=cLabels.map(function(k){return cat25[k]||0;});
+  var cV26=cLabels.map(function(k){return cat26[k]||0;});
+  var cMax=Math.max.apply(null,cV25.concat(cV26).concat([5]))+5;
+  var catSvg=barChart(cLabels,cV25,cV26,cMax,600,220);
+
+  /* 월별 그래프 */
+  var moLabels=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  var mV25=moLabels.map(function(m){return mo25['2025.'+m]||0;});
+  var mV26=moLabels.map(function(m){return mo26['2026.'+m]||0;});
+  var mMax=Math.max.apply(null,mV25.concat(mV26).concat([5]))+3;
+  var moSvg=barChart(moLabels,mV25,mV26,mMax,600,220);
+
+  /* 급수별 그래프 */
+  var gV25=GRADES.map(function(g){return gr25[g]||0;});
+  var gV26=GRADES.map(function(g){return gr26[g]||0;});
+  var gMax=Math.max.apply(null,gV25.concat(gV26).concat([5]))+5;
+  var grSvg=barChart(GRADES,gV25,gV26,gMax,380,220);
+
+  /* 모달 내용 */
+  var body=
+    '<div style="display:flex;gap:12px;margin-bottom:16px">'
+      +'<div style="flex:1;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:12px;padding:16px 20px;text-align:center">'
+        +'<div style="font-size:11px;font-weight:700;color:#2563EB;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">2025년 총 합격자</div>'
+        +'<div style="font-size:36px;font-weight:800;color:#1D4ED8">'+t25+'<span style="font-size:16px;font-weight:500;margin-left:4px">명</span></div>'
+      +'</div>'
+      +'<div style="flex:1;background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:12px;padding:16px 20px;text-align:center">'
+        +'<div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">2026년 총 합격자</div>'
+        +'<div style="font-size:36px;font-weight:800;color:#047857">'+t26+'<span style="font-size:16px;font-weight:500;margin-left:4px">명</span></div>'
+      +'</div>'
+      +'<div style="flex:1;background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px 20px;text-align:center">'
+        +'<div style="font-size:11px;font-weight:700;color:#D97706;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">전년 대비 증감</div>'
+        +'<div style="font-size:36px;font-weight:800;color:'+(t26>=t25?'#059669':'#DC2626')+'">'+(t26>=t25?'+':'')+(t26-t25)+'<span style="font-size:16px;font-weight:500;margin-left:4px">명</span></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:14px;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:280px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px 16px">'
+        +'<div style="font-size:13px;font-weight:800;color:#0F172A;margin-bottom:10px">📋 카테고리별 비교</div>'
+        +'<div style="overflow-x:auto">'+catSvg+'</div>'
+      +'</div>'
+      +'<div style="min-width:220px;background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px 16px">'
+        +'<div style="font-size:13px;font-weight:800;color:#0F172A;margin-bottom:10px">🎯 급수별 비교</div>'
+        +grSvg
+      +'</div>'
+    +'</div>'
+    +'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px 16px;margin-top:14px">'
+      +'<div style="font-size:13px;font-weight:800;color:#0F172A;margin-bottom:10px">📅 월별 합격자 추이</div>'
+      +'<div style="overflow-x:auto">'+moSvg+'</div>'
+    +'</div>';
+
+  showModal('📊 2025 vs 2026 취업 현황 비교', body, '720px');
+}
+
+function getEmpDataRaw(){
+  var result=[];
+  JOBS.forEach(function(j){
+    j.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).forEach(function(a){
+      var st=STUDENTS.find(function(s){return s.id===a.studentId;});
+      result.push({name:st?st.name:'',phone:st?st.phone||'-':'-',email:st?st.email||'-':'-',jobName:j.name,category:j.category,finalDate:j.finalDate||'',grade:a.grade||'-',memo:a.memo||''});
+    });
+  });
+  return result;
+}
+
 function setEmpYear(y){empYear=y;empCat='전체';empKw='';renderView();}
 function _getEmpYearSelect(){
   return'<select onchange="setEmpYear(this.value)" style="margin-left:10px;padding:5px 14px;border:1.5px solid #2563EB;border-radius:8px;font-size:13px;font-weight:700;color:#2563EB;background:#EFF6FF;font-family:inherit;cursor:pointer;vertical-align:middle">'+(empYear==="2026"?'<option value="2026" selected>2026년</option><option value="2025">2025년</option>':'<option value="2026">2026년</option><option value="2025" selected>2025년</option>')+'</select>';
@@ -3236,8 +3364,8 @@ function renderEmployment(){
     var c=entry[0],cnt=entry[1];var active=empCat===c;var cc=CAT_COLORS[c]||'#2563EB';
     return'<button onclick="setEmpCat(\''+c+'\')" style="white-space:nowrap;padding:7px 15px;border-radius:99px;border:1.5px solid '+(active?cc:'#E2E8F0')+';background:'+(active?cc:'#fff')+';color:'+(active?'#fff':'#374151')+';font-size:12px;font-weight:'+(active?700:500)+';cursor:pointer;font-family:inherit;flex-shrink:0;display:inline-flex;align-items:center;gap:6px">'+c+'<span style="font-size:10px;background:'+(active?'rgba(255,255,255,.28)':'#F3F4F6')+';color:'+(active?'#fff':'#6B7280')+';padding:1px 7px;border-radius:99px;font-weight:700">'+cnt+'</span></button>';
   }).join('');
-  var tableRows=list.length===0?'<tr><td colspan="7" style="padding:56px 20px;text-align:center"><div style="display:flex;flex-direction:column;align-items:center;gap:10px"><span style="font-size:40px">🏢</span><span style="font-size:14px;color:#64748B;font-weight:700">'+(empCat==='전체'?'아직 취업자가 없습니다.':'['+empCat+'] 분야 취업자가 없습니다.')+'</span></div></td></tr>':list.map(function(r,i){var fd=calcDDay(r.finalDate);var fdText=fd===null?'-':fd===0?'<span style="color:#EA580C;font-weight:700">오늘</span>':fd>0?'<span style="color:#64748B">'+fd+'일 후</span>':'<span style="color:#64748B">'+Math.abs(fd)+'일 전</span>';return'<tr class="emp-tr emp-row-anim" style="border-bottom:1px solid #F0FDF4;animation-delay:'+Math.min(i*0.025,0.3)+'s"><td style="padding:11px 16px;text-align:center;color:#64748B;font-size:11px;font-weight:700">'+(i+1)+'</td><td style="padding:11px 14px"><span style="font-weight:800;font-size:13px;color:#0F172A">'+esc(r.name)+'</span></td><td style="padding:11px 14px;color:#1F2937;font-size:12px">'+esc(r.phone)+'</td><td style="padding:11px 14px"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+badge(r.category)+'<span style="font-size:12px;color:#1F2937;font-weight:600">'+esc(r.jobName.length>32?r.jobName.slice(0,32)+'…':r.jobName)+'</span></div></td><td style="padding:11px 14px;white-space:nowrap">'+(r.finalDate?'<div><span style="font-size:12px;font-weight:700;color:#059669">'+fmt(r.finalDate)+'</span><br><span style="font-size:10px">'+fdText+'</span></div>':'<span style="color:#CBD5E1;font-size:11px">-</span>')+'</td><td style="padding:11px 14px">'+(r.grade&&r.grade!=='-'?'<span style="background:#F1F5F9;color:#1F2937;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid #E2E8F0">'+esc(r.grade)+'</span>':'<span style="color:#CBD5E1">-</span>')+'</td>'+(isStaff()?'':'<td style="padding:11px 14px;max-width:160px"><span style="font-size:11px;color:#9CA3AF;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo||'-')+'</span></td>')+'</tr>';}).join('');
-  return'<div id="_view_scroll" style="padding:24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:16px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0"><div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">🏆 취업 현황</h2>'+_getEmpYearSelect()+'<p style="margin:4px 0 0;font-size:12px;color:#64748B">'+(empYear==="2025"?'2025년 합격/취업성공자 명단':'기관별 최종합격/취업성공자 명단')+'</p></div>'+(isStaff()?'':'<button onclick="exportEmpCsv()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(5,150,105,.35);flex-shrink:0">📥 명단 다운로드<span style="font-size:11px;background:rgba(255,255,255,.25);padding:2px 9px;border-radius:99px">'+(empCat==='전체'?'전체':empCat)+' · '+list.length+'명</span></button>')+'</div><div style="background:#fff;border-radius:14px;border:1px solid #D1FAE5;overflow:hidden;flex-shrink:0"><div style="padding:14px 20px;background:linear-gradient(135deg,#064E3B,#065F46);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🏢</span><div><p style="margin:0;font-size:9px;color:#6EE7B7;font-weight:700;letter-spacing:.14em;text-transform:uppercase">기관별 취업 현황</p><p style="margin:3px 0 0;font-size:16px;font-weight:800;color:#fff">'+(empCat==='전체'?'전체 기관':empCat)+'<span style="font-size:12px;font-weight:500;color:#6EE7B7;margin-left:8px">취업자 '+list.length+'명</span></p></div></div>'+(!isStaff()&&list.length>0?'<button onclick="exportEmpCsv()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📥 CSV 다운로드</button>':'')+'</div><div style="padding:10px 16px 8px;border-bottom:1px solid #ECFDF5;background:#F0FDF4"><div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">'+tabs+'</div><div style="padding:8px 16px 10px;background:#F0FDF4;border-top:1px solid #D1FAE5;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div style="position:relative;flex:1;min-width:180px;max-width:360px"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🔍</span><input oncompositionstart="onEmpKwCompositionStart()" oncompositionend="onEmpKwCompositionEnd(this)" oninput="onEmpKwInput(this)" value="'+esc(empKw)+'" placeholder="이름·연락정보·기관·공고명 검색..." autocomplete="off" style="width:100%;padding:7px 10px 7px 32px;border:1px solid #A7F3D0;border-radius:7px;font-size:12px;outline:none;font-family:inherit;background:#fff"></div>'+( empKw?'<button onclick="clearEmpKw()" style="border:none;background:#D1FAE5;color:#065F46;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✕ 초기화</button><span style="font-size:12px;color:#059669;font-weight:700;white-space:nowrap;margin-left:4px">'+list.length+'명 검색됨</span>':'')+'</div></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px"><thead><tr style="background:#F0FDF4;border-bottom:2px solid #D1FAE5">'+['No.','이름','연락처','기관 / 공고명','최종합격발표일','급수'].concat(isStaff()?[]:['메모']).map(function(h){return'<th style="padding:10px 14px;text-align:left;font-weight:700;color:#065F46;font-size:11px;white-space:nowrap;letter-spacing:.04em">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>'+(list.length>0?'<div style="padding:10px 20px;background:#F9FAFB;border-top:1px solid #F3F4F6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:12px;color:#6B7280">총 <strong style="color:#065F46">'+list.length+'</strong>명</span>'+(isStaff()?'':'<button onclick="exportEmpCsv()" style="background:#059669;color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📥 엑셀(CSV)</button>')+'</div>':'')+'</div></div>';
+  var tableRows=list.length===0?'<tr><td colspan="8" style="padding:56px 20px;text-align:center"><div style="display:flex;flex-direction:column;align-items:center;gap:10px"><span style="font-size:40px">🏢</span><span style="font-size:14px;color:#64748B;font-weight:700">'+(empCat==='전체'?'아직 취업자가 없습니다.':'['+empCat+'] 분야 취업자가 없습니다.')+'</span></div></td></tr>':list.map(function(r,i){var fd=calcDDay(r.finalDate);var fdText=fd===null?'-':fd===0?'<span style="color:#EA580C;font-weight:700">오늘</span>':fd>0?'<span style="color:#64748B">'+fd+'일 후</span>':'<span style="color:#64748B">'+Math.abs(fd)+'일 전</span>';return'<tr class="emp-tr emp-row-anim" style="border-bottom:1px solid #F0FDF4;animation-delay:'+Math.min(i*0.025,0.3)+'s"><td style="padding:11px 16px;text-align:center;color:#64748B;font-size:11px;font-weight:700">'+(i+1)+'</td><td style="padding:11px 14px"><span style="font-weight:800;font-size:13px;color:#0F172A">'+esc(r.name)+'</span></td><td style="padding:11px 14px;color:#1F2937;font-size:12px">'+esc(r.phone)+'</td><td style="padding:11px 14px"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+badge(r.category)+'<span style="font-size:12px;color:#1F2937;font-weight:600">'+esc(r.jobName.length>32?r.jobName.slice(0,32)+'…':r.jobName)+'</span></div></td><td style="padding:11px 14px">'+(r.jobType?'<span style="padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap;background:#F1F5F9;color:#374151;border:1px solid #E2E8F0">'+esc(r.jobType)+'</span>':'<span style="color:#CBD5E1;font-size:11px">-</span>')+'</td><td style="padding:11px 14px;white-space:nowrap">'+(r.finalDate?'<div><span style="font-size:12px;font-weight:700;color:#059669">'+fmt(r.finalDate)+'</span><br><span style="font-size:10px">'+fdText+'</span></div>':'<span style="color:#CBD5E1;font-size:11px">-</span>')+'</td><td style="padding:11px 14px">'+(r.grade&&r.grade!=='-'?'<span style="background:#F1F5F9;color:#1F2937;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid #E2E8F0">'+esc(r.grade)+'</span>':'<span style="color:#CBD5E1">-</span>')+'</td>'+(isStaff()?'':'<td style="padding:11px 14px;max-width:160px"><span style="font-size:11px;color:#9CA3AF;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.memo||'-')+'</span></td>')+'</tr>';}).join('');
+  return'<div id="_view_scroll" style="padding:24px;height:100%;overflow-y:auto;display:flex;flex-direction:column;gap:16px"><div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;flex-shrink:0"><div><h2 style="margin:0;font-size:20px;font-weight:800;color:#0F172A">🏆 취업 현황</h2>'+_getEmpYearSelect()+'<p style="margin:4px 0 0;font-size:12px;color:#64748B">'+(empYear==="2025"?'2025년 합격/취업성공자 명단':'기관별 최종합격/취업성공자 명단')+'</p></div>'+(isStaff()?'':'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+'<button onclick="openEmpCompare()" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(37,99,235,.35);flex-shrink:0">📊 연도 비교</button>'+'<button onclick="exportEmpCsv()" style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(5,150,105,.35);flex-shrink:0">📥 명단 다운로드<span style="font-size:11px;background:rgba(255,255,255,.25);padding:2px 9px;border-radius:99px">'+(empCat==='전체'?'전체':empCat)+' · '+list.length+'명</span></button>'+'</div>')+'</div><div style="background:#fff;border-radius:14px;border:1px solid #D1FAE5;overflow:hidden;flex-shrink:0"><div style="padding:14px 20px;background:linear-gradient(135deg,#064E3B,#065F46);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🏢</span><div><p style="margin:0;font-size:9px;color:#6EE7B7;font-weight:700;letter-spacing:.14em;text-transform:uppercase">기관별 취업 현황</p><p style="margin:3px 0 0;font-size:16px;font-weight:800;color:#fff">'+(empCat==='전체'?'전체 기관':empCat)+'<span style="font-size:12px;font-weight:500;color:#6EE7B7;margin-left:8px">취업자 '+list.length+'명</span></p></div></div>'+(!isStaff()&&list.length>0?'<button onclick="exportEmpCsv()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📥 CSV 다운로드</button>':'')+'</div><div style="padding:10px 16px 8px;border-bottom:1px solid #ECFDF5;background:#F0FDF4"><div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">'+tabs+'</div><div style="padding:8px 16px 10px;background:#F0FDF4;border-top:1px solid #D1FAE5;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div style="position:relative;flex:1;min-width:180px;max-width:360px"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🔍</span><input oncompositionstart="onEmpKwCompositionStart()" oncompositionend="onEmpKwCompositionEnd(this)" oninput="onEmpKwInput(this)" value="'+esc(empKw)+'" placeholder="이름·연락정보·기관·공고명 검색..." autocomplete="off" style="width:100%;padding:7px 10px 7px 32px;border:1px solid #A7F3D0;border-radius:7px;font-size:12px;outline:none;font-family:inherit;background:#fff"></div>'+( empKw?'<button onclick="clearEmpKw()" style="border:none;background:#D1FAE5;color:#065F46;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✕ 초기화</button><span style="font-size:12px;color:#059669;font-weight:700;white-space:nowrap;margin-left:4px">'+list.length+'명 검색됨</span>':'')+'</div></div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px"><thead><tr style="background:#F0FDF4;border-bottom:2px solid #D1FAE5">'+['No.','이름','연락처','기관 / 공고명','채용형태','최종합격발표일','급수'].concat(isStaff()?[]:['메모']).map(function(h){return'<th style="padding:10px 14px;text-align:left;font-weight:700;color:#065F46;font-size:11px;white-space:nowrap;letter-spacing:.04em">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+tableRows+'</tbody></table></div>'+(list.length>0?'<div style="padding:10px 20px;background:#F9FAFB;border-top:1px solid #F3F4F6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:12px;color:#6B7280">총 <strong style="color:#065F46">'+list.length+'</strong>명</span>'+(isStaff()?'':'<button onclick="exportEmpCsv()" style="background:#059669;color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📥 엑셀(CSV)</button>')+'</div>':'')+'</div></div>';
 }
 
 /* ─ 대시보드 ─ */
