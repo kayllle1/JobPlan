@@ -1687,8 +1687,7 @@ function renderEmployerDB(){
         +'</td>'
         +'<td style="padding:10px 10px;font-size:12px;color:#1F2937;white-space:nowrap">'+(e.contact_person?esc(e.contact_person):'<span style="color:#CBD5E1">—</span>')+'</td>'
         +'<td style="padding:10px 10px;font-size:12px;white-space:nowrap">'+(e.contact_phone?'<a href="tel:'+esc(e.contact_phone)+'" onclick="event.stopPropagation()" style="color:#2563EB;text-decoration:none;font-weight:600">'+esc(e.contact_phone)+'</a>':'<span style="color:#CBD5E1">—</span>')+'</td>'
-        +'<td style="padding:10px 10px;font-size:11px;font-weight:700;color:'+confColor+';white-space:nowrap">'+confText+'</td>'
-      +'</tr>';
+        +'</tr>';
     }).join('');
 
   /* ── 우측 상세 패널 ── */
@@ -1784,7 +1783,7 @@ function renderEmployerDB(){
             +'<th style="padding:9px 8px;text-align:center;background:#F8FAFC;width:36px">'
               +(list.length>0?'<input type="checkbox" '+(allChecked?'checked':'')+' onchange="toggleEmpSelectAll(['+allIds.join(',')+'])" style="width:15px;height:15px;cursor:pointer;accent-color:#7C3AED">':'')
             +'</th>'
-            +['No.','카테고리','지역','기관명 / 부서','담당자','연락처','업데이트 날짜'].map(function(h){return'<th style="padding:9px 10px;text-align:left;font-weight:700;color:#1F2937;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">'+h+'</th>';}).join('')
+            +['No.','카테고리','지역','기관명 / 부서','담당자','연락처'].map(function(h){return'<th style="padding:9px 10px;text-align:left;font-weight:700;color:#1F2937;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">'+h+'</th>';}).join('')
           +'</tr></thead>'
           +'<tbody>'+tableRows+'</tbody>'
         +'</table>'
