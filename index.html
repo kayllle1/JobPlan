@@ -3245,21 +3245,43 @@ function openEmpCompare(){
   function cntCat(d){var m={};CATS.forEach(function(k){m[k]=0;});d.forEach(function(r){var k=CATS.indexOf(r.category)>=0?r.category:'기타';m[k]++;});return m;}
   function cntGrade(d){var m={};GRADES.forEach(function(g){m[g]=0;});d.forEach(function(r){var g=GRADES.indexOf(r.grade)>=0?r.grade:'미취득';m[g]++;});return m;}
   function barSVG2(labels,v1,v2,l1,l2,w,h){
-    var pad={t:26,r:8,b:46,l:34},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,n=labels.length;
-    var mx=Math.max.apply(null,v1.concat(v2).concat([1]))+Math.ceil(Math.max.apply(null,v1.concat(v2))*0.15);
-    var bw=Math.max(5,Math.floor(cw/n*0.3)),gap=cw/n,sy=function(v){return ch-Math.round(v/mx*ch);};
+    var pad={t:36,r:20,b:62,l:44},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,n=labels.length;
+    var mx=Math.max.apply(null,v1.concat(v2).concat([1]))+Math.ceil(Math.max.apply(null,v1.concat(v2))*0.2);
+    var bw=Math.max(12,Math.floor(cw/n*0.32)),gap=cw/n,sy=function(v){return ch-Math.round((v||0)/mx*ch);};
     var svg='<svg width="'+w+'" height="'+h+'" xmlns="http://www.w3.org/2000/svg" style="font-family:inherit">';
-    for(var i=0;i<=4;i++){var yv=Math.round(mx/4*i),yp=pad.t+sy(yv);svg+='<line x1="'+pad.l+'" y1="'+yp+'" x2="'+(pad.l+cw)+'" y2="'+yp+'" stroke="#F1F5F9" stroke-width="1"/><text x="'+(pad.l-4)+'" y="'+(yp+4)+'" text-anchor="end" font-size="9" fill="#94A3B8">'+yv+'</text>';}
-    for(var i=0;i<n;i++){var x=pad.l+i*gap+gap/2-bw,val1=v1[i]||0,val2=v2[i]||0,y1=pad.t+sy(val1),y2=pad.t+sy(val2);
-      svg+='<rect x="'+x+'" y="'+y1+'" width="'+bw+'" height="'+(ch-sy(val1))+'" fill="#93C5FD" rx="2"/>';
-      if(val1>0)svg+='<text x="'+(x+bw/2)+'" y="'+(y1-3)+'" text-anchor="middle" font-size="9" fill="#1D4ED8" font-weight="700">'+val1+'</text>';
-      svg+='<rect x="'+(x+bw+2)+'" y="'+y2+'" width="'+bw+'" height="'+(ch-sy(val2))+'" fill="#1D4ED8" rx="2"/>';
-      if(val2>0)svg+='<text x="'+(x+bw+2+bw/2)+'" y="'+(y2-3)+'" text-anchor="middle" font-size="9" fill="#1E3A8A" font-weight="700">'+val2+'</text>';
-      svg+='<text x="'+(x+bw+1)+'" y="'+(pad.t+ch+14)+'" text-anchor="middle" font-size="9" fill="#64748B">'+labels[i]+'</text>';}
-    svg+='<rect x="'+pad.l+'" y="'+(h-13)+'" width="8" height="8" fill="#93C5FD" rx="1"/><text x="'+(pad.l+11)+'" y="'+(h-6)+'" font-size="9" fill="#374151">'+l1+'</text>';
-    svg+='<rect x="'+(pad.l+48)+'" y="'+(h-13)+'" width="8" height="8" fill="#1D4ED8" rx="1"/><text x="'+(pad.l+59)+'" y="'+(h-6)+'" font-size="9" fill="#374151">'+l2+'</text>';
+    /* Y축 그리드 */
+    for(var i=0;i<=4;i++){var yv=Math.round(mx/4*i),yp=pad.t+sy(yv);
+      svg+='<line x1="'+pad.l+'" y1="'+yp+'" x2="'+(pad.l+cw)+'" y2="'+yp+'" stroke="#E5E7EB" stroke-width="1" stroke-dasharray="3,3"/>';
+      svg+='<text x="'+(pad.l-8)+'" y="'+(yp+4)+'" text-anchor="end" font-size="11" fill="#9CA3AF">'+yv+'</text>';
+    }
+    /* X축 기준선 */
+    svg+='<line x1="'+pad.l+'" y1="'+(pad.t+ch)+'" x2="'+(pad.l+cw)+'" y2="'+(pad.t+ch)+'" stroke="#E5E7EB" stroke-width="1.5"/>';
+    /* 막대 */
+    for(var i=0;i<n;i++){
+      var x=pad.l+i*gap+gap/2-bw,val1=v1[i]||0,val2=v2[i]||0,y1=pad.t+sy(val1),y2=pad.t+sy(val2);
+      /* 25년 막대 */
+      svg+='<rect x="'+x+'" y="'+y1+'" width="'+bw+'" height="'+(ch-sy(val1))+'" fill="#93C5FD" rx="3"/>';
+      if(val1>0)svg+='<text x="'+(x+bw/2)+'" y="'+(y1-5)+'" text-anchor="middle" font-size="12" fill="#1D4ED8" font-weight="800">'+val1+'</text>';
+      /* 26년 막대 */
+      svg+='<rect x="'+(x+bw+4)+'" y="'+y2+'" width="'+bw+'" height="'+(ch-sy(val2))+'" fill="#1D4ED8" rx="3"/>';
+      if(val2>0)svg+='<text x="'+(x+bw+4+bw/2)+'" y="'+(y2-5)+'" text-anchor="middle" font-size="12" fill="#1E3A8A" font-weight="800">'+val2+'</text>';
+      /* X 레이블 - 45도 회전으로 긴 텍스트도 보기 좋게 */
+      var lx=x+bw+2,ly=pad.t+ch+16;
+      if(labels[i].length>3){
+        svg+='<text x="'+lx+'" y="'+ly+'" text-anchor="end" font-size="11" fill="#374151" font-weight="600" transform="rotate(-35 '+lx+' '+ly+')">'+labels[i]+'</text>';
+      }else{
+        svg+='<text x="'+lx+'" y="'+ly+'" text-anchor="middle" font-size="12" fill="#374151" font-weight="600">'+labels[i]+'</text>';
+      }
+    }
+    /* 범례 */
+    var legY=h-10;
+    svg+='<rect x="'+pad.l+'" y="'+(legY-12)+'" width="14" height="14" fill="#93C5FD" rx="3"/>';
+    svg+='<text x="'+(pad.l+18)+'" y="'+(legY)+'" font-size="12" fill="#374151" font-weight="600">'+l1+'</text>';
+    svg+='<rect x="'+(pad.l+80)+'" y="'+(legY-12)+'" width="14" height="14" fill="#1D4ED8" rx="3"/>';
+    svg+='<text x="'+(pad.l+98)+'" y="'+(legY)+'" font-size="12" fill="#374151" font-weight="600">'+l2+'</text>';
     return svg+'</svg>';
   }
+
   function barSVGAll(labels,vals,colors,w,h){
     var pad={t:36,r:16,b:44,l:44},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,n=labels.length;
     var mx=Math.max.apply(null,vals.concat([1]));
@@ -3276,15 +3298,15 @@ function openEmpCompare(){
   var cL=CATS.filter(function(k){return catA[k]>0||cat26[k]>0;});
   var tA=dA.length,t26=d26.length,diff=t26-tA;
   var tab1='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">'
-    +'<div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:12px;padding:16px 20px;text-align:center"><div style="font-size:10px;font-weight:700;color:#2563EB;margin-bottom:4px">'+compareYear+'년</div><div style="font-size:36px;font-weight:800;color:#1D4ED8">'+tA+'<span style="font-size:13px;font-weight:500;margin-left:2px">명</span></div></div>'
-    +'<div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:12px;padding:16px 20px;text-align:center"><div style="font-size:10px;font-weight:700;color:#059669;margin-bottom:4px">2026년</div><div style="font-size:36px;font-weight:800;color:#047857">'+t26+'<span style="font-size:13px;font-weight:500;margin-left:2px">명</span></div></div>'
-    +'<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px 20px;text-align:center"><div style="font-size:10px;font-weight:700;color:#D97706;margin-bottom:4px">증감</div><div style="font-size:36px;font-weight:800;color:'+(diff>=0?'#059669':'#DC2626')+'">'+(diff>=0?'+':'')+diff+'<span style="font-size:13px;font-weight:500;margin-left:2px">명</span></div></div>'
+    +'<div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:12px;padding:16px 20px;text-align:center"><div style="font-size:10px;font-weight:700;color:#2563EB;margin-bottom:4px">'+compareYear+'년</div><div style="font-size:44px;font-weight:900;color:#1D4ED8">'+tA+'<span style="font-size:13px;font-weight:500;margin-left:2px">명</span></div></div>'
+    +'<div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:12px;padding:16px 20px;text-align:center"><div style="font-size:10px;font-weight:700;color:#059669;margin-bottom:4px">2026년</div><div style="font-size:44px;font-weight:900;color:#047857">'+t26+'<span style="font-size:13px;font-weight:500;margin-left:2px">명</span></div></div>'
+    +'<div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px 20px;text-align:center"><div style="font-size:10px;font-weight:700;color:#D97706;margin-bottom:4px">증감</div><div style="font-size:44px;font-weight:900;color:'+(diff>=0?'#059669':'#DC2626')+'">'+(diff>=0?'+':'')+diff+'<span style="font-size:13px;font-weight:500;margin-left:2px">명</span></div></div>'
     +'</div>'
     +'<div style="display:grid;grid-template-columns:3fr 2fr;gap:12px;margin-bottom:12px">'
-      +'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px 16px;overflow-x:auto"><div style="font-size:13px;font-weight:800;color:#0F172A;margin-bottom:8px">📋 카테고리별</div>'
-      +barSVG2(cL,cL.map(function(k){return catA[k]||0;}),cL.map(function(k){return cat26[k]||0;}),compareYear+'년','2026년',640,250)+'</div>'
-      +'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px 16px"><div style="font-size:13px;font-weight:800;color:#0F172A;margin-bottom:8px">🎯 급수별</div>'
-      +barSVG2(GRADES,GRADES.map(function(g){return grA[g]||0;}),GRADES.map(function(g){return gr26[g]||0;}),compareYear+'년','2026년',420,250)+'</div>'
+      +'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px 16px;overflow-x:auto"><div style="font-size:15px;font-weight:800;color:#0F172A;margin-bottom:10px">📋 카테고리별</div>'
+      +barSVG2(cL,cL.map(function(k){return catA[k]||0;}),cL.map(function(k){return cat26[k]||0;}),compareYear+'년','2026년',700,300)+'</div>'
+      +'<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px 16px"><div style="font-size:15px;font-weight:800;color:#0F172A;margin-bottom:10px">🎯 급수별</div>'
+      +barSVG2(GRADES,GRADES.map(function(g){return grA[g]||0;}),GRADES.map(function(g){return gr26[g]||0;}),compareYear+'년','2026년',420,300)+'</div>'
     +'</div>';
   var totals=ALL_YEARS.map(function(y){return y==='2026'?d26.length:(_PAST[y]||[]).length;});
   var catRows=CATS.map(function(cat){var v=ALL_YEARS.map(function(y){return(y==='2026'?d26:(_PAST[y]||[])).filter(function(r){return r.category===cat;}).length;});return v.some(function(x){return x>0;})?{cat:cat,vals:v}:null;}).filter(Boolean);
