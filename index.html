@@ -3385,32 +3385,8 @@ function getEmpDataRaw(){
   return result;
 }
 function onEmpKwCompositionStart(){_empComposing=true;clearTimeout(_empTimer);}
-function onEmpKwCompositionEnd(el){
-  _empComposing=false;clearTimeout(_empTimer);
-  empKw=el.value;
-  _empTimer=setTimeout(function(){
-    var pos=el.selectionEnd;
-    renderView();
-    _restoreEmpSearch(empKw,pos);
-  },0);
-}
-function onEmpKwInput(el){
-  if(_empComposing)return;
-  clearTimeout(_empTimer);
-  empKw=el.value;
-  var pos=el.selectionEnd;
-  _empTimer=setTimeout(function(){
-    renderView();
-    _restoreEmpSearch(empKw,pos);
-  },80);
-}
-function _restoreEmpSearch(val,pos){
-  /* renderView 후 검색창 포커스·커서 복원 */
-  var inp=document.querySelector('#_view_scroll input[placeholder*="\uC774\uB984\xB7\uC5F0\uB77D"]');
-  if(!inp)return;
-  inp.focus();
-  try{inp.setSelectionRange(pos,pos);}catch(e){}
-}
+function onEmpKwCompositionEnd(el){_empComposing=false;clearTimeout(_empTimer);var v=el.value;_empTimer=setTimeout(function(){empKw=v;renderView();},0);}
+function onEmpKwInput(el){if(_empComposing)return;clearTimeout(_empTimer);var v=el.value;_empTimer=setTimeout(function(){empKw=v;renderView();},200);}
 function clearEmpKw(){empKw='';_empComposing=false;clearTimeout(_empTimer);renderView();}
 function onBlKwCompositionStart(){_blComposing=true;clearTimeout(_blTimer);}
 function onBlKwCompositionEnd(el){_blComposing=false;clearTimeout(_blTimer);var v=el.value;_blTimer=setTimeout(function(){blKw=v;renderView();},0);}
@@ -3811,7 +3787,7 @@ function sortByFinalDate(jobs){
   active.sort(function(a,b){var fa=a.finalDate?String(a.finalDate).slice(0,10):'',fb=b.finalDate?String(b.finalDate).slice(0,10):'';var aF=fa&&fa>=TODAY,bF=fb&&fb>=TODAY,aP=fa&&fa<TODAY,bP=fb&&fb<TODAY;if(aF&&bF)return fa.localeCompare(fb);if(aF&&!bF)return -1;if(!aF&&bF)return 1;if(aP&&bP)return fb.localeCompare(fa);if(aP&&!bP)return -1;if(!aP&&bP)return 1;return(a.applyDeadline||a.docDate||'9999').localeCompare(b.applyDeadline||b.docDate||'9999');});
   return active.concat(closed);
 }
-function getFiltered(){return JOBS.filter(function(j){if(jobFilter.cat!=='전체'&&j.category!==jobFilter.cat)return false;if(jobFilter.year&&!(j.docDate||'').startsWith(jobFilter.year))return false;if(jobFilter.kw&&j.name.indexOf(jobFilter.kw)<0)return false;if(jobFilter.recType==='추천'&&!j.isRec)return false;if(jobFilter.recType==='지원'&&j.isRec)return false;if(jobFilter.type!=='전체'&&(j.type||'')!==jobFilter.type)return false;if(jobFilter.location&&j.location!==jobFilter.location)return false;if(jobFilter.dateFrom){var dl=j.applyDeadline||j.docDate||'';if(dl&&dl<jobFilter.dateFrom)return false;}if(jobFilter.dateTo){var dl2=j.applyDeadline||j.docDate||'';if(dl2&&dl2>jobFilter.dateTo)return false;}var _cf=_jobColFilters;function _cfOk(v,from,to){if(!from&&!to)return true;if(!v)return false;if(from&&v<from)return false;if(to&&v>to)return false;return true;}if(!_cfOk(j.docDate||'',_cf.docDate.from,_cf.docDate.to))return false;if(!_cfOk(j.applyDeadline||j.docDate||'',_cf.deadline.from,_cf.deadline.to))return false;if(!_cfOk(j.documentPassDate||'',_cf.documentPassDate.from,_cf.documentPassDate.to))return false;if(!_cfOk(j.interviewDate||'',_cf.interviewDate.from,_cf.interviewDate.to))return false;if(!_cfOk(j.finalDate||'',_cf.finalDate.from,_cf.finalDate.to))return false;return true;});}
+function getFiltered(){return JOBS.filter(function(j){if(jobFilter.cat!=='전체'&&j.category!==jobFilter.cat)return false;if(jobFilter.year&&!(j.docDate||'').startsWith(jobFilter.year))return false;if(jobFilter.kw&&j.name.indexOf(jobFilter.kw)<0)return false;if(jobFilter.recType==='추천'&&!j.isRec)return false;if(jobFilter.recType==='지원'&&j.isRec)return false;if(jobFilter.type!=='전체'&&(j.type||'')!==jobFilter.type)return false;if(jobFilter.location==='__none__'?!!j.location:jobFilter.location&&j.location!==jobFilter.location)return false;if(jobFilter.dateFrom){var dl=j.applyDeadline||j.docDate||'';if(dl&&dl<jobFilter.dateFrom)return false;}if(jobFilter.dateTo){var dl2=j.applyDeadline||j.docDate||'';if(dl2&&dl2>jobFilter.dateTo)return false;}var _cf=_jobColFilters;function _cfOk(v,from,to){if(!from&&!to)return true;if(!v)return false;if(from&&v<from)return false;if(to&&v>to)return false;return true;}if(!_cfOk(j.docDate||'',_cf.docDate.from,_cf.docDate.to))return false;if(!_cfOk(j.applyDeadline||j.docDate||'',_cf.deadline.from,_cf.deadline.to))return false;if(!_cfOk(j.documentPassDate||'',_cf.documentPassDate.from,_cf.documentPassDate.to))return false;if(!_cfOk(j.interviewDate||'',_cf.interviewDate.from,_cf.interviewDate.to))return false;if(!_cfOk(j.finalDate||'',_cf.finalDate.from,_cf.finalDate.to))return false;return true;});}
 
 /* ─ 스크롤 ─ */
 function _saveScrollPositions(){var vs=$('_view_scroll'),ts=$('_tbl_scroll');if(vs)_savedScrollTop=vs.scrollTop;if(ts)_savedTblScrollTop=ts.scrollTop;}
@@ -3912,6 +3888,16 @@ function renderJobRow(job,rowNum){
   return'<tr class="'+rowClass+'" style="border-bottom:1px solid #F1F5F9;'+(rowBg!='#fff'&&!isUrgent?'background:'+rowBg+';':'')+(over?'opacity:.65;':'')+'"><td style="padding:10px 8px;text-align:center">'+(_selectedJobIds.has(job.id)?'<input type="checkbox" checked onchange="toggleJobSelect('+job.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">':'<input type="checkbox" onchange="toggleJobSelect('+job.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">')+'</td><td style="padding:10px 8px;text-align:center;color:#64748B;font-size:11px;font-weight:700;white-space:nowrap">'+rowNum+'</td><td style="padding:10px 10px;white-space:nowrap">'+badge(job.category)+'</td><td style="padding:10px 10px;white-space:nowrap">'+typeCell+'</td><td style="padding:10px 10px;min-width:180px">'+nameCell+'</td><td style="padding:10px 10px;white-space:nowrap">'+docDateText+'</td><td style="padding:10px 10px;white-space:nowrap">'+dlText+'</td><td style="padding:10px 10px;font-size:11px;white-space:nowrap">'+dpText+'</td><td style="padding:10px 10px;font-size:11px;white-space:nowrap;color:'+(tI?'#DC2626':'#475569')+';font-weight:'+(tI?700:400)+'">'+fmt(job.interviewDate)+'</td><td style="padding:10px 10px;white-space:nowrap">'+finalText+'</td><td style="padding:10px 10px">'+countCell+'</td><td style="padding:10px 32px 10px 10px;min-width:180px">'+manageBtns+'</td></tr>'+(isDetail?renderDetailPanel(job):'')+apRows;
 }
 
+function _noLocBtn(){
+  var n=JOBS.filter(function(j){return !j.location&&!j.isClosed;}).length;
+  if(!n)return '';
+  var on=jobFilter.location==='__none__';
+  return '<button onclick="jobFilter.location=\'__none__\';renderView()"'
+    +' style="background:'+(on?'#DC2626':'#FEE2E2')+';color:'+(on?'#fff':'#DC2626')+';'
+    +'border:1px solid #FECACA;padding:6px 12px;border-radius:6px;font-size:12px;'
+    +'font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">'
+    +'📍 지역 미설정 '+n+'건</button>';
+}
 function renderJobs(){
   var filtered=getFiltered(),sorted=getSorted(filtered);
   var years=[...new Set(JOBS.map(function(j){return j.docDate?j.docDate.slice(0,4):'';}).filter(Boolean))].sort().reverse();
@@ -3957,6 +3943,7 @@ function renderJobs(){
     +'<select onchange="jobFilter.year=this.value;renderView()" style="padding:7px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#fff;font-family:inherit"><option value="">전체 연도</option>'+years.map(function(y){return'<option value="'+y+'" '+(y===jobFilter.year?'selected':'')+'>'+y+'</option>';}).join('')+'</select>'
     +'<select onchange="jobFilter.recType=this.value;renderView()" style="padding:7px 10px;border:1px solid '+(jobFilter.recType!=='전체'?'#059669':'#E2E8F0')+';border-radius:6px;font-size:12px;background:'+(jobFilter.recType!=='전체'?'#F0FDF4':'#fff')+';font-family:inherit;color:'+(jobFilter.recType!=='전체'?'#059669':'#374151')+'"><option value="전체">전체(추천/지원)</option><option value="추천" '+(jobFilter.recType==='추천'?'selected':'')+'>추천</option><option value="지원" '+(jobFilter.recType==='지원'?'selected':'')+'>지원</option></select>'
     +'<select onchange="jobFilter.location=this.value;_dashMapLocation=this.value||null;renderView()" style="padding:7px 10px;border:1px solid '+(jobFilter.location?'#F59E0B':'#E2E8F0')+';border-radius:6px;font-size:12px;background:'+(jobFilter.location?'#FFFBEB':'#fff')+';font-family:inherit;color:'+(jobFilter.location?'#D97706':'#374151')+'"><option value="">📍 전체 지역</option>'+LOCATIONS.map(function(l){return'<option value="'+l+'" '+(l===jobFilter.location?'selected':'')+'>'+l+'</option>';}).join('')+'</select>'
+    +_noLocBtn()
     +'<input id="jobSearchInput" value="'+esc(jobFilter.kw)+'" oncompositionstart="onJobCompositionStart()" oncompositionend="onJobCompositionEnd(this)" oninput="onJobInput(this)" placeholder="🔍 공고명 실시간 검색..." style="padding:7px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;min-width:160px;outline:none;font-family:inherit;flex:1" autocomplete="off">'
     +(locBadge?locBadge+' ':'')
     +(jobFilter.kw?'<button onclick="jobFilter.kw=\'\';renderView()" style="border:none;background:#F1F5F9;color:#64748B;padding:7px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">✕ 초기화</button>':'')
@@ -4105,11 +4092,6 @@ function openJobModal(jobId){if(!isAdmin()){customAlert("⛔ 마스터 계정만
 }
 async function saveJob(jobId){
   var name=$('jf_name')&&$('jf_name').value.trim();if(!name)return customAlert('공고명을 입력하세요');
-  var _locEl=$('jf_loc');var _locVal=_locEl&&_locEl.value;
-  if(!_locVal){
-    if(_locEl){_locEl.style.outline='2px solid #DC2626';setTimeout(function(){_locEl.style.outline='';},2500);}
-    return customAlert('📍 지역을 선택해주세요');
-  }
   var _rcVal=$('jf_rc_cnt')&&$('jf_rc_cnt').value.trim()!==''?parseInt($('jf_rc_cnt').value):null;
   var f={name:name,category:$('jf_cat').value,type:$('jf_type').value,location:($('jf_loc')&&$('jf_loc').value)||'',is_rec:!!$('jf_rc').checked,is_rea:!!$('jf_ra').checked,is_closed:!!$('jf_cl').checked,doc_date:dateOrNull($('jf_dd')&&$('jf_dd').value),apply_deadline:dateOrNull($('jf_ad')&&$('jf_ad').value),document_pass_date:dateOrNull($('jf_dpd')&&$('jf_dpd').value),interview_date:dateOrNull($('jf_id')&&$('jf_id').value),final_date:dateOrNull($('jf_fd')&&$('jf_fd').value),start_date:dateOrNull($('jf_sd2')&&$('jf_sd2').value),end_date:dateOrNull($('jf_ed')&&$('jf_ed').value),job_url:($('jf_url')&&$('jf_url').value)||'',note:($('jf_note')&&$('jf_note').value)||'',submit_docs:($('jf_sd')&&$('jf_sd').value)||'',submit_deadline:dateOrNull($('jf_sl')&&$('jf_sl').value),manager_name:($('jf_mn')&&$('jf_mn').value)||'',manager_phone:($('jf_mp')&&$('jf_mp').value)||'',manager_email:($('jf_me')&&$('jf_me').value)||'',recruitment_count:_rcVal};
   var r=jobId!=null?await SB.from('jobs').update(f).eq('id',jobId):await SB.from('jobs').insert(f);
