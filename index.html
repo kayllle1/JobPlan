@@ -4105,6 +4105,11 @@ function openJobModal(jobId){if(!isAdmin()){customAlert("⛔ 마스터 계정만
 }
 async function saveJob(jobId){
   var name=$('jf_name')&&$('jf_name').value.trim();if(!name)return customAlert('공고명을 입력하세요');
+  var _locEl=$('jf_loc');var _locVal=_locEl&&_locEl.value;
+  if(!_locVal){
+    if(_locEl){_locEl.style.outline='2px solid #DC2626';setTimeout(function(){_locEl.style.outline='';},2500);}
+    return customAlert('📍 지역을 선택해주세요');
+  }
   var _rcVal=$('jf_rc_cnt')&&$('jf_rc_cnt').value.trim()!==''?parseInt($('jf_rc_cnt').value):null;
   var f={name:name,category:$('jf_cat').value,type:$('jf_type').value,location:($('jf_loc')&&$('jf_loc').value)||'',is_rec:!!$('jf_rc').checked,is_rea:!!$('jf_ra').checked,is_closed:!!$('jf_cl').checked,doc_date:dateOrNull($('jf_dd')&&$('jf_dd').value),apply_deadline:dateOrNull($('jf_ad')&&$('jf_ad').value),document_pass_date:dateOrNull($('jf_dpd')&&$('jf_dpd').value),interview_date:dateOrNull($('jf_id')&&$('jf_id').value),final_date:dateOrNull($('jf_fd')&&$('jf_fd').value),start_date:dateOrNull($('jf_sd2')&&$('jf_sd2').value),end_date:dateOrNull($('jf_ed')&&$('jf_ed').value),job_url:($('jf_url')&&$('jf_url').value)||'',note:($('jf_note')&&$('jf_note').value)||'',submit_docs:($('jf_sd')&&$('jf_sd').value)||'',submit_deadline:dateOrNull($('jf_sl')&&$('jf_sl').value),manager_name:($('jf_mn')&&$('jf_mn').value)||'',manager_phone:($('jf_mp')&&$('jf_mp').value)||'',manager_email:($('jf_me')&&$('jf_me').value)||'',recruitment_count:_rcVal};
   var r=jobId!=null?await SB.from('jobs').update(f).eq('id',jobId):await SB.from('jobs').insert(f);
