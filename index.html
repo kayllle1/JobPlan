@@ -3385,8 +3385,32 @@ function getEmpDataRaw(){
   return result;
 }
 function onEmpKwCompositionStart(){_empComposing=true;clearTimeout(_empTimer);}
-function onEmpKwCompositionEnd(el){_empComposing=false;clearTimeout(_empTimer);var v=el.value;_empTimer=setTimeout(function(){empKw=v;renderView();},0);}
-function onEmpKwInput(el){if(_empComposing)return;clearTimeout(_empTimer);var v=el.value;_empTimer=setTimeout(function(){empKw=v;renderView();},200);}
+function onEmpKwCompositionEnd(el){
+  _empComposing=false;clearTimeout(_empTimer);
+  empKw=el.value;
+  _empTimer=setTimeout(function(){
+    var pos=el.selectionEnd;
+    renderView();
+    _restoreEmpSearch(empKw,pos);
+  },0);
+}
+function onEmpKwInput(el){
+  if(_empComposing)return;
+  clearTimeout(_empTimer);
+  empKw=el.value;
+  var pos=el.selectionEnd;
+  _empTimer=setTimeout(function(){
+    renderView();
+    _restoreEmpSearch(empKw,pos);
+  },80);
+}
+function _restoreEmpSearch(val,pos){
+  /* renderView 후 검색창 포커스·커서 복원 */
+  var inp=document.querySelector('#_view_scroll input[placeholder*="\uC774\uB984\xB7\uC5F0\uB77D"]');
+  if(!inp)return;
+  inp.focus();
+  try{inp.setSelectionRange(pos,pos);}catch(e){}
+}
 function clearEmpKw(){empKw='';_empComposing=false;clearTimeout(_empTimer);renderView();}
 function onBlKwCompositionStart(){_blComposing=true;clearTimeout(_blTimer);}
 function onBlKwCompositionEnd(el){_blComposing=false;clearTimeout(_blTimer);var v=el.value;_blTimer=setTimeout(function(){blKw=v;renderView();},0);}
