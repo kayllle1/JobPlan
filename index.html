@@ -415,7 +415,7 @@ function isStaff(){return _currentUser&&(_currentUser.type==='staff'||_currentUs
 function isStaff2(){return _currentUser&&_currentUser.type==='staff2';}
 function isLoggedIn(){return !!_currentUser;}
 function _counselNatBlock(){
-  if(!isStaff())return'';
+  return'';
   var gData=[
     {label:'여성',cnt:455,pct:90,bar:'linear-gradient(90deg,#F472B6,#EC4899)'},
     {label:'남성',cnt:50, pct:10,bar:'linear-gradient(90deg,#60A5FA,#2563EB)'}
@@ -1178,7 +1178,16 @@ function renderAgeInfographicCounsel(){
   var _now=new Date();
   var _dateLabel='2026년 1월 ~ '+_now.getFullYear()+'년 '+(_now.getMonth()+1)+'월 누적';
   var _fPct=Math.round(_CS.freelance/_CS.total*100),_iPct=100-_fPct;
-  return'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0">'+'<span style="font-size:12px;color:#64748B;font-weight:600">최종합격자 '+T+'명의 연령 분포</span>'+'<span style="font-size:11px;background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:99px;font-weight:600">📅 '+_dateLabel+'</span>'+'</div>'+'<div style="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0">'+'<div style="flex:1;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">'+'<span style="font-size:18px">🎙️</span>'+'<div><p style="margin:0;font-size:10px;color:#1D4ED8;font-weight:700">프리랜서</p>'+'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#1E40AF">'+_CS.freelance+'<span style="font-size:11px;color:#3B82F6;margin-left:2px">명 ('+_fPct+'%)</span></p></div></div>'+'<div style="flex:1;background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">'+'<span style="font-size:18px">🏛️</span>'+'<div><p style="margin:0;font-size:10px;color:#059669;font-weight:700">기관 (법원·의회 등)</p>'+'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#047857">'+_CS.institution+'<span style="font-size:11px;color:#10B981;margin-left:2px">명 ('+_iPct+'%)</span></p></div></div>'+'</div>'+'<div style="display:flex;height:90px;border-radius:14px;overflow:hidden;border:1px solid #E2E8F0;flex-shrink:0">'+bar+'</div>'+'<div style="display:flex;flex-direction:column;gap:7px;margin-top:12px;flex:1;overflow-y:auto;min-height:0">'+rows+'</div>'+'<div style="margin-top:12px;padding:11px 16px;background:linear-gradient(135deg,#FFFBEB,#FEF9C3);border-radius:11px;border:1px solid #FDE68A;display:flex;align-items:center;gap:12px;flex-shrink:0">'+'<span style="font-size:22px;flex-shrink:0">🏆</span>'+'<div style="flex:1;min-width:0"><p style="margin:0;font-size:12px;color:#92400E;font-weight:700">최빈 연령대</p>'+'<p style="margin:3px 0 0;font-size:16px;font-weight:900;color:#78350F">'+peak.label+'<span style="font-size:12px;color:#B45309;font-weight:600;margin-left:6px">'+((peak.cnt/T*100).toFixed(0))+'% · '+peak.cnt+'명</span></p></div>'+'<div style="text-align:right;flex-shrink:0"><p style="margin:0;font-size:12px;color:#92400E;font-weight:700">총 합격자</p>'+'<p style="margin:3px 0 0;font-size:22px;font-weight:900;color:#0F172A;line-height:1">'+T+'<span style="font-size:12px;color:#64748B;margin-left:2px">명</span></p></div></div>';
+  var _gBar='<div style="display:flex;gap:8px;align-items:center;padding:8px 16px 10px;border-bottom:1px solid #F1F5F9;margin-bottom:2px">'
+    +'<span style="font-size:11px;font-weight:700;color:#6B7280;min-width:44px">성별 분포</span>'
+    +'<div style="flex:1;height:10px;background:#F1F5F9;border-radius:99px;overflow:hidden;display:flex">'
+      +'<div style="width:90%;height:100%;background:linear-gradient(90deg,#F472B6,#EC4899);border-radius:99px 0 0 99px"></div>'
+      +'<div style="width:10%;height:100%;background:linear-gradient(90deg,#60A5FA,#2563EB);border-radius:0 99px 99px 0"></div>'
+    +'</div>'
+    +'<span style="font-size:11px;color:#EC4899;font-weight:700;white-space:nowrap">여 455명</span>'
+    +'<span style="font-size:11px;color:#2563EB;font-weight:700;white-space:nowrap;margin-left:2px">남 50명</span>'
+  +'</div>';
+  return _gBar+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0">'+'<span style="font-size:12px;color:#64748B;font-weight:600">최종합격자 '+T+'명의 연령 분포</span>'+'<span style="font-size:11px;background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:99px;font-weight:600">📅 '+_dateLabel+'</span>'+'</div>'+'<div style="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0">'+'<div style="flex:1;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">'+'<span style="font-size:18px">🎙️</span>'+'<div><p style="margin:0;font-size:10px;color:#1D4ED8;font-weight:700">프리랜서</p>'+'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#1E40AF">'+_CS.freelance+'<span style="font-size:11px;color:#3B82F6;margin-left:2px">명 ('+_fPct+'%)</span></p></div></div>'+'<div style="flex:1;background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">'+'<span style="font-size:18px">🏛️</span>'+'<div><p style="margin:0;font-size:10px;color:#059669;font-weight:700">기관 (법원·의회 등)</p>'+'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#047857">'+_CS.institution+'<span style="font-size:11px;color:#10B981;margin-left:2px">명 ('+_iPct+'%)</span></p></div></div>'+'</div>'+'<div style="display:flex;height:90px;border-radius:14px;overflow:hidden;border:1px solid #E2E8F0;flex-shrink:0">'+bar+'</div>'+'<div style="display:flex;flex-direction:column;gap:7px;margin-top:12px;flex:1;overflow-y:auto;min-height:0">'+rows+'</div>'+'<div style="margin-top:12px;padding:11px 16px;background:linear-gradient(135deg,#FFFBEB,#FEF9C3);border-radius:11px;border:1px solid #FDE68A;display:flex;align-items:center;gap:12px;flex-shrink:0">'+'<span style="font-size:22px;flex-shrink:0">🏆</span>'+'<div style="flex:1;min-width:0"><p style="margin:0;font-size:12px;color:#92400E;font-weight:700">최빈 연령대</p>'+'<p style="margin:3px 0 0;font-size:16px;font-weight:900;color:#78350F">'+peak.label+'<span style="font-size:12px;color:#B45309;font-weight:600;margin-left:6px">'+((peak.cnt/T*100).toFixed(0))+'% · '+peak.cnt+'명</span></p></div>'+'<div style="text-align:right;flex-shrink:0"><p style="margin:0;font-size:12px;color:#92400E;font-weight:700">총 합격자</p>'+'<p style="margin:3px 0 0;font-size:22px;font-weight:900;color:#0F172A;line-height:1">'+T+'<span style="font-size:12px;color:#64748B;margin-left:2px">명</span></p></div></div>';
 }
 
 function renderAgeInfographic(finalSids){
@@ -3756,10 +3765,10 @@ function renderDashboard(){
   +(isStaff()
     /* ── 스태프: 상단 2열 + 하단 전폭 ── */
     ?'<div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 360px;gap:14px;padding:12px 22px 24px;flex-shrink:0">'
-      /* 오늘의 주요 일정 */
-      +'<div class="dk-grid-card"><div class="dk-grid-head"><div style="width:24px;height:24px;border-radius:7px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-calendar" style="font-size:13px;color:#B45309"></i></div><span style="font-size:13px;font-weight:600;color:#0F172A">오늘의 주요 일정</span>'+(todayEvents.length>0?'<span style="margin-left:auto;background:#FEF3C7;color:#B45309;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">'+todayEvents.length+'건</span>':'')+'</div><div class="dk-grid-body" style="min-height:160px">'+eventContent+'</div></div>'
       /* 최종합격자 연령대 */
-      +'<div class="dk-grid-card"><div class="dk-grid-head"><div style="width:24px;height:24px;border-radius:7px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-users" style="font-size:13px;color:#059669"></i></div><span style="font-size:13px;font-weight:600;color:#0F172A">최종합격자 연령대</span><span style="margin-left:auto;background:#F0FDF4;color:#059669;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500">합격 '+(_isCounsel()?505:finalSids.length)+'명</span></div><div class="dk-grid-body" style="flex:1;overflow:hidden">'+(_isCounsel()?renderAgeInfographicCounsel():renderAgeInfographic(finalSids))+'</div></div>'
+      +'<div class="dk-grid-card"><div class="dk-grid-head"><div style="width:24px;height:24px;border-radius:7px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-users" style="font-size:13px;color:#059669"></i></div><span style="font-size:13px;font-weight:600;color:#0F172A">최종합격자 연령대</span><span style="margin-left:auto;background:#F0FDF4;color:#059669;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500">합격 '+(_isCounsel()?505:finalSids.length)+'명</span></div><div class="dk-grid-body" style="flex:1;overflow:hidden">'+(_isCounsel()?renderAgeInfographicCounsel():renderAgeInfographic(finalSids))+'</div></div>'/* 오늘의 주요 일정 */
+      +'<div class="dk-grid-card"><div class="dk-grid-head"><div style="width:24px;height:24px;border-radius:7px;background:#FFFBEB;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-calendar" style="font-size:13px;color:#B45309"></i></div><span style="font-size:13px;font-weight:600;color:#0F172A">오늘의 주요 일정</span>'+(todayEvents.length>0?'<span style="margin-left:auto;background:#FEF3C7;color:#B45309;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">'+todayEvents.length+'건</span>':'')+'</div><div class="dk-grid-body" style="min-height:160px">'+eventContent+'</div></div>'
+      
       /* 진행 중인 공고 — 2열 전폭 */
       +'<div class="dk-grid-card" style="grid-column:1/-1"><div class="dk-grid-head"><div style="width:24px;height:24px;border-radius:7px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-file-text" style="font-size:13px;color:#2563EB"></i></div><span style="font-size:13px;font-weight:600;color:#0F172A">진행 중인 공고</span><span style="font-size:12px;color:#94A3B8;margin-left:4px">임박순</span><span style="margin-left:auto;background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">'+active.length+'건</span></div>'
         +'<div style="padding:12px 16px;overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;align-content:start">'+activeSorted.map(function(j){var dd=j.finalDate?Math.ceil((new Date(j.finalDate)-_now)/86400000):-1;var dc=dd>=0&&dd<=3?'#DC2626':dd>=0&&dd<=7?'#D97706':'#94A3B8';var bg=dd>=0&&dd<=3?'#FCEBEB':dd>=0&&dd<=7?'#FFFBEB':'#F8FAFC';return'<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F8FAFC;border-radius:8px;border:0.5px solid #E2E8F0">'+badge(j.category)+'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:#0F172A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name.length>18?j.name.slice(0,18)+'…':j.name)+'</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">지원자 '+j.applicants.length+'명</div></div>'+(dd>=0?'<span style="font-size:11px;font-weight:600;color:'+dc+';background:'+bg+';padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0">'+(dd===0?'D-day':'D-'+dd)+'</span>':'')+'</div>';}).join('')+'</div>'
@@ -4158,8 +4167,10 @@ function renderJobs(){
   var sortHint=tableSort.col&&tableSort.dir!=='none'?'<span style="color:#2563EB;font-weight:600">'+({docDate:'서류접수일',deadline:'서류마감일',documentPassDate:'서류합격발표일',interviewDate:'면접일',finalDate:'최종합격발표일'}[tableSort.col]||'')+' '+(tableSort.dir==='asc'?'오래된순↑':'최신순↓')+'</span>':'<span style="color:#2563EB;font-weight:600">최종합격발표일 임박순</span>';
   /* 상담팀 + 프리랜서 카테고리: 특별 패널 반환 */
   if(_isCounsel()&&_FREELANCE_CATS.some(function(f){return f.cat===jobFilter.cat;})){
-    return '<div class="cat-tab-wrap" style="flex-shrink:0">'+catTabs+'</div>'
-      +'<div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;margin-top:0">'+renderFreelanceCatPanel(jobFilter.cat)+'</div>';
+    return '<div id="_view_scroll" style="padding:12px 16px 24px;height:100%;overflow-y:auto">'
+      +'<div class="cat-tab-wrap" style="flex-shrink:0">'+catTabs+'</div>'
+      +'<div style="background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;margin-top:8px">'+renderFreelanceCatPanel(jobFilter.cat)+'</div>'
+    +'</div>';
   }
   var tblRows=sorted.length===0?'<tr><td colspan="12" style="padding:40px;text-align:center;color:#CBD5E1;font-size:13px">공고가 없습니다.</td></tr>':sorted.map(function(j,i){return renderJobRow(j,i+1);}).join('');
   var sTh=function(label){return'<th style="padding:10px 10px;text-align:left;font-weight:700;color:#1F2937;font-size:11px;white-space:nowrap;letter-spacing:.04em;background:#F8FAFC">'+label+'</th>';};
@@ -4819,6 +4830,58 @@ function exportHistory(studentId){var s=STUDENTS.find(function(st){return st.id=
 
 /* ══ 일정 캘린더 ══ */
 var _calMonth=MONTH;
+
+function openCalJobModal(jobId){
+  var job=JOBS.find(function(j){return j.id===jobId;});
+  if(!job)return;
+  var existing=document.getElementById('_calJobModal');
+  if(existing)existing.remove();
+  // 날짜 표시 헬퍼
+  function fd(ds){return ds?String(ds).slice(0,10):'-';}
+  var apCount=job.applicants?job.applicants.length:0;
+  var passCount=job.applicants?job.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length:0;
+  var cat=job.category||'기타';
+  var catColors={'법원':'#3B82F6','의회':'#7C3AED','국회':'#EC4899','검찰청':'#EF4444','공공기관':'#059669','라이브콘텐츠':'#F59E0B','VOD':'#F97316','데이터속기사':'#06B6D4','현장속기사':'#8B5CF6'};
+  var cc=catColors[cat]||'#64748B';
+  var html='<div id="_calJobModal" onclick="if(event.target===this)this.remove()" '
+    +'style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">'
+    +'<div style="background:#fff;border-radius:16px;width:min(520px,100%);max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
+      +'<div style="padding:20px 24px 16px;border-bottom:1px solid #F1F5F9;display:flex;align-items:flex-start;gap:12px">'
+        +'<div style="width:36px;height:36px;border-radius:10px;background:'+cc+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+          +'<i class="ti ti-building" style="font-size:18px;color:'+cc+'"></i>'
+        +'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:16px;font-weight:800;color:#0F172A;line-height:1.3">'+esc(job.name)+'</div>'
+          +'<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">'
+            +'<span style="background:'+cc+'18;color:'+cc+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px">'+cat+'</span>'
+            +(job.location?'<span style="background:#F1F5F9;color:#64748B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px">'+esc(job.location)+'</span>':'')
+          +'</div>'
+        +'</div>'
+        +'<button onclick="document.getElementById(\'_calJobModal\').remove()" style="background:none;border:none;font-size:20px;color:#94A3B8;cursor:pointer;line-height:1;padding:0">×</button>'
+      +'</div>'
+      +'<div style="padding:16px 24px">'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+          +[['📋 서류접수',fd(job.docDate),'#3B82F6'],['🚫 지원마감',fd(job.applyDeadline),'#EF4444'],['✅ 서류합격',fd(job.documentPassDate),'#7C3AED'],['🎤 면접',fd(job.interviewDate),'#F59E0B'],['🏆 합격발표',fd(job.finalDate),'#059669']].map(function(x){
+            return'<div style="background:#F8FAFC;border-radius:8px;padding:8px 12px">'
+              +'<div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:2px">'+x[0]+'</div>'
+              +'<div style="font-size:13px;font-weight:700;color:'+(x[1]==='-'?'#CBD5E1':x[2])+'">'+x[1]+'</div>'
+            +'</div>';
+          }).join('')
+        +'</div>'
+        +(job.memo?'<div style="background:#FFFBEB;border-radius:8px;padding:10px 12px;margin-bottom:12px">'
+          +'<div style="font-size:11px;color:#B45309;font-weight:700;margin-bottom:4px">📝 메모</div>'
+          +'<div style="font-size:12px;color:#78350F;line-height:1.5">'+esc(job.memo)+'</div>'
+        +'</div>':'')
+        +'<div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid #F1F5F9">'
+          +'<button onclick="document.getElementById(\'_calJobModal\').remove()" style="padding:8px 16px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">닫기</button>'
+          +'<button onclick="document.getElementById(\'_calJobModal\').remove();currentView=\'jobs\';setJobCat(\''+cat+'\');renderView();setTimeout(function(){var rows=document.querySelectorAll(\'.job-name-btn\');for(var i=0;i<rows.length;i++){if(rows[i].dataset.jobId===\''+jobId+'\'){rows[i].click();break;}}},300)" style="padding:8px 16px;border-radius:8px;border:none;background:#2563EB;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">공고관리에서 보기</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
 function renderCalendar(){
   var parts=_calMonth.split('-');
   var cy=parseInt(parts[0]),cm=parseInt(parts[1]);
@@ -4837,7 +4900,7 @@ function renderCalendar(){
       var d=String(ds).slice(0,10);
       if(d.slice(0,7)!==_calMonth)return;
       if(!evMap[d])evMap[d]=[];
-      evMap[d].push({lbl:lbl,c:c,jn:jn,fullName:j.name,cat:cat});
+      evMap[d].push({lbl:lbl,c:c,jn:jn,fullName:j.name,cat:cat,jobId:j.id});
     }
     mark(j.docDate,'서류접수','#3B82F6');
     mark(j.applyDeadline,'지원마감','#EF4444');
@@ -4879,7 +4942,7 @@ function renderCalendar(){
     var evs=evMap[dStr]||[];
     /* 이벤트 카드: 레이블 + 기관명 */
     var eHtml=evs.map(function(ev){
-      return'<div title="'+esc(ev.fullName)+' · '+ev.lbl+'" style="margin-top:4px;background:'+ev.c+'18;border-left:3px solid '+ev.c+';border-radius:0 6px 6px 0;padding:3px 6px 3px 7px;cursor:default">'
+      return'<div title="'+esc(ev.fullName)+' · '+ev.lbl+'" onclick="openCalJobModal(\''+ev.jobId+'\')" style="margin-top:4px;background:'+ev.c+'18;border-left:3px solid '+ev.c+';border-radius:0 6px 6px 0;padding:3px 6px 3px 7px;cursor:pointer">'
         +'<div style="font-size:10.5px;font-weight:800;color:'+ev.c+';line-height:1.3">'+ev.lbl+'</div>'
         +'<div style="font-size:11px;font-weight:600;color:#1E293B;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(ev.jn)+'</div>'
       +'</div>';
