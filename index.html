@@ -4832,54 +4832,68 @@ function exportHistory(studentId){var s=STUDENTS.find(function(st){return st.id=
 var _calMonth=MONTH;
 
 function openCalJobModal(jobId){
-  var job=JOBS.find(function(j){return j.id===jobId;});
+  var job=JOBS.find(function(j){return String(j.id)===String(jobId);});
   if(!job)return;
-  var existing=document.getElementById('_calJobModal');
-  if(existing)existing.remove();
-  // 날짜 표시 헬퍼
+  var ex=document.getElementById('_calJobModal');if(ex)ex.remove();
   function fd(ds){return ds?String(ds).slice(0,10):'-';}
-  var apCount=job.applicants?job.applicants.length:0;
-  var passCount=job.applicants?job.applicants.filter(function(a){return a.status==='최종합격'||a.status==='취업성공';}).length:0;
   var cat=job.category||'기타';
-  var catColors={'법원':'#3B82F6','의회':'#7C3AED','국회':'#EC4899','검찰청':'#EF4444','공공기관':'#059669','라이브콘텐츠':'#F59E0B','VOD':'#F97316','데이터속기사':'#06B6D4','현장속기사':'#8B5CF6'};
-  var cc=catColors[cat]||'#64748B';
-  var html='<div id="_calJobModal" onclick="if(event.target===this)this.remove()" '
-    +'style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">'
-    +'<div style="background:#fff;border-radius:16px;width:min(520px,100%);max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
-      +'<div style="padding:20px 24px 16px;border-bottom:1px solid #F1F5F9;display:flex;align-items:flex-start;gap:12px">'
-        +'<div style="width:36px;height:36px;border-radius:10px;background:'+cc+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-          +'<i class="ti ti-building" style="font-size:18px;color:'+cc+'"></i>'
-        +'</div>'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:16px;font-weight:800;color:#0F172A;line-height:1.3">'+esc(job.name)+'</div>'
-          +'<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">'
-            +'<span style="background:'+cc+'18;color:'+cc+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px">'+cat+'</span>'
-            +(job.location?'<span style="background:#F1F5F9;color:#64748B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px">'+esc(job.location)+'</span>':'')
-          +'</div>'
-        +'</div>'
-        +'<button onclick="document.getElementById(\'_calJobModal\').remove()" style="background:none;border:none;font-size:20px;color:#94A3B8;cursor:pointer;line-height:1;padding:0">×</button>'
+  var catC={'법원':'#3B82F6','의회':'#7C3AED','국회':'#EC4899','검찰청':'#EF4444','공공기관':'#059669','라이브콘텐츠':'#F59E0B','VOD':'#F97316','데이터속기사':'#06B6D4','현장속기사':'#8B5CF6'};
+  var cc=catC[cat]||'#64748B';
+  var dates=[
+    ['📋 서류접수',fd(job.docDate),'#3B82F6'],
+    ['🚫 지원마감',fd(job.applyDeadline),'#EF4444'],
+    ['✅ 서류합격',fd(job.documentPassDate),'#7C3AED'],
+    ['🎤 면접',fd(job.interviewDate),'#F59E0B'],
+    ['🏆 합격발표',fd(job.finalDate),'#059669']
+  ];
+  var dateCards=dates.map(function(x){
+    return '<div style="background:#F8FAFC;border-radius:8px;padding:8px 12px">'
+      +'<div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:2px">'+x[0]+'</div>'
+      +'<div style="font-size:13px;font-weight:700;color:'+(x[1]==='-'?'#CBD5E1':x[2])+'">'+x[1]+'</div>'
+    +'</div>';
+  }).join('');
+  var memoHtml=job.memo
+    ?'<div style="background:#FFFBEB;border-radius:8px;padding:10px 12px;margin-bottom:12px">'
+      +'<div style="font-size:11px;color:#B45309;font-weight:700;margin-bottom:4px">📝 메모</div>'
+      +'<div style="font-size:12px;color:#78350F;line-height:1.5">'+esc(job.memo)+'</div>'
+    +'</div>':'';
+  var el=document.createElement('div');
+  el.id='_calJobModal';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.onclick=function(e){if(e.target===el)el.remove();};
+  el.innerHTML='<div style="background:#fff;border-radius:16px;width:min(520px,100%);max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">'
+    +'<div style="padding:20px 24px 16px;border-bottom:1px solid #F1F5F9;display:flex;align-items:flex-start;gap:12px">'
+      +'<div style="width:36px;height:36px;border-radius:10px;background:'+cc+'18;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        +'<i class="ti ti-building" style="font-size:18px;color:'+cc+'"></i>'
       +'</div>'
-      +'<div style="padding:16px 24px">'
-        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
-          +[['📋 서류접수',fd(job.docDate),'#3B82F6'],['🚫 지원마감',fd(job.applyDeadline),'#EF4444'],['✅ 서류합격',fd(job.documentPassDate),'#7C3AED'],['🎤 면접',fd(job.interviewDate),'#F59E0B'],['🏆 합격발표',fd(job.finalDate),'#059669']].map(function(x){
-            return'<div style="background:#F8FAFC;border-radius:8px;padding:8px 12px">'
-              +'<div style="font-size:10px;color:#94A3B8;font-weight:600;margin-bottom:2px">'+x[0]+'</div>'
-              +'<div style="font-size:13px;font-weight:700;color:'+(x[1]==='-'?'#CBD5E1':x[2])+'">'+x[1]+'</div>'
-            +'</div>';
-          }).join('')
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:16px;font-weight:800;color:#0F172A;line-height:1.3">'+esc(job.name)+'</div>'
+        +'<div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap">'
+          +'<span style="background:'+cc+'18;color:'+cc+';font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px">'+cat+'</span>'
+          +(job.location?'<span style="background:#F1F5F9;color:#64748B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px">'+esc(job.location)+'</span>':'')
         +'</div>'
-        +(job.memo?'<div style="background:#FFFBEB;border-radius:8px;padding:10px 12px;margin-bottom:12px">'
-          +'<div style="font-size:11px;color:#B45309;font-weight:700;margin-bottom:4px">📝 메모</div>'
-          +'<div style="font-size:12px;color:#78350F;line-height:1.5">'+esc(job.memo)+'</div>'
-        +'</div>':'')
-        +'<div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid #F1F5F9">'
-          +'<button onclick="document.getElementById(\'_calJobModal\').remove()" style="padding:8px 16px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">닫기</button>'
-          +'<button onclick="document.getElementById(\'_calJobModal\').remove();currentView=\'jobs\';setJobCat(\''+cat+'\');renderView();setTimeout(function(){var rows=document.querySelectorAll(\'.job-name-btn\');for(var i=0;i<rows.length;i++){if(rows[i].dataset.jobId===\''+jobId+'\'){rows[i].click();break;}}},300)" style="padding:8px 16px;border-radius:8px;border:none;background:#2563EB;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">공고관리에서 보기</button>'
-        +'</div>'
+      +'</div>'
+      +'<button id="_calModalClose" style="background:none;border:none;font-size:20px;color:#94A3B8;cursor:pointer;line-height:1;padding:0">×</button>'
+    +'</div>'
+    +'<div style="padding:16px 24px">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'+dateCards+'</div>'
+      +memoHtml
+      +'<div style="display:flex;gap:8px;justify-content:flex-end;padding-top:12px;border-top:1px solid #F1F5F9">'
+        +'<button id="_calModalCancel" style="padding:8px 16px;border-radius:8px;border:1.5px solid #E2E8F0;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">닫기</button>'
+        +'<button id="_calModalGo" style="padding:8px 16px;border-radius:8px;border:none;background:#2563EB;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">공고관리에서 보기</button>'
       +'</div>'
     +'</div>'
   +'</div>';
-  document.body.insertAdjacentHTML('beforeend',html);
+  document.body.appendChild(el);
+  document.getElementById('_calModalClose').onclick=function(){el.remove();};
+  document.getElementById('_calModalCancel').onclick=function(){el.remove();};
+  document.getElementById('_calModalGo').onclick=function(){
+    el.remove();
+    currentView='jobs';
+    jobFilter.cat=cat;
+    renderView();
+    setTimeout(function(){toggleDetail(String(jobId));},350);
+  };
 }
 
 function renderCalendar(){
