@@ -1023,6 +1023,36 @@ var _CS={total:505,freelance:432,institution:73,groups:[
   {label:'40대+',color:'#F9A8D4',textDk:'#831843',cnt:51}
 ]};
 
+/* ── 상담팀 연령대 모드 ── */
+var _counselAgeMode='all';
+
+
+function _renderAgeSettingsPanel(){
+  var btns=['전체','20대','30대','40대','40대+'].map(function(m){
+    var on=_counselAgeMode===m;
+    return '<button onclick="setCounselAgeMode(\''+m+'\');" style="display:block;width:100%;text-align:left;margin-bottom:3px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:inherit;border:1px solid '+(on?'#6366F1':'rgba(255,255,255,.1)')+';background:'+(on?'rgba(99,102,241,.3)':'rgba(255,255,255,.03)')+';color:'+(on?'#E0E7FF':'#94A3B8')+'">'+(on?'● ':'○ ')+m+(on?' ✓':'')+'</button>';
+  }).join('');
+  return '<div style="padding:4px 10px 2px">'
+    +'<button onclick="toggleAgeSettings()" style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 11px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);border-radius:8px;color:#A5B4FC;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">⚙️ 맞춤 연령대 설정</button>'
+    +'<div id="_ageSettingsPanel" style="display:none;margin-top:5px;padding:8px;background:rgba(255,255,255,.05);border-radius:8px;border:1px solid rgba(255,255,255,.08)">'
+      +'<p style="margin:0 0 5px;font-size:10px;color:#64748B;font-weight:600">고객 연령대 선택</p>'
+      +btns
+    +'</div></div>';
+}
+
+function toggleAgeSettings(){
+  var p=document.getElementById('_ageSettingsPanel');
+  if(p)p.style.display=p.style.display==='none'?'block':'none';
+}
+
+function setCounselAgeMode(m){
+  _counselAgeMode=m;
+  var p=document.getElementById('_ageSettingsPanel');
+  if(p)p.style.display='none';
+  if(currentView==='dashboard')renderView();
+  else{var sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();}
+}
+
 /* ── 상담팀 전용 프리랜서 카테고리 ── */
 var _FREELANCE_CATS=[
   {cat:'라이브콘텐츠', cnt:71,  icon:'🔴', desc:'실시간 방송·회의 자막 제공', color:'#FEE2E2', border:'#FECACA', text:'#991B1B'},
@@ -1171,13 +1201,11 @@ function renderFreelanceCatEmpRows(catName){
 
 function _isCounsel(){return _currentUser&&_currentUser.type==='staff';}
 function renderAgeInfographicCounsel(){
-  var T=_CS.total,A=_CS.groups;
-  var bar=A.map(function(g){var p=g.cnt/T*100;return'<div style="width:'+p.toFixed(2)+'%;background:'+g.color+';display:flex;flex-direction:column;align-items:center;justify-content:center">'+(p>=16?'<span style="font-size:15px;font-weight:900;color:'+g.textDk+';white-space:nowrap">'+g.label+'</span><span style="font-size:14px;font-weight:800;color:'+g.textDk+';opacity:.85">'+p.toFixed(0)+'%</span>':p>=9?'<span style="font-size:12px;font-weight:900;color:'+g.textDk+'">'+p.toFixed(0)+'%</span>':'')+'</div>';}).join('');
-  var rows=A.map(function(g){var p=g.cnt/T*100;return'<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border-radius:9px;border:1px solid #F1F5F9">'+'<div style="width:12px;height:12px;border-radius:50%;background:'+g.color+';flex-shrink:0"></div>'+'<span style="font-size:12px;font-weight:700;color:#1F2937;flex:1">'+g.label+'</span>'+'<div style="flex:2;height:8px;background:#F1F5F9;border-radius:99px;overflow:hidden"><div style="height:100%;width:'+p.toFixed(1)+'%;background:'+g.color+';border-radius:99px"></div></div>'+'<span style="font-size:13px;font-weight:900;color:#0F172A;min-width:36px;text-align:right">'+p.toFixed(0)+'<span style="font-size:12px;color:#64748B;font-weight:500">%</span></span>'+'<span style="font-size:12px;color:#64748B;min-width:28px;text-align:right">'+g.cnt+'명</span></div>';}).join('');
-  var peak=A.slice().sort(function(a,b){return b.cnt-a.cnt;})[0];
-  var _now=new Date();
-  var _dateLabel='2026년 1월 ~ '+_now.getFullYear()+'년 '+(_now.getMonth()+1)+'월 누적';
-  var _fPct=Math.round(_CS.freelance/_CS.total*100),_iPct=100-_fPct;
+  var T=_CS.total,FL=_CS.freelance,INST=_CS.institution,A=_CS.groups;
+  var _mode=_counselAgeMode||'all';
+  var _selG=_mode==='all'?null:A.find(function(g){return g.label===_mode;});
+
+  /* ── 성별 분포 bar (공통) ── */
   var _gBar='<div style="display:flex;gap:8px;align-items:center;padding:8px 16px 10px;border-bottom:1px solid #F1F5F9;margin-bottom:2px">'
     +'<span style="font-size:11px;font-weight:700;color:#6B7280;min-width:44px">성별 분포</span>'
     +'<div style="flex:1;height:10px;background:#F1F5F9;border-radius:99px;overflow:hidden;display:flex">'
@@ -1185,9 +1213,123 @@ function renderAgeInfographicCounsel(){
       +'<div style="width:10%;height:100%;background:linear-gradient(90deg,#60A5FA,#2563EB);border-radius:0 99px 99px 0"></div>'
     +'</div>'
     +'<span style="font-size:11px;color:#EC4899;font-weight:700;white-space:nowrap">여 455명</span>'
-    +'<span style="font-size:11px;color:#2563EB;font-weight:700;white-space:nowrap;margin-left:2px">남 50명</span>'
+    +'<span style="font-size:11px;color:#2563EB;font-weight:700;white-space:nowrap;margin-left:4px">남 50명</span>'
   +'</div>';
-  return _gBar+'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0">'+'<span style="font-size:12px;color:#64748B;font-weight:600">최종합격자 '+T+'명의 연령 분포</span>'+'<span style="font-size:11px;background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:99px;font-weight:600">📅 '+_dateLabel+'</span>'+'</div>'+'<div style="display:flex;gap:8px;margin-bottom:10px;flex-shrink:0">'+'<div style="flex:1;background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">'+'<span style="font-size:18px">🎙️</span>'+'<div><p style="margin:0;font-size:10px;color:#1D4ED8;font-weight:700">프리랜서</p>'+'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#1E40AF">'+_CS.freelance+'<span style="font-size:11px;color:#3B82F6;margin-left:2px">명 ('+_fPct+'%)</span></p></div></div>'+'<div style="flex:1;background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px">'+'<span style="font-size:18px">🏛️</span>'+'<div><p style="margin:0;font-size:10px;color:#059669;font-weight:700">기관 (법원·의회 등)</p>'+'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#047857">'+_CS.institution+'<span style="font-size:11px;color:#10B981;margin-left:2px">명 ('+_iPct+'%)</span></p></div></div>'+'</div>'+'<div style="display:flex;height:90px;border-radius:14px;overflow:hidden;border:1px solid #E2E8F0;flex-shrink:0">'+bar+'</div>'+'<div style="display:flex;flex-direction:column;gap:7px;margin-top:12px;flex:1;overflow-y:auto;min-height:0">'+rows+'</div>'+'<div style="margin-top:12px;padding:11px 16px;background:linear-gradient(135deg,#FFFBEB,#FEF9C3);border-radius:11px;border:1px solid #FDE68A;display:flex;align-items:center;gap:12px;flex-shrink:0">'+'<span style="font-size:22px;flex-shrink:0">🏆</span>'+'<div style="flex:1;min-width:0"><p style="margin:0;font-size:12px;color:#92400E;font-weight:700">최빈 연령대</p>'+'<p style="margin:3px 0 0;font-size:16px;font-weight:900;color:#78350F">'+peak.label+'<span style="font-size:12px;color:#B45309;font-weight:600;margin-left:6px">'+((peak.cnt/T*100).toFixed(0))+'% · '+peak.cnt+'명</span></p></div>'+'<div style="text-align:right;flex-shrink:0"><p style="margin:0;font-size:12px;color:#92400E;font-weight:700">총 합격자</p>'+'<p style="margin:3px 0 0;font-size:22px;font-weight:900;color:#0F172A;line-height:1">'+T+'<span style="font-size:12px;color:#64748B;margin-left:2px">명</span></p></div></div>';
+
+  /* ── 연령대 선택 시: 주인공 화면 ── */
+  if(_selG){
+    var g=_selG;
+    var pct=(g.cnt/T*100).toFixed(0);
+    var flPct=(g.cnt/FL*100).toFixed(0);
+    /* 연령대별 맞춤 문구 */
+    var msgs={
+      '20대':['빠른 시작, 빠른 성장!','20대의 젊은 감각과 빠른 습득력으로 속기 분야에서 두각을 나타내고 있습니다.','🚀'],
+      '30대':['경력 전환 최적기!','30대는 사회경험을 바탕으로 안정적인 속기사 커리어를 쌓기에 가장 좋은 시기입니다.','⭐'],
+      '40대':['경험이 곧 경쟁력!','40대의 풍부한 사회경험과 책임감은 법원·의회 속기 분야에서 높이 평가받습니다.','💎'],
+      '40대+':['나이는 숫자일 뿐!','속기 실력이 전부입니다. 꾸준한 노력으로 취업에 성공한 선배들이 있습니다.','🏆']
+    };
+    var m=msgs[g.label]||['','','🎯'];
+
+    /* 해당 연령대만 강조한 바 차트 */
+    var heroBar=A.map(function(ag){
+      var p=(ag.cnt/T*100);
+      var isSel=ag.label===g.label;
+      return '<div style="width:'+p.toFixed(2)+'%;background:'+(isSel?ag.color:'#E2E8F0')+';opacity:'+(isSel?'1':'0.4')+';display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .3s">'
+        +(isSel&&p>=10?'<span style="font-size:13px;font-weight:900;color:'+ag.textDk+'">'+ag.label+'</span><span style="font-size:12px;font-weight:800;color:'+ag.textDk+';opacity:.9">'+p.toFixed(0)+'%</span>':'')
+      +'</div>';
+    }).join('');
+
+    /* 다른 연령대 비교 리스트 */
+    var compareRows=A.map(function(ag){
+      var p=(ag.cnt/T*100);
+      var isSel=ag.label===g.label;
+      return '<div style="display:flex;align-items:center;gap:10px;padding:'+(isSel?'10px 14px':'6px 12px')+';border-radius:9px;'
+        +'background:'+(isSel?ag.color+'33':'transparent')+';border:1px solid '+(isSel?ag.color:'transparent')+';margin-bottom:4px;transition:all .3s">'
+        +'<div style="width:10px;height:10px;border-radius:50%;background:'+ag.color+';flex-shrink:0;'+(isSel?'transform:scale(1.4)':'opacity:.5')+'"></div>'
+        +'<span style="font-size:'+(isSel?'13px':'11px')+';font-weight:'+(isSel?'800':'500')+';color:'+(isSel?'#0F172A':'#94A3B8')+';flex:1">'+ag.label+'</span>'
+        +'<div style="flex:2;height:'+(isSel?'9px':'6px')+';background:#F1F5F9;border-radius:99px;overflow:hidden">'
+          +'<div style="width:'+p.toFixed(0)+'%;height:100%;background:'+ag.color+';opacity:'+(isSel?'1':'0.4')+';border-radius:99px"></div>'
+        +'</div>'
+        +'<span style="font-size:'+(isSel?'14px':'11px')+';font-weight:'+(isSel?'800':'400')+';color:'+(isSel?ag.textDk:'#94A3B8')+';min-width:32px;text-align:right">'+p.toFixed(0)+'%</span>'
+        +'<span style="font-size:'+(isSel?'13px':'11px')+';font-weight:'+(isSel?'800':'400')+';color:'+(isSel?ag.textDk:'#94A3B8')+';min-width:36px;text-align:right">'+ag.cnt+'명</span>'
+      +'</div>';
+    }).join('');
+
+    return _gBar
+      /* 맞춤 배너 */
+      +'<div style="margin:8px 12px 10px;padding:14px 16px;background:'+g.color+'22;border-left:4px solid '+g.color+';border-radius:10px">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+          +'<span style="font-size:28px">'+m[2]+'</span>'
+          +'<div>'
+            +'<div style="font-size:13px;font-weight:800;color:'+g.textDk+'">'+g.label+' 취업 현황</div>'
+            +'<div style="font-size:11px;color:#374151;margin-top:1px">'+m[0]+'</div>'
+          +'</div>'
+          +'<div style="margin-left:auto;text-align:right">'
+            +'<div style="font-size:28px;font-weight:900;color:'+g.textDk+'">'+g.cnt+'명</div>'
+            +'<div style="font-size:10px;color:#6B7280">취업 성공</div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="font-size:11px;color:#4B5563;line-height:1.6">'+m[1]+'</div>'
+      +'</div>'
+      /* 히어로 바 */
+      +'<div style="display:flex;height:52px;border-radius:10px;overflow:hidden;margin:0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,.08)">'+heroBar+'</div>'
+      /* 비교 리스트 */
+      +'<div style="padding:0 12px 8px">'+compareRows+'</div>'
+      /* 하단 요약 */
+      +'<div style="margin:0 12px 12px;padding:10px 14px;background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border-radius:9px;display:flex;justify-content:space-between;align-items:center">'
+        +'<div><p style="margin:0;font-size:9px;color:#B45309;font-weight:700;letter-spacing:.1em">전체 합격자 중</p>'
+          +'<p style="margin:3px 0 0;font-size:18px;font-weight:900;color:#78350F">'+pct+'% · '+g.cnt+'명</p></div>'
+        +'<div style="text-align:right"><p style="margin:0;font-size:9px;color:#B45309;font-weight:700">총 합격자</p>'
+          +'<p style="margin:3px 0 0;font-size:22px;font-weight:900;color:#92400E">'+T+'명</p></div>'
+      +'</div>';
+  }
+
+  /* ── 전체 모드: 기존 화면 ── */
+  var bar=A.map(function(g){var p=g.cnt/T*100;return'<div style="width:'+p.toFixed(2)+'%;background:'+g.color+';display:flex;flex-direction:column;align-items:center;justify-content:center">'+(p>=16?'<span style="font-size:15px;font-weight:900;color:'+g.textDk+';white-space:nowrap">'+g.label+'</span><span style="font-size:14px;font-weight:800;color:'+g.textDk+';opacity:.85">'+p.toFixed(0)+'%</span>':p>=9?'<span style="font-size:12px;font-weight:900;color:'+g.textDk+'">'+p.toFixed(0)+'%</span>':'')+'</div>';}).join('');
+  var rows=A.map(function(g){
+    var _rSel=_mode==='all'||g.label===_mode;
+    var _rBg=(_rSel&&_mode!=='all'&&g.label===_mode)?g.color+'22':'#F8FAFC';
+    var _rBd=(_rSel&&_mode!=='all'&&g.label===_mode)?g.color:'#F1F5F9';
+    var _rOp=_rSel?'1':'0.3';
+    var p=g.cnt/T*100;
+    return'<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:'+_rBg+';border-radius:9px;border:1px solid '+_rBd+';opacity:'+_rOp+'">'
+      +'<div style="width:12px;height:12px;border-radius:50%;background:'+g.color+';flex-shrink:0"></div>'
+      +'<span style="font-size:12px;font-weight:700;color:#1F2937;flex:1">'+g.label+'</span>'
+      +'<div style="flex:2;height:8px;background:#F1F5F9;border-radius:99px;overflow:hidden">'
+        +'<div style="width:'+p.toFixed(0)+'%;height:100%;background:'+g.color+';border-radius:99px"></div>'
+      +'</div>'
+      +'<span style="font-size:12px;color:#374151;font-weight:700;min-width:32px;text-align:right">'+p.toFixed(0)+'%</span>'
+      +'<span style="font-size:12px;color:#374151;font-weight:700;min-width:36px;text-align:right">'+g.cnt+'명</span>'
+    +'</div>';
+  }).join('');
+
+  var bestG=A.reduce(function(a,b){return a.cnt>b.cnt?a:b;});
+
+  return _gBar
+    +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;flex-wrap:wrap;gap:6px">'
+      +'<p style="margin:0;font-size:11px;color:#6B7280">최종합격자 '+T+'명의 연령 분포</p>'
+      +'<p style="margin:0;font-size:11px;color:#94A3B8">🗓 2026년 1월 ~ 현재월 누적</p>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;padding:6px 12px 8px">'
+      +'<div style="flex:1;background:#EFF6FF;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:20px">🎙</span>'
+        +'<div><p style="margin:0;font-size:9px;color:#1D4ED8;font-weight:700;letter-spacing:.08em">프리랜서</p>'
+          +'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#1E3A5F">'+FL+'<span style="font-size:12px;font-weight:600;color:#3B82F6;margin-left:4px">('+Math.round(FL/T*100)+'%)</span></p></div>'
+      +'</div>'
+      +'<div style="flex:1;background:#ECFDF5;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px">'
+        +'<span style="font-size:20px">🏛</span>'
+        +'<div><p style="margin:0;font-size:9px;color:#065F46;font-weight:700;letter-spacing:.08em">기관 (법원·의회 등)</p>'
+          +'<p style="margin:2px 0 0;font-size:18px;font-weight:900;color:#064E3B">'+INST+'<span style="font-size:12px;font-weight:600;color:#059669;margin-left:4px">('+Math.round(INST/T*100)+'%)</span></p></div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;height:60px;border-radius:12px;overflow:hidden;margin:0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,.07)">'+bar+'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:6px;padding:0 12px 8px">'+rows+'</div>'
+    +'<div style="margin:0 12px 12px;padding:10px 14px;background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border-radius:9px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div><p style="margin:0;font-size:9px;color:#B45309;font-weight:700;letter-spacing:.1em">최빈 연령대</p>'
+        +'<p style="margin:3px 0 0;font-size:16px;font-weight:900;color:#78350F">'+bestG.label+' <span style="font-size:12px">'+Math.round(bestG.cnt/T*100)+'% · '+bestG.cnt+'명</span></p></div>'
+      +'<div style="text-align:right"><p style="margin:0;font-size:9px;color:#B45309;font-weight:700">총 합격자</p>'
+        +'<p style="margin:3px 0 0;font-size:22px;font-weight:900;color:#92400E">'+T+'명</p></div>'
+    +'</div>';
 }
 
 function renderAgeInfographic(finalSids){
@@ -3404,6 +3546,7 @@ function renderSidebar(){
       +'<p style="margin:0;font-size:9.5px;color:#2A3F52">'+TODAY+' (KST)</p>'
       +(isStaff()?'<div style="margin-top:8px;padding:5px 8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:7px;font-size:10px;color:#FBBF24;font-weight:700">⚡ STAFF MODE</div>':'')
     +'</div>'
+    +(isStaff()?_renderAgeSettingsPanel():'')
     +'<div style="padding:8px 10px 12px;border-top:1px solid rgba(255,255,255,.05)">'
       +'<button onclick="doLogout()" style="width:100%;display:flex;align-items:center;gap:8px;padding:8px 11px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#FCA5A5;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .12s" onmouseover="this.style.background=\'rgba(239,68,68,.2)\'" onmouseout="this.style.background=\'rgba(239,68,68,.1)\'"><i class="ti ti-logout" style="font-size:14px" aria-hidden="true"></i>로그아웃</button>'
     +'</div>'
