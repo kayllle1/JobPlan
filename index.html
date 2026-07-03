@@ -1055,16 +1055,16 @@ function setCounselAgeMode(m){
   _counselAgeMode=m;
   var p=document.getElementById('_ageSettingsPanel');
   if(p)p.style.display='none';
-  /* 스크롤 위치 보존 - 대시보드 연령대 카드만 갱신 */
-  var vs=document.getElementById('_view_scroll');
-  var savedTop=vs?vs.scrollTop:0;
   if(currentView==='dashboard'){
+    /* dash-root 스크롤 위치 저장 */
+    var dr=document.getElementById('dash-root');
+    var savedTop=dr?dr.scrollTop:0;
     renderView();
+    /* 렌더링 후 스크롤 복원 */
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
-        var vs2=document.getElementById('_view_scroll');
-        if(vs2)vs2.scrollTop=savedTop;
-        /* 사이드바도 갱신 (선택 체크 표시 업데이트) */
+        var dr2=document.getElementById('dash-root');
+        if(dr2)dr2.scrollTop=savedTop;
         var sb=$('_sidebar');if(sb)sb.outerHTML=renderSidebar();
       });
     });
