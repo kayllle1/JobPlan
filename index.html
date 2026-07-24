@@ -1085,7 +1085,9 @@ var _FREELANCE_CATS=[
   {cat:'데이터속기사', cnt:63,  icon:'💾', desc:'AI 학습용 데이터 구축',       color:'#EDE9FE', border:'#DDD6FE', text:'#5B21B6'},
   {cat:'현장속기사',   cnt:45,  icon:'🎤', desc:'오프라인 현장 속기 지원',     color:'#ECFDF5', border:'#A7F3D0', text:'#065F46'}
 ];
-var _COUNSEL_CATS=['전체','법원','의회','국회','검찰청','공공기관','해바라기','사기업','대학교','기타','라이브콘텐츠','VOD','데이터속기사','현장속기사'];
+var _COUNSEL_CATS=['전체','공공기관','라이브콘텐츠','VOD','데이터속기사','현장속기사'];
+/* 공공기관으로 묶이는 실제 카테고리들 */
+var _PUBLIC_CATS=['법원','의회','국회','검찰청','공공기관','해바라기','사기업','대학교','기타'];
 
 function renderFreelanceCatPanel(catName){
   var fd=_FREELANCE_CATS.find(function(f){return f.cat===catName;});
@@ -3495,7 +3497,12 @@ var EMP_2025=[{"name": "신은정", "phone": "010-2516-1258", "email": "-", "cat
 function getEmpData(cat){
   var _PAST={'2020':EMP_2020,'2021':EMP_2021,'2022':EMP_2022,'2023':EMP_2023,'2024':EMP_2024,'2025':EMP_2025};
   if(_PAST[empYear]){
-    var d=_PAST[empYear].filter(function(r){return cat==='전체'||r.category===cat;});
+    var _isPublicEmp=_isCounsel()&&cat==='공공기관';
+    var d=_PAST[empYear].filter(function(r){
+      if(cat==='전체')return true;
+      if(_isPublicEmp)return _PUBLIC_CATS&&_PUBLIC_CATS.indexOf(r.category)>=0;
+      return r.category===cat;
+    });
     if(isStaff()){d=d.map(function(r){return Object.assign({},r,{name:maskName(r.name),phone:maskPhone(r.phone),email:maskEmail(r.email)});});}
     return d;
   }
@@ -3693,7 +3700,7 @@ function renderEmployment(){
   var catCounts={};(_isCounsel()?['법원','의회','국회','검찰청','공공기관','해바라기','사기업','대학교','기타']:CATS.slice(1)).forEach(function(c){catCounts[c]=getEmpData(c).length;});
   if(_isCounsel()&&empYear!=='2026'){empYear='2026';}
   var _empCatList=_isCounsel()
-    ?['법원','의회','국회','검찰청','공공기관','해바라기','사기업','대학교','기타','라이브콘텐츠','VOD','데이터속기사','현장속기사']
+    ?['공공기관','라이브콘텐츠','VOD','데이터속기사','현장속기사']
     :CATS.slice(1);
   var tabs=[['전체',_isCounsel()?allList.length+_FREELANCE_CATS.reduce(function(s,f){return s+f.cnt;},0):allList.length]]
     .concat(_empCatList.map(function(cat){
@@ -4119,7 +4126,15 @@ function sortByFinalDate(jobs){
   active.sort(function(a,b){var fa=a.finalDate?String(a.finalDate).slice(0,10):'',fb=b.finalDate?String(b.finalDate).slice(0,10):'';var aF=fa&&fa>=TODAY,bF=fb&&fb>=TODAY,aP=fa&&fa<TODAY,bP=fb&&fb<TODAY;if(aF&&bF)return fa.localeCompare(fb);if(aF&&!bF)return -1;if(!aF&&bF)return 1;if(aP&&bP)return fb.localeCompare(fa);if(aP&&!bP)return -1;if(!aP&&bP)return 1;return(a.applyDeadline||a.docDate||'9999').localeCompare(b.applyDeadline||b.docDate||'9999');});
   return active.concat(closed);
 }
-function getFiltered(){return JOBS.filter(function(j){if(jobFilter.cat!=='전체'&&j.category!==jobFilter.cat)return false;if(jobFilter.year&&!(j.docDate||'').startsWith(jobFilter.year))return false;if(jobFilter.kw&&j.name.indexOf(jobFilter.kw)<0)return false;if(jobFilter.recType==='추천'&&!j.isRec)return false;if(jobFilter.recType==='지원'&&j.isRec)return false;if(jobFilter.type!=='전체'&&(j.type||'')!==jobFilter.type)return false;if(jobFilter.location==='__none__'?!!j.location:jobFilter.location&&j.location!==jobFilter.location)return false;if(jobFilter.dateFrom){var dl=j.applyDeadline||j.docDate||'';if(dl&&dl<jobFilter.dateFrom)return false;}if(jobFilter.dateTo){var dl2=j.applyDeadline||j.docDate||'';if(dl2&&dl2>jobFilter.dateTo)return false;}var _cf=_jobColFilters;function _cfOk(v,from,to){if(!from&&!to)return true;if(!v)return false;if(from&&v<from)return false;if(to&&v>to)return false;return true;}if(!_cfOk(j.docDate||'',_cf.docDate.from,_cf.docDate.to))return false;if(!_cfOk(j.applyDeadline||j.docDate||'',_cf.deadline.from,_cf.deadline.to))return false;if(!_cfOk(j.documentPassDate||'',_cf.documentPassDate.from,_cf.documentPassDate.to))return false;if(!_cfOk(j.interviewDate||'',_cf.interviewDate.from,_cf.interviewDate.to))return false;if(!_cfOk(j.finalDate||'',_cf.finalDate.from,_cf.finalDate.to))return false;return true;});}
+function getFiltered(){return JOBS.filter(function(j){if(jobFilter.cat!=='전체'){
+    /* 상담팀: '공공기관' 탭은 여러 기관 카테고리를 포함 */
+    var _isPublicTab=_isCounsel()&&jobFilter.cat==='공공기관';
+    if(_isPublicTab){
+      if(!_PUBLIC_CATS||_PUBLIC_CATS.indexOf(j.category)<0)return false;
+    } else {
+      if(j.category!==jobFilter.cat)return false;
+    }
+  }if(jobFilter.year&&!(j.docDate||'').startsWith(jobFilter.year))return false;if(jobFilter.kw&&j.name.indexOf(jobFilter.kw)<0)return false;if(jobFilter.recType==='추천'&&!j.isRec)return false;if(jobFilter.recType==='지원'&&j.isRec)return false;if(jobFilter.type!=='전체'&&(j.type||'')!==jobFilter.type)return false;if(jobFilter.location==='__none__'?!!j.location:jobFilter.location&&j.location!==jobFilter.location)return false;if(jobFilter.dateFrom){var dl=j.applyDeadline||j.docDate||'';if(dl&&dl<jobFilter.dateFrom)return false;}if(jobFilter.dateTo){var dl2=j.applyDeadline||j.docDate||'';if(dl2&&dl2>jobFilter.dateTo)return false;}var _cf=_jobColFilters;function _cfOk(v,from,to){if(!from&&!to)return true;if(!v)return false;if(from&&v<from)return false;if(to&&v>to)return false;return true;}if(!_cfOk(j.docDate||'',_cf.docDate.from,_cf.docDate.to))return false;if(!_cfOk(j.applyDeadline||j.docDate||'',_cf.deadline.from,_cf.deadline.to))return false;if(!_cfOk(j.documentPassDate||'',_cf.documentPassDate.from,_cf.documentPassDate.to))return false;if(!_cfOk(j.interviewDate||'',_cf.interviewDate.from,_cf.interviewDate.to))return false;if(!_cfOk(j.finalDate||'',_cf.finalDate.from,_cf.finalDate.to))return false;return true;});}
 
 /* ─ 스크롤 ─ */
 function _saveScrollPositions(){var vs=$('_view_scroll'),ts=$('_tbl_scroll');if(vs)_savedScrollTop=vs.scrollTop;if(ts)_savedTblScrollTop=ts.scrollTop;}
