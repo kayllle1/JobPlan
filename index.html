@@ -4631,7 +4631,7 @@ function checkDupApName(){
   if(warn)warn.style.display=isDup?'block':'none';
   if(saveBtn)saveBtn.disabled=!!isDup;
 }
-function selectNewAp(nameVal){_addApSelectedSid='new';var r=$('ap_search_results');if(r)r.innerHTML='';var s=$('ap_search');if(s){s.disabled=true;s.style.background='#F3F4F6';}var si=$('ap_selected_info');if(si)si.innerHTML='<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.06em">신규 학생 정보 입력</span><button onclick="clearApSelection()" style="background:none;border:1px solid #86EFAC;color:#15803D;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">'+fInp('이름 *','ns_nm','text',nameVal,'oninput="checkDupApName()"')+'<div id="_ns_dup_warn" style="display:none;color:#DC2626;font-size:11px;font-weight:700;margin:-6px 0 8px;padding:4px 8px;background:#FEE2E2;border-radius:5px;border:1px solid #FECACA">⚠️ 이미 이 공고에 등록된 지원자입니다.</div>'+fInp('나이','ns_ag','number')+'  '+fInp('연락처','ns_ph')+'  '+fInp('이메일','ns_em','email')+'</div></div>';}
+function selectNewAp(nameVal){_addApSelectedSid='new';var r=$('ap_search_results');if(r)r.innerHTML='';var s=$('ap_search');if(s){s.disabled=true;s.style.background='#F3F4F6';}var si=$('ap_selected_info');if(si)si.innerHTML='<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;margin-bottom:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.06em">신규 학생 정보 입력</span><button onclick="clearApSelection()" style="background:none;border:1px solid #86EFAC;color:#15803D;padding:3px 10px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">변경</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px">'+fInp('이름 *','ns_nm','text',nameVal,'oninput="checkDupApName()"')+'<div id="_ns_dup_warn" style="display:none;color:#DC2626;font-size:11px;font-weight:700;margin:-6px 0 8px;padding:4px 8px;background:#FEE2E2;border-radius:5px;border:1px solid #FECACA">⚠️ 이미 이 공고에 등록된 지원자입니다.</div>'+('<div style="margin-bottom:10px">'+'<label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">출생연도</label>'+'<div style="display:flex;gap:6px;align-items:center">'+'<input id="ns_by" type="number" min="1940" max="2020" placeholder="예: 2006" oninput="calcNsAge()" style="flex:1;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;outline:none;font-family:inherit">'+'<span id="ns_age_display" style="font-size:13px;color:#2563EB;font-weight:800;white-space:nowrap;min-width:44px"></span>'+'</div><input type="hidden" id="ns_ag">'+'</div>')+'  '+fInp('연락처','ns_ph')+'  '+fInp('이메일','ns_em','email')+'</div></div>';}
 function clearApSelection(){_addApSelectedSid=null;var s=$('ap_search');if(s){s.value='';s.disabled=false;s.style.background='';s.focus();}var r=$('ap_search_results');if(r)r.innerHTML='';var si=$('ap_selected_info');if(si)si.innerHTML='';}
 async function saveAddAp(jobId){if(!isAdmin())return;
   if(!_addApSelectedSid)return customAlert('학생을 검색하여 선택하거나 신규 등록을 먼저 해주세요.');
@@ -5858,6 +5858,19 @@ function renderMemberSearch(){
   +'</div>';
 }
 
+
+function calcNsAge(){
+  var byEl=document.getElementById('ns_by');
+  var dispEl=document.getElementById('ns_age_display');
+  var hidEl=document.getElementById('ns_ag');
+  if(!byEl||!dispEl||!hidEl)return;
+  var by=parseInt(byEl.value);
+  if(!by||by<1930||by>2020){dispEl.textContent='';hidEl.value='';return;}
+  var thisYear=new Date().getFullYear();
+  var age=thisYear-by+1;  /* 한국식 나이 */
+  dispEl.textContent=age+'세';
+  hidEl.value=age;
+}
 function renderView(){
   _saveScrollPositions();
   var focusedId=document.activeElement?document.activeElement.id:null;
