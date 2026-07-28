@@ -5749,6 +5749,53 @@ function initNationalSVGMap(){
 }
 
 
+function importMemberExcel(input){
+  var file=input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var text=e.target.result;
+      var sep=text.indexOf('\r\n')>=0?'\r\n':'\n';
+      var lines=text.split(sep);
+      var header=lines[0].split(',').map(function(h){return h.trim().replace(/^"|"$/g,'');});
+      var added=0,skipped=0;
+      for(var i=1;i<lines.length;i++){
+        if(!lines[i].trim())continue;
+        var cols=lines[i].split(',').map(function(v){return v.trim().replace(/^"|"$/g,'');});
+        var obj={};header.forEach(function(h,j){obj[h]=cols[j]||'';});
+        var name=(obj['이름']||'').trim();
+        if(!name)continue;
+        var dup=MEMBER_DATA.some(function(m){return m.n===name&&m.p===(obj['휴대전화']||'').trim();});
+        if(dup){skipped++;continue;}
+        var sg=(obj['한글속기(취득급수,취득년도,회차)']||obj['한글속기']||'').trim();
+        var sgP=sg.split(',').map(function(x){return x.trim();});
+        MEMBER_DATA.push({n:name,g:(obj['성별']||'').trim(),e:(obj['이메일']||'').trim(),p:(obj['휴대전화']||'').trim(),b:(obj['생년월일']||'').trim(),sg:sgP[0]||'',sy:sgP[1]||'',sr:sgP[2]||'',etc:(obj['기타속기자격증(자격증명,취득급수,취득년도,회차)']||obj['기타속기자격증']||'').trim(),edu:(obj['최종학력']||'').trim(),m:(obj['협회회원']||'').trim()});
+        added++;
+      }
+      customAlert('엑셀 가져오기 완료!\n추가: '+added+'명 / 중복 제외: '+skipped+'명\n현재 총 '+MEMBER_DATA.length+'명');
+      renderView();
+    }catch(err){customAlert('파일 처리 중 오류가 발생했습니다.');}
+  };
+  reader.readAsText(file,'UTF-8');
+  input.value='';
+}
+
+function exportMemberExcel(){
+  var headers=['이름','성별','이메일','휴대전화','생년월일','협회회원','한글속기 급수','취득년도','회차','기타속기자격증','최종학력'];
+  var csvRows=MEMBER_DATA.map(function(m){
+    var row=[m.n,m.g,m.e,m.p,m.b,m.m,m.sg,m.sy,m.sr,m.etc,m.edu];
+    return row.map(function(v){var s=String(v||'');return s.indexOf(',')>=0?'"'+s+'"':s;}).join(',');
+  });
+  var csv='\uFEFF'+headers.join(',')+'\n'+csvRows.join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='속기사명단_'+TODAY+'.csv';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
 function renderMemberSearch(){
   var kw=(window._memberKw||'').trim();
   var gradeF=window._memberGrade||'전체';
