@@ -5827,6 +5827,13 @@ function renderMemberSearch(){
     return true;
   });
 
+  /* 취득년도 최신순 정렬 */
+  filtered=filtered.slice().sort(function(a,b){
+    var ya=parseInt((a.sy||'0').replace(/[^0-9]/g,''))||0;
+    var yb=parseInt((b.sy||'0').replace(/[^0-9]/g,''))||0;
+    return yb-ya;
+  });
+
   function gradeBtn(g){var on=gradeF===g;return '<button onclick="window._memberGrade=\''+g+'\';renderView()" style="padding:5px 14px;border-radius:99px;border:1.5px solid '+(on?'#2563EB':'#E2E8F0')+';background:'+(on?'#2563EB':'#fff')+';color:'+(on?'#fff':'#374151')+';font-size:12px;font-weight:'+(on?700:500)+';cursor:pointer;font-family:inherit;white-space:nowrap">'+g+'</button>';}
   function assocBtn(a){var on=assocF===a;return '<button onclick="window._memberAssoc=\''+a+'\';renderView()" style="padding:5px 14px;border-radius:99px;border:1.5px solid '+(on?'#7C3AED':'#E2E8F0')+';background:'+(on?'#7C3AED':'#fff')+';color:'+(on?'#fff':'#374151')+';font-size:12px;font-weight:'+(on?700:500)+';cursor:pointer;font-family:inherit;white-space:nowrap">'+a+'</button>';}
 
@@ -5857,6 +5864,15 @@ function renderMemberSearch(){
         +'<div><h2 style="margin:0;font-size:18px;font-weight:800;color:#0F172A">속기사 찾기</h2>'
           +'<p style="margin:1px 0 0;font-size:11px;color:#94A3B8">한국AI속기사협회 자격증 보유자 '+MEMBER_DATA.length+'명</p></div>'
         +(showTable?'<div style="margin-left:auto;background:#F0FDF4;padding:4px 12px;border-radius:99px"><span style="font-size:12px;font-weight:700;color:#059669">'+filtered.length+'명 검색됨</span></div>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:10px">'
+        +'<label style="display:inline-flex;align-items:center;gap:5px;padding:6px 13px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;color:#1D4ED8;white-space:nowrap;font-family:inherit">'
+          +'<i class="ti ti-file-import" style="font-size:14px"></i> 엑셀 가져오기'
+          +'<input type="file" accept=".csv" onchange="importMemberExcel(this)" style="display:none">'
+        +'</label>'
+        +'<button onclick="exportMemberExcel()" style="display:inline-flex;align-items:center;gap:5px;padding:6px 13px;background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;color:#059669;white-space:nowrap;font-family:inherit">'
+          +'<i class="ti ti-file-export" style="font-size:14px"></i> 엑셀 내보내기'
+        +'</button>'
       +'</div>'
       +'<div style="position:relative;margin-bottom:10px">'
         +'<i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#94A3B8;pointer-events:none"></i>'
