@@ -5804,19 +5804,26 @@ function renderMemberSearch(){
   function matchName(name,q){
     if(!q)return true;
     var n=name.trim();
-    if(q.length===1)return n[0]===q[0];
+    /* 0을 와일드카드로 처리 */
+    /* 패턴: 0이 아닌 글자는 해당 위치 글자와 일치, 0은 아무 글자나 */
+    if(q.length===1){
+      if(q==='0')return true; /* 0 단독 → 전체 */
+      return n[0]===q[0];
+    }
     if(q.length===2){
-      if(n[0]!==q[0])return false;
-      if(q[1]==='0')return n.length===2;
-      return n.length===2&&n[1]===q[1];
+      if(n.length!==2)return false;
+      if(q[0]!=='0'&&n[0]!==q[0])return false;
+      if(q[1]!=='0'&&n[1]!==q[1])return false;
+      return true;
     }
     if(q.length===3){
-      if(n[0]!==q[0])return false;
-      if(q[1]==='0'&&q[2]==='0')return n.length===3;
-      if(q[1]==='0')return n.length===3&&n[2]===q[2];
-      if(q[2]==='0')return n.length===3;
-      return n===q||(n.length===3&&n[2]===q[2]);
+      if(n.length!==3)return false;
+      if(q[0]!=='0'&&n[0]!==q[0])return false;
+      if(q[1]!=='0'&&n[1]!==q[1])return false;
+      if(q[2]!=='0'&&n[2]!==q[2])return false;
+      return true;
     }
+    /* 4글자 이상: 포함 검색 */
     return n.indexOf(q)>=0;
   }
 
@@ -5876,7 +5883,7 @@ function renderMemberSearch(){
       +'</div>'
       +'<div style="position:relative;margin-bottom:10px">'
         +'<i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#94A3B8;pointer-events:none"></i>'
-        +'<input id="_memberSearchInput" value="'+esc(kw)+'" placeholder="이름 검색 — 김00 · 송0나 · 이0 · 김 · 김철수" '
+        +'<input id="_memberSearchInput" value="'+esc(kw)+'" placeholder="이름 검색 — 김00 · 0정0 · 송0나 · 이0 · 김" '
           +'oninput="window._memberKw=this.value;clearTimeout(window._mst);window._mst=setTimeout(function(){renderView();},280)" '
           +'style="width:100%;padding:10px 36px;border:1.5px solid '+(kw?'#2563EB':'#E2E8F0')+';border-radius:10px;font-size:13px;outline:none;font-family:inherit;box-sizing:border-box">'
         +(kw?'<button onclick="window._memberKw=\'\';renderView()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:#F1F5F9;color:#64748B;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">✕ 초기화</button>':'')
