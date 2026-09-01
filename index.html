@@ -1865,7 +1865,7 @@ function openEmployerModal(empId){
       +fInp('이메일 주소','ef_email','email',v.contact_email||'')
       +fInp('등록일','ef_confirmed','date',v.last_confirmed||TODAY)
     +'</div>'
-    +'<div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">대표속기사 정보</label><textarea id="ef_steno" rows="2" placeholder="성명, 연락처, 입사일 등" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">'+esc(v.stenographer_info||'')+'</textarea></div>'
+    +'<div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">대표속기사 정보</label>'+(_isCounsel()?'<div style="padding:8px 10px;border:1px solid #E2E8F0;border-radius:6px;font-size:12px;background:#F1F5F9;filter:blur(4px);user-select:none;pointer-events:none;min-height:36px">'+esc(v.stenographer_info||'-')+'</div>':'<textarea id="ef_steno" rows="2" placeholder="성명, 연락처, 입사일 등" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">'+esc(v.stenographer_info||'')+'</textarea>')+'</div>'
     +'<div style="margin-bottom:12px"><label style="display:block;font-size:10px;font-weight:700;color:#6B7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">특이사항 메모</label><textarea id="ef_memo" rows="3" placeholder="특이사항, 채용 성향, 주의사항 등" style="width:100%;padding:8px 10px;border:1px solid #D1D5DB;border-radius:6px;font-size:12px;resize:vertical;font-family:inherit">'+esc(v.memo||'')+'</textarea></div>'
     +'<div style="display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid #F3F4F6">'
       +btn('취소','closeModal()','outline')
@@ -2540,7 +2540,7 @@ function showCallJobInfo(jobId){
         +'<span style="font-size:12px;color:#DC2626;font-weight:600">최종합격 발표일</span>'
         +'<span style="font-size:12px;font-weight:700;color:#DC2626">'+(j.finalDate?fmt(j.finalDate):'미등록')+'</span>'
       +'</div>'
-      +(j.managerName||j.managerPhone
+      +(!_isCounsel()&&(j.managerName||j.managerPhone)
         ?'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">'
           +'<span style="font-size:12px;color:#64748B">담당자</span>'
           +'<span style="font-size:12px;font-weight:500;color:#374151">'+esc(j.managerName||'')+(j.managerPhone?' · '+esc(j.managerPhone):'')+'</span>'
@@ -3820,7 +3820,7 @@ function renderDashboard(){
       
       /* 진행 중인 공고 — 2열 전폭 */
       +'<div class="dk-grid-card" style="grid-column:1/-1"><div class="dk-grid-head"><div style="width:24px;height:24px;border-radius:7px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-file-text" style="font-size:13px;color:#2563EB"></i></div><span style="font-size:13px;font-weight:600;color:#0F172A">진행 중인 공고</span><span style="font-size:12px;color:#94A3B8;margin-left:4px">임박순</span><span style="margin-left:auto;background:#EFF6FF;color:#1D4ED8;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600">'+active.length+'건</span></div>'
-        +'<div style="padding:12px 16px;overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;align-content:start">'+activeSorted.map(function(j){var dd=j.finalDate?Math.ceil((new Date(j.finalDate)-_now)/86400000):-1;var dc=dd>=0&&dd<=3?'#DC2626':dd>=0&&dd<=7?'#D97706':'#94A3B8';var bg=dd>=0&&dd<=3?'#FCEBEB':dd>=0&&dd<=7?'#FFFBEB':'#F8FAFC';return'<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F8FAFC;border-radius:8px;border:0.5px solid #E2E8F0">'+badge(j.category)+'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:#0F172A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name.length>18?j.name.slice(0,18)+'…':j.name)+'</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">지원자 '+j.applicants.length+'명</div></div>'+(dd>=0?'<span style="font-size:11px;font-weight:600;color:'+dc+';background:'+bg+';padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0">'+(dd===0?'D-day':'D-'+dd)+'</span>':'')+'</div>';}).join('')+'</div>'
+        +'<div style="padding:12px 16px;overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;align-content:start">'+activeSorted.map(function(j){var dd=j.finalDate?Math.ceil((new Date(j.finalDate)-_now)/86400000):-1;var dc=dd>=0&&dd<=3?'#DC2626':dd>=0&&dd<=7?'#D97706':'#94A3B8';var bg=dd>=0&&dd<=3?'#FCEBEB':dd>=0&&dd<=7?'#FFFBEB':'#F8FAFC';return'<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F8FAFC;border-radius:8px;border:0.5px solid #E2E8F0">'+badge(j.category)+'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:#0F172A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(j.name.length>18?j.name.slice(0,18)+'…':j.name)+'</div>'+(_isCounsel()?'':'<div style="font-size:11px;color:#94A3B8;margin-top:1px">지원자 '+j.applicants.length+'명</div>')+'  </div>'+(dd>=0?'<span style="font-size:11px;font-weight:600;color:'+dc+';background:'+bg+';padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0">'+(dd===0?'D-day':'D-'+dd)+'</span>':'')+'</div>';}).join('')+'</div>'
       +'</div>'
     +'</div>'
     /* ── 마스터: 2×2 그리드 ── */
@@ -4107,7 +4107,7 @@ function renderDetailPanel(job){
   var fdNum=calcDDay(job.finalDate);
   var rows='<div style="display:flex;flex-wrap:wrap;gap:14px 24px;padding:12px 16px;border-bottom:1px solid #DBEAFE">'+dl('카테고리',job.category)+dl('채용형태',job.type)+(job.applyDeadline?dl('서류 마감일',fmt(job.applyDeadline)):'')+dl('서류접수일',fmt(job.docDate),isToday(job.docDate)?'#DC2626':'')+dl('서류합격발표일',fmt(job.documentPassDate),isToday(job.documentPassDate)?'#DC2626':'')+dl('면접일',fmt(job.interviewDate),isToday(job.interviewDate)?'#DC2626':'')+dl('최종합격발표일',fmt(job.finalDate),(fdNum!==null&&fdNum<=3&&fdNum>=0)?'#DC2626':'')+dl('근무 시작',fmt(job.startDate))+dl('근무 종료',job.endDate?fmt(job.endDate):'무기한')+'</div>';
   if(job.jobUrl)rows+='<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE;display:flex;align-items:center;gap:10px"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">공고 URL</span><a href="'+esc(job.jobUrl)+'" target="_blank" style="font-size:12px;color:#2563EB;text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">'+esc(job.jobUrl)+'</a></div>';
-  if(job.isRec)rows+='<div style="padding:10px 16px;border-bottom:1px solid #DBEAFE;background:#F0F7FF"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.05em">📌 추천 공고 정보</p><div style="display:flex;flex-wrap:wrap;gap:14px 24px">'+dl('제출 서류',job.submitDocs)+dl('제출 기한',fmt(job.submitDeadline))+dl('담당자',job.managerName)+dl('연락처',job.managerPhone)+dl('이메일',job.managerEmail)+'</div></div>';
+  if(job.isRec)rows+='<div style="padding:10px 16px;border-bottom:1px solid #DBEAFE;background:#F0F7FF"><p style="margin:0 0 8px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.05em">📌 추천 공고 정보</p><div style="display:flex;flex-wrap:wrap;gap:14px 24px">'+dl('제출 서류',job.submitDocs)+dl('제출 기한',fmt(job.submitDeadline))+(!_isCounsel()?dl('담당자',job.managerName)+dl('연락처',job.managerPhone)+dl('이메일',job.managerEmail):'')+'</div></div>';
   if(job.note)rows+='<div style="padding:8px 16px;border-bottom:1px solid #DBEAFE"><span style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.05em">비고 </span><span style="font-size:12px;color:#374151">'+esc(job.note)+'</span></div>';
 
   /* ── 최종합격자 신원 확인 (신규) ── */
@@ -4275,6 +4275,7 @@ function renderJobs(){
     catJobs.forEach(function(j){var t=j.type||'기타';typeCounts[t]=(typeCounts[t]||0)+1;});
     var typeList=JOB_TYPES.filter(function(t){return typeCounts[t]>0;});
     if(!typeList.length)return'';
+    if(_isCounsel())return'';
     return'<div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;padding:0 2px">'
       +'<span style="font-size:11px;color:#64748B;font-weight:600;padding-top:7px;white-space:nowrap">채용형태:</span>'
       +typeList.map(function(t){
