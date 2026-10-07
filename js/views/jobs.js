@@ -132,6 +132,25 @@ function getFiltered(){return JOBS.filter(function(j){var _isPub=_isCounsel()&&j
 function _saveScrollPositions(){var vs=$('_view_scroll'),ts=$('_tbl_scroll');if(vs)_savedScrollTop=vs.scrollTop;if(ts)_savedTblScrollTop=ts.scrollTop;}
 function _restoreScrollPositions(){requestAnimationFrame(function(){requestAnimationFrame(function(){var vs=$('_view_scroll'),ts=$('_tbl_scroll');if(vs)vs.scrollTop=_savedScrollTop;if(ts)ts.scrollTop=_savedTblScrollTop;});});}
 function toggleDetail(jobId){_saveScrollPositions();if(detailJobs.has(jobId))detailJobs.delete(jobId);else detailJobs.add(jobId);renderView();}
+/* 대시보드 등에서 공고 하나를 눌렀을 때: 공고관리로 이동해 그 공고를 펼치고 강조 */
+function openJobFromDash(jobId){
+  var job=JOBS.find(function(j){return j.id===jobId;});
+  if(!job)return;
+  if(getFiltered().indexOf(job)<0){
+    jobFilter={cat:'전체',year:'',kw:'',type:'전체',recType:'전체',dateFrom:'',dateTo:'',location:''};
+    _dashMapLocation=null;
+    Object.keys(_jobColFilters).forEach(function(k){_jobColFilters[k]={from:'',to:''};});
+  }
+  expandedJobs.add(jobId);
+  setView('jobs');
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    var tr=document.querySelector('tr[data-job-row="'+jobId+'"]');
+    if(!tr)return;
+    tr.scrollIntoView({block:'center'});
+    tr.classList.add('row-flash');
+    setTimeout(function(){tr.classList.remove('row-flash');},2200);
+  });});
+}
 function toggleJob(jobId){_saveScrollPositions();if(expandedJobs.has(jobId))expandedJobs.delete(jobId);else expandedJobs.add(jobId);renderView();}
 
 /* ─ 공고 상세/행 ─ */
@@ -224,7 +243,7 @@ function renderJobRow(job,rowNum){
   var dpText=job.documentPassDate?'<span style="color:'+(tDP?'#DC2626':'#475569')+';font-weight:'+(tDP?700:400)+';font-size:11px">'+fmt(job.documentPassDate)+'</span>':'<span style="color:#1E293B">-</span>';
   var finalText=job.finalDate?'<div style="display:flex;flex-direction:column;gap:2px">'+dDayBadge(job.finalDate,job.isClosed)+'<span style="color:'+(tF?'#EA580C':finalDNum!==null&&finalDNum>=0&&finalDNum<=3?'#DC2626':'#475569')+';font-weight:'+((tF||(finalDNum!==null&&finalDNum>=0&&finalDNum<=3))?700:400)+';font-size:10px">'+fmt(job.finalDate)+'</span></div>':'<span style="color:#1E293B">-</span>';
   var typeCell=job.type?'<span style="background:#F1F5F9;color:#1F2937;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;display:inline-block;border:1px solid #E2E8F0">'+esc(job.type)+'</span>':'<span style="color:#1E293B">-</span>';
-  return'<tr class="'+rowClass+'" style="border-bottom:1px solid #F1F5F9;'+(rowBg!='#fff'&&!isUrgent?'background:'+rowBg+';':'')+(over?'opacity:.65;':'')+'"><td style="padding:10px 8px;text-align:center">'+(_selectedJobIds.has(job.id)?'<input type="checkbox" checked onchange="toggleJobSelect('+job.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">':'<input type="checkbox" onchange="toggleJobSelect('+job.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">')+'</td><td style="padding:10px 8px;text-align:center;color:#64748B;font-size:11px;font-weight:700;white-space:nowrap">'+rowNum+'</td><td style="padding:10px 10px;white-space:nowrap">'+badge(job.category)+'</td><td style="padding:10px 10px;white-space:nowrap">'+typeCell+'</td><td style="padding:10px 10px;min-width:180px">'+nameCell+'</td><td style="padding:10px 10px;white-space:nowrap">'+docDateText+'</td><td style="padding:10px 10px;white-space:nowrap">'+dlText+'</td><td style="padding:10px 10px;font-size:11px;white-space:nowrap">'+dpText+'</td><td style="padding:10px 10px;font-size:11px;white-space:nowrap;color:'+(tI?'#DC2626':'#475569')+';font-weight:'+(tI?700:400)+'">'+fmt(job.interviewDate)+'</td><td style="padding:10px 10px;white-space:nowrap">'+finalText+'</td>'+(_isCounsel()?'':'<td style="padding:10px 10px">'+countCell+'</td>')+'<td style="padding:10px 32px 10px 10px;min-width:180px">'+(_isCounsel()?'':manageBtns)+'</td></tr>'+(isDetail?renderDetailPanel(job):'')+apRows;
+  return'<tr class="'+rowClass+'" data-job-row="'+job.id+'" style="border-bottom:1px solid #F1F5F9;'+(rowBg!='#fff'&&!isUrgent?'background:'+rowBg+';':'')+(over?'opacity:.65;':'')+'"><td style="padding:10px 8px;text-align:center">'+(_selectedJobIds.has(job.id)?'<input type="checkbox" checked onchange="toggleJobSelect('+job.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">':'<input type="checkbox" onchange="toggleJobSelect('+job.id+')" style="width:15px;height:15px;cursor:pointer;accent-color:#2563EB">')+'</td><td style="padding:10px 8px;text-align:center;color:#64748B;font-size:11px;font-weight:700;white-space:nowrap">'+rowNum+'</td><td style="padding:10px 10px;white-space:nowrap">'+badge(job.category)+'</td><td style="padding:10px 10px;white-space:nowrap">'+typeCell+'</td><td style="padding:10px 10px;min-width:180px">'+nameCell+'</td><td style="padding:10px 10px;white-space:nowrap">'+docDateText+'</td><td style="padding:10px 10px;white-space:nowrap">'+dlText+'</td><td style="padding:10px 10px;font-size:11px;white-space:nowrap">'+dpText+'</td><td style="padding:10px 10px;font-size:11px;white-space:nowrap;color:'+(tI?'#DC2626':'#475569')+';font-weight:'+(tI?700:400)+'">'+fmt(job.interviewDate)+'</td><td style="padding:10px 10px;white-space:nowrap">'+finalText+'</td>'+(_isCounsel()?'':'<td style="padding:10px 10px">'+countCell+'</td>')+'<td style="padding:10px 32px 10px 10px;min-width:180px">'+(_isCounsel()?'':manageBtns)+'</td></tr>'+(isDetail?renderDetailPanel(job):'')+apRows;
 }
 
 function _noLocBtn(){
