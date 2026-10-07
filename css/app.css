@@ -304,3 +304,16 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 @media(max-width:900px){.dk-kpi{grid-template-columns:repeat(2,1fr);padding:0 14px}.dk-4grid{grid-template-columns:1fr;gap:10px;padding:10px 14px 16px}.dk-grid-card{height:260px}.dk-monthly,.dk-recruit{padding-left:14px;padding-right:14px}}
 
 .age-card-text{font-family:"Gowun Dodum",sans-serif!important;}
+
+/* 대시보드에서 공고로 이동했을 때 잠깐 강조 */
+@keyframes rowFlash{0%,40%{background:#DBEAFE}100%{background:transparent}}
+.row-flash>td{animation:rowFlash 2.2s ease-out}
+.dk-link{cursor:pointer;transition:background .12s}
+.dk-link:hover{background:#F1F5F9}
+.dk-kpi-click{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.dk-kpi-click:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,23,42,.08)!important}
+.dk-iv-chip,.dk-job-tile{cursor:pointer;transition:filter .12s}
+.dk-iv-chip:hover{filter:brightness(.95)}
+.dk-job-tile:hover{background:#EFF6FF!important}
+.dk-2col{grid-template-rows:auto}
+.dk-col{display:flex;flex-direction:column;gap:14px;min-width:0}
