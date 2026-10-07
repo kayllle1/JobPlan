@@ -61,7 +61,7 @@ function setDashPeriod(mode,fr,to){
 }
 var $=function(id){return document.getElementById(id);};
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function dateOrNull(v){if(!v||!String(v).trim())return null;var yr=parseInt(String(v).slice(0,4),10);if(yr<1900||yr>2100)return null;return v;}
+function dateOrNull(v){if(!v||!String(v).trim())return null;if(!/^\d{4}-\d{2}-\d{2}/.test(String(v).trim()))return null;var yr=parseInt(String(v).slice(0,4),10);if(yr<1900||yr>2100)return null;return v;}
 function isToday(d){return !!d&&String(d).slice(0,10)===TODAY;}
 function calcDDay(ds){
   if(!ds)return null;
@@ -191,7 +191,7 @@ function getStudentStatus(sid){
   var apps=getApps(sid);
   if(!apps.length)return{label:'지원가능',emoji:'🟢',color:'#059669',bg:'#D1FAE5',border:'#6EE7B7'};
   if(apps.some(function(a){return a.status==='최종합격'||a.status==='취업성공';}))return{label:'취업완료',emoji:'🔵',color:'#1D4ED8',bg:'#DBEAFE',border:'#93C5FD'};
-  if(apps.some(function(a){return['최종합격','취업성공','불합격'].indexOf(a.status)<0;}))return{label:'진행중',emoji:'🟡',color:'#D97706',bg:'#FEF3C7',border:'#FDE68A'};
+  if(apps.some(function(a){return ENDED_STATUSES.indexOf(a.status)<0;}))return{label:'진행중',emoji:'🟡',color:'#D97706',bg:'#FEF3C7',border:'#FDE68A'};
   return{label:'지원가능',emoji:'🟢',color:'#059669',bg:'#D1FAE5',border:'#6EE7B7'};
 }
 function getRestrictionBadge(student){
