@@ -352,7 +352,7 @@ function renderJobRow(job,rowNum){
   var urlBtn=job.jobUrl?'<a href="'+esc(job.jobUrl)+'" target="_blank" style="background:#F0FDF4;color:#059669;border:1px solid #6EE7B7;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:3px">🔗 공고</a>':'';
   /* 관리자만 수정/삭제/지원추가 버튼 표시 */
   var manageBtns=isAdmin()
-    ?'<div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center;margin-right:4px">'+urlBtn+' '+btn('✏','openJobModal('+job.id+')','outline',true)+' '+'<button onclick="openJobModal(null,'+job.id+')" title="이 공고를 복사해서 새 공고 등록" style="background:#fff;color:#1F2937;border:1px solid #D1D5DB;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⧉ 복사</button>'+' '+btn('🗑','confirmDeleteJob('+job.id+')','danger',true)+' '+btn('+지원','openAddApModal('+job.id+')','primary',true)+'</div>'
+    ?'<div class="job-manage" style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center;justify-content:flex-end;width:max-content;margin-left:auto;margin-right:4px">'+urlBtn+' '+'<button onclick="openJobModal('+job.id+')" title="공고 수정" style="background:#fff;color:#1F2937;border:1px solid #D1D5DB;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;line-height:1"><i class="ti ti-pencil" style="font-size:14px"></i></button>'+' '+'<button onclick="openJobModal(null,'+job.id+')" title="공고 복사 (이 공고로 새 공고 등록)" style="background:#fff;color:#1F2937;border:1px solid #D1D5DB;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;line-height:1"><i class="ti ti-copy" style="font-size:14px"></i></button>'+' '+btn('🗑','confirmDeleteJob('+job.id+')','danger',true)+' '+btn('+지원','openAddApModal('+job.id+')','primary',true)+'</div>'
     :'<div style="display:flex;gap:4px;flex-wrap:nowrap;align-items:center;margin-right:4px">'+urlBtn+'</div>';
   var docDateText=job.docDate?'<span style="color:'+(tD?'#DC2626':'#475569')+';font-weight:'+(tD?700:400)+';font-size:11px">'+fmt(job.docDate)+'</span>':'<span style="color:#1E293B;font-size:11px">-</span>';
   var dlText=job.isClosed?'<span style="color:#9CA3AF;font-size:10px">마감됨</span>':deadline?'<div style="display:flex;flex-direction:column;gap:2px">'+dDayBadge(deadline,false)+'<span style="color:'+(dlDNum!==null&&dlDNum>=0&&dlDNum<=3?'#DC2626':dlDNum!==null&&dlDNum>=0&&dlDNum<=7?'#D97706':'#6B7280')+';font-size:10px;font-weight:'+(dlDNum!==null&&dlDNum>=0&&dlDNum<=7?700:400)+'">'+fmt(deadline)+'</span></div>':'<span style="color:#1E293B">-</span>';
@@ -492,9 +492,30 @@ function buildVaultRefPanel(jobCat){
     return'<div style="padding:8px 10px;border-bottom:1px solid #F3F4F6;cursor:pointer" onclick="'+fnId+'()" title="클릭→클립보드 복사"><div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><div style="min-width:0;flex:1"><p style="margin:0 0 2px;font-size:11px;font-weight:700;color:#1F2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(v.year?'['+v.year+'년] ':'')+esc(v.institutionName.length>18?v.institutionName.slice(0,18)+'…':v.institutionName)+'</p><p style="margin:0;font-size:10px;color:#9CA3AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(v.content.length>40?v.content.slice(0,40)+'…':v.content)+'</p></div><span style="font-size:9px;color:#0EA5E9;font-weight:700;white-space:nowrap;flex-shrink:0">📋 복사</span></div></div>';
   }).join('');
 }
-function buildRecSection(f){f=f||{};return'<div style="background:#F0F7FF;border-radius:8px;padding:14px;margin-bottom:8px"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em">📌 추천 공고 정보</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">'+fInp('제출 서류','jf_sd','text',f.submitDocs||'')+' '+fInp('제출 기한','jf_sl','date',f.submitDeadline||'')+' '+fInp('담당자 이름','jf_mn','text',f.managerName||'')+' '+fInp('담당자 연락처','jf_mp','text',f.managerPhone||'')+'</div>'+fInp('담당자 이메일','jf_me','email',f.managerEmail||'')+'</div>';}
+/* ─ 추천 공고 담당자 주소록: 예전에 입력한 담당자 이름 → 가장 최근 연락처·이메일 ─ */
+function _mgrBook(){
+  var map={};
+  JOBS.slice().sort(function(a,b){return String(a.docDate||'').localeCompare(String(b.docDate||''))||(a.id-b.id);}).forEach(function(j){
+    var nm=(j.managerName||'').trim();if(!nm||(!j.managerPhone&&!j.managerEmail))return;
+    var m=map[nm]||(map[nm]={name:nm,phone:'',email:''});
+    if(j.managerPhone)m.phone=j.managerPhone;if(j.managerEmail)m.email=j.managerEmail;
+  });
+  return Object.keys(map).sort().map(function(k){return map[k];});
+}
+var _mgrFilled={phone:null,email:null};
+function _mgrAutofill(name){
+  var nm=String(name||'').trim(),hint=$('jf_mn_hint');
+  var m=nm?_mgrBook().find(function(x){return x.name===nm;}):null;
+  if(!m){if(hint)hint.style.display='none';return;}
+  var ph=$('jf_mp'),em=$('jf_me'),done=[];
+  /* 비어 있거나 직전에 자동으로 넣은 값일 때만 채운다 (직접 고친 값은 덮어쓰지 않음) */
+  if(ph&&m.phone&&(!ph.value||ph.value===_mgrFilled.phone)){ph.value=m.phone;_mgrFilled.phone=m.phone;done.push('연락처');}
+  if(em&&m.email&&(!em.value||em.value===_mgrFilled.email)){em.value=m.email;_mgrFilled.email=m.email;done.push('이메일');}
+  if(hint){hint.textContent=done.length?'✓ 예전 기록에서 '+done.join(', ')+' 자동 입력됨':'';hint.style.display=done.length?'block':'none';}
+}
+function buildRecSection(f){f=f||{};return'<div style="background:#F0F7FF;border-radius:8px;padding:14px;margin-bottom:8px"><p style="margin:0 0 10px;font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.06em">📌 추천 공고 정보</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">'+fInp('제출 서류','jf_sd','text',f.submitDocs||'')+' '+fInp('제출 기한','jf_sl','date',f.submitDeadline||'')+' '+fInp('담당자 이름','jf_mn','text',f.managerName||'','list="jf_mn_list" autocomplete="off" placeholder="이름을 입력하면 예전 연락처를 불러와요" oninput="_mgrAutofill(this.value)" onchange="_mgrAutofill(this.value)"')+' '+fInp('담당자 연락처','jf_mp','text',f.managerPhone||'')+'</div>'+fInp('담당자 이메일','jf_me','email',f.managerEmail||'')+'<div id="jf_mn_hint" style="display:none;font-size:11px;color:#059669;font-weight:600;margin-top:-4px"></div><datalist id="jf_mn_list">'+_mgrBook().map(function(m){return'<option value="'+esc(m.name)+'">'+esc([m.phone,m.email].filter(Boolean).join(' · '))+'</option>';}).join('')+'</datalist></div>';}
 function toggleRecF(){var isRec=$('jf_rc')&&$('jf_rc').checked;var el=$('jf_rec');if(!el)return;if(!isRec){el.innerHTML='';}else if(!document.getElementById('jf_sd')){el.innerHTML=buildRecSection({});}}
-function openJobModal(jobId,copyFromId){if(!isAdmin()){customAlert("⛔ 마스터 계정만 사용 가능한 기능입니다.");return;}
+function openJobModal(jobId,copyFromId){_mgrFilled={phone:null,email:null};if(!isAdmin()){customAlert("⛔ 마스터 계정만 사용 가능한 기능입니다.");return;}
   var job=jobId!=null?JOBS.find(function(j){return j.id===jobId;}):null;
   var _src=!job&&copyFromId!=null?JOBS.find(function(j){return j.id===copyFromId;}):null;
   var _cf=null;if(_src){var _c={};Object.keys(_src).forEach(function(k){if(k==='applicants')return;_c[k]=/(Date|Deadline)$/.test(k)?'':_src[k];});_c.isClosed=false;_c.note='';_cf=_c;}

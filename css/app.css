@@ -317,3 +317,5 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 .dk-job-tile:hover{background:#EFF6FF!important}
 .dk-2col{grid-template-rows:auto}
 .dk-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+/* 공고관리 관리 칸 버튼이 줄바꿈되지 않게 */
+.job-manage>*{white-space:nowrap;flex-shrink:0}
