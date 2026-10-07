@@ -319,3 +319,15 @@ input[type="month"]{-webkit-appearance:none;appearance:none}
 .dk-col{display:flex;flex-direction:column;gap:14px;min-width:0}
 /* 공고관리 관리 칸 버튼이 줄바꿈되지 않게 */
 .job-manage>*{white-space:nowrap;flex-shrink:0}
+/* 면접 자료실 줄 */
+.vrow-read{flex:1;min-width:0;cursor:pointer;border-radius:8px;padding:4px 8px;margin:-4px -8px;transition:background .12s}
+.vrow-read:hover{background:#EFF6FF}
+.vrow-read:hover .vrow-tog{color:#1D4ED8}
+.vrow-tog{display:inline-flex;align-items:center;gap:2px;font-size:11px;color:#2563EB;font-weight:700}
+.vrow-tog i{font-size:14px}
+.vrow-acts{display:flex;gap:4px;flex-shrink:0;align-items:center;margin-left:8px}
+.vrow-btn{width:30px;height:28px;display:inline-flex;align-items:center;justify-content:center;background:#fff;color:#64748B;border:1px solid #E2E8F0;border-radius:7px;cursor:pointer;font-family:inherit;padding:0;transition:all .12s}
+.vrow-btn i{font-size:15px}
+.vrow-btn:hover{background:#F1F5F9;color:#0F172A;border-color:#CBD5E1}
+.vrow-btn.del:hover{background:#FEF2F2;color:#DC2626;border-color:#FECACA}
+.vh-meta{font-size:11px;color:#64748B;white-space:nowrap;flex-shrink:0}

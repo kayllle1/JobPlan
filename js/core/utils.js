@@ -161,7 +161,8 @@ function vaultToggleGroup(idx){
     var g=_vaultGroups[idx];
     if(!g)return;
     var name=g.institutionName;
-    if(expandedInstitutions.has(name))expandedInstitutions.delete(name);
+    if(vaultKw.trim()){if(_vaultKwCollapsed.has(name))_vaultKwCollapsed.delete(name);else _vaultKwCollapsed.add(name);}
+    else if(expandedInstitutions.has(name))expandedInstitutions.delete(name);
     else expandedInstitutions.add(name);
     renderView();
   }catch(e){console.error('vaultToggleGroup',e);customAlert('오류: '+(e.message||String(e)));}
