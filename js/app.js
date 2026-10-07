@@ -29,6 +29,16 @@ function renderView(){
   var searchIds=['jobSearchInput','studentSearchInput','vaultSearchInput','trSearchInput','_memberSearchInput'];
   if(focusedId&&searchIds.indexOf(focusedId)>=0){requestAnimationFrame(function(){var el=$(focusedId);if(el){el.focus();if(cursorPos!==null){try{el.setSelectionRange(cursorPos,cursorPos);}catch(e){}}}});}
 }
+/* 날짜 입력칸: 연도를 4자리까지만 입력되게 (min/max가 없는 칸에 자동 적용) */
+function _limitDateInputs(root){
+  (root.querySelectorAll?root.querySelectorAll('input[type="date"]'):[]).forEach(function(el){
+    if(!el.getAttribute('max'))el.setAttribute('max','2100-12-31');
+    if(!el.getAttribute('min'))el.setAttribute('min','1900-01-01');
+  });
+}
+new MutationObserver(function(muts){
+  muts.forEach(function(m){m.addedNodes.forEach(function(n){if(n.nodeType===1){if(n.matches&&n.matches('input[type="date"]'))_limitDateInputs(n.parentNode||n);else _limitDateInputs(n);}});});
+}).observe(document.documentElement,{childList:true,subtree:true});
 function setView(v){
   /* 스태프 접근 제한 */
   if(isStaff2()&&STAFF2_VIEWS.indexOf(v)<0)v='training';
