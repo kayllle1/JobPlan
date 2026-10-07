@@ -88,6 +88,8 @@ var PROV_DATA={
 };
 
 let _jobColFilters={docDate:{from:'',to:''},deadline:{from:'',to:''},documentPassDate:{from:'',to:''},interviewDate:{from:'',to:''},finalDate:{from:'',to:''}};
+/* 공고관리 빠른 보기: hideClosed(마감 숨기기) + mode(today/weekIv/noAps 중 하나) */
+let _jobQuick={hideClosed:false,mode:''};
 /* v7.5 자료실 상태 */
 let vaultFilter='전체',vaultKw='';
 let expandedInstitutions=new Set();
